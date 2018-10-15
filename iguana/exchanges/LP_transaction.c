@@ -1726,7 +1726,7 @@ char *LP_createblasttransaction(uint64_t *changep,int32_t *changeoutp,cJSON **tx
     if ( (rawtxbytes= bitcoin_json2hex(coin->symbol,coin->isPoS,&txid,txobj,V)) == 0 )
         fprintf(stderr,"LP_createblasttransaction: error making rawtx suppress.%d\n",suppress_pubkeys);
     *txobjp = txobj;
-    usleep(50000);
+    //usleep(10000);
     return(rawtxbytes);
 }
 
