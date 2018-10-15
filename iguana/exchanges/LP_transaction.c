@@ -1149,7 +1149,7 @@ int32_t LP_vins_select(void *ctx,struct iguana_info *coin,int64_t *totalp,int64_
             preselected[numpre++] = min1;
     }
     else min1 = 0;
-    
+
     printf("dustcombine.%d numpre.%d min0.%p min1.%p numutxos.%d amount %.8f\n",dustcombine,numpre,min0,min1,numunspents,dstr(amount));
     maxiters = numunspents+numpre;
     for (i=0; i<maxiters; i++)
@@ -1601,6 +1601,7 @@ char *LP_createblasttransaction(uint64_t *changep,int32_t *changeoutp,cJSON **tx
     scriptlen = bitcoin_standardspend(script,0,rmd160);
     init_hexbytes_noT(spendscriptstr,script,scriptlen);
     vins = cJSON_CreateArray();
+    printf("scriptPubKey ? : %s\n", spendscriptstr);
     jaddi(vins,LP_inputjson(utxotxid,utxovout,spendscriptstr,suppress_pubkeys));
     jdelete(txobj,"vin");
     jadd(txobj,"vin",jduplicate(vins));
@@ -2621,7 +2622,7 @@ int32_t basilisk_bobdeposit_refund(struct basilisk_swap *swap,int32_t delay)
             return(retval);
         }
     } else printf("basilisk_bobdeposit_refund cant find (%s)\n",bobstr);
-    
+
     return(-1);
 }
 
