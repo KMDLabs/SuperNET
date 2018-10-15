@@ -1601,7 +1601,7 @@ char *LP_createblasttransaction(uint64_t *changep,int32_t *changeoutp,cJSON **tx
     scriptlen = bitcoin_standardspend(script,0,rmd160);
     init_hexbytes_noT(spendscriptstr,script,scriptlen);
     vins = cJSON_CreateArray();
-    printf("scriptPubKey ? : %s\n", spendscriptstr);
+    fprintf(stderr,"scriptPubKey ? : %s\n", spendscriptstr);
     jaddi(vins,LP_inputjson(utxotxid,utxovout,spendscriptstr,suppress_pubkeys));
     jdelete(txobj,"vin");
     jadd(txobj,"vin",jduplicate(vins));
@@ -1645,6 +1645,7 @@ char *LP_createblasttransaction(uint64_t *changep,int32_t *changeoutp,cJSON **tx
                 }
             }
             txobj = bitcoin_txoutput(txobj,spendscript,spendlen,value + adjust);
+            //printf("spendscript: %s\n", spendscript);
         }
         else
         {
