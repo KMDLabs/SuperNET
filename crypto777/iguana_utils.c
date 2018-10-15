@@ -133,7 +133,7 @@ bits256 bits256_ave(bits256 a,bits256 b)
 
 bits256 bits256_from_compact(uint32_t c)
 {
-    
+
 	uint32_t nbytes,nbits,i; bits256 x;
     memset(x.bytes,0,sizeof(x));
     nbytes = (c >> 24) & 0xFF;
@@ -381,7 +381,7 @@ int32_t decode_hex(unsigned char *bytes,int32_t n,char *hex)
         if ( n > 0 )
         {
             bytes[0] = unhex(hex[0]);
-            printf("decode_hex n.%d hex[0] (%c) -> %d hex.(%s) [n*2+1: %d] [n*2: %d %c] len.%ld\n",n,hex[0],bytes[0],hex,hex[n*2+1],hex[n*2],hex[n*2],(long)strlen(hex));
+            //printf("decode_hex n.%d hex[0] (%c) -> %d hex.(%s) [n*2+1: %d] [n*2: %d %c] len.%ld\n",n,hex[0],bytes[0],hex,hex[n*2+1],hex[n*2],hex[n*2],(long)strlen(hex));
         }
         bytes++;
         hex++;

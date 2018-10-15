@@ -1668,7 +1668,6 @@ char *LP_createblasttransaction(uint64_t *changep,int32_t *changeoutp,cJSON **tx
     if ( opretstr != 0 )
     {
         spendlen = (int32_t)strlen(opretstr) >> 1;
-        printf("max length : %ld \n actual len : %d \n", sizeof(script)-60,spendlen);
         if ( spendlen < sizeof(script)-60 )
         {
             if ( passphrase != 0 && passphrase[0] != 0 )
