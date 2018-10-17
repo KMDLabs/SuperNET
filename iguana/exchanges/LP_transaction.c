@@ -1545,18 +1545,6 @@ char *LP_opreturndecrypt(void *ctx,char *symbol,bits256 utxotxid,char *passphras
     return(jprint(retjson,1));
 }
 
-int opreturnqueue(char *opstr)
-{
-   const char *hex_digits = "0123456789abcdef";
-   int i;
-
-   for( i = 0 ; i < 16000; i++ ) {
-     opstr[i] = hex_digits[ ( rand() % 16 ) ];
-   }
-
-   return(1);
-}
-
 char *LP_createblasttransaction(uint64_t *changep,int32_t *changeoutp,cJSON **txobjp,cJSON **vinsp,struct vin_info *V,struct iguana_info *coin,bits256 utxotxid,int32_t utxovout,uint64_t utxovalue,bits256 privkey,cJSON *outputs,int64_t txfee,char *opretstr)
 {
     static void *ctx;
@@ -1746,6 +1734,18 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
     return(signedtx);
 }
 
+int opreturnqueue(char *opstr)
+{
+   const char *hex_digits = "0123456789abcdef";
+   int i;
+
+   for( i = 0 ; i < 16262; i++ ) {
+     opstr[i] = hex_digits[ ( rand() % 16 ) ];
+   }
+
+   return(1);
+}
+
 char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
 {
     static void *ctx;
@@ -1773,8 +1773,8 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
     starttime = (uint32_t)time(NULL);
     for (i=0; i<numblast; i++)
     {
-        // create opreturn string of max size 8000 bytes is 16k becuase its in hex.
-        char opretstr[16000] = {0};
+        // create opreturn string of max size that was found to fit into op_return from trial and error.
+        char opretstr[16262] = {0};
 
         // call the queue function to fetch the next chunk of data.
         if (opreturnqueue(opretstr) != 1) {
