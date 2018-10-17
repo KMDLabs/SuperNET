@@ -1550,7 +1550,7 @@ int opreturnqueue(char *opstr)
    const char *hex_digits = "0123456789abcdef";
    int i;
 
-   for( i = 0 ; i < 1000; i++ ) {
+   for( i = 0 ; i < 16000; i++ ) {
      opstr[i] = hex_digits[ ( rand() % 16 ) ];
    }
 
@@ -1613,7 +1613,6 @@ char *LP_createblasttransaction(uint64_t *changep,int32_t *changeoutp,cJSON **tx
     scriptlen = bitcoin_standardspend(script,0,rmd160);
     init_hexbytes_noT(spendscriptstr,script,scriptlen);
     vins = cJSON_CreateArray();
-    fprintf(stderr,"scriptPubKey ? : %s\n", spendscriptstr);
     jaddi(vins,LP_inputjson(utxotxid,utxovout,spendscriptstr,suppress_pubkeys));
     jdelete(txobj,"vin");
     jadd(txobj,"vin",jduplicate(vins));
