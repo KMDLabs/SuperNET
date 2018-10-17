@@ -1782,7 +1782,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         if ( i = 0 )
             strcpy(opretstr,txid0);
         else
-            strcpy(opretstr,signedtxid);
+            strcpy(opretstr,bits256_str(str,signedtxid));
 
         // call the queue function to fetch the next chunk of data.
         if (opreturnqueue(opretstr,i) != 1) {
