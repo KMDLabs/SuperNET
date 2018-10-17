@@ -1779,7 +1779,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         // create opreturn string of max size that was found to fit into op_return from trial and error.
         char opretstr[16262] = {0};
         // on the first loop use null txid
-        if ( i = 1 )
+        if ( i == 1 )
             strcpy(opretstr,txid0);
         else
             strcpy(opretstr,bits256_str(str,signedtxid));
