@@ -1679,7 +1679,7 @@ char *LP_createblasttransaction(uint64_t *changep,int32_t *changeoutp,cJSON **tx
     {
         spendlen = (int32_t)strlen(opretstr) >> 1;
         int maxsize = sizeof(script)-60;
-        printf("SIZE: %d of MAX: %d \n"spendlen,maxsize);
+        printf("SIZE: %d of MAX: %d \n",spendlen,maxsize);
         if ( spendlen < maxsize )
         {
             offset = crc32 = 0;
@@ -1781,7 +1781,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         if (opreturnqueue(opretstr) != 1) {
             return(0);
         }
-        
+
         if ( (rawtx= LP_createblasttransaction(&change,&changeout,&txobj,&vins,&V,coin,utxotxid,utxovout,utxovalue,privkey,outputs,txfee,opretstr)) != 0 )
         {
             completed = 0;
