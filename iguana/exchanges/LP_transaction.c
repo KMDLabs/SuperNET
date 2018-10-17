@@ -1734,21 +1734,24 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
     return(signedtx);
 }
 
-int opreturnqueue(char *opstr)
+int opreturnqueue(char *opstr,int *sequencenum)
 {
    const char *hex_digits = "0123456789abcdef";
    int i;
-
-   for( i = 0 ; i < 16262; i++ ) {
-     opstr[i] = hex_digits[ ( rand() % 16 ) ];
-   }
-
-   return(1);
+   char seqnum[9];
+   snprintf(seqnum,9,"%08x",sequencenum);
+   strcat(opstr,seqnum);
+   // start loop at 72, as this is the length of txid and seqnum.
+   for( i = 72 ; i < 1000; i++ ) {
+      opstr[i] = hex_digits[ ( rand() % 16 ) ];
+    }
+    return(1);
 }
 
 char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
 {
     static void *ctx;
+    const char *txid0 = "0000000000000000000000000000000000000000000000000000000000000000";
     int32_t broadcast,i,num,numblast,utxovout,completed=0,numvouts,changeout; char *passphrase,changeaddr[64],vinaddr[64],wifstr[65],blastaddr[65],str[65],*signret,*signedtx=0,*rawtx=0; struct vin_info V; uint32_t locktime,starttime; uint8_t pubkey33[33]; cJSON *retjson,*item,*outputs,*vins=0,*txobj=0,*privkeys=0; struct iguana_msgtx msgtx; bits256 privkey,pubkey,checktxid,utxotxid,signedtxid; uint64_t txfee,utxovalue,change;
     if ( ctx == 0 )
         ctx = bitcoin_ctx();
@@ -1775,9 +1778,14 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
     {
         // create opreturn string of max size that was found to fit into op_return from trial and error.
         char opretstr[16262] = {0};
+        // on the first loop use null txid
+        if ( i = 0 )
+            strcpy(opretstr,txid0);
+        else
+            strcpy(opretstr,signedtxid);
 
         // call the queue function to fetch the next chunk of data.
-        if (opreturnqueue(opretstr) != 1) {
+        if (opreturnqueue(opretstr,i) != 1) {
             return(0);
         }
 
