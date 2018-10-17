@@ -1734,7 +1734,7 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
     return(signedtx);
 }
 
-int opreturnqueue(char *opstr,int *sequencenum)
+int opreturnqueue(char *opstr,int sequencenum)
 {
    const char *hex_digits = "0123456789abcdef";
    int i;
