@@ -1775,7 +1775,7 @@ char *LP_streamerqget() {
         if ( n > 0 )
           break;
     }
-    return(data)
+    return(data);
 }
 
 int opreturnqueue(char *opstr,uint32_t sequencenum)
