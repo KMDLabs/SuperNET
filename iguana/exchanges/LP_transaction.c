@@ -1741,12 +1741,14 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
 
 char *LP_streamerqadd(cJSON *argjson) {
     struct datachunk *chunk = calloc(1,sizeof(*chunk));
-    char data[16190]; int chunklen;
+    char *data; int chunklen;
     static int init_lock;
+    if ( (data= jstr(argjson,"data")) == 0 )
+        return(clonestr("{\"error\":\"need some data\"}"));
     data = jstr(argjson,"data");
     chunklen = strlen(data);
     if ( chunklen > 16190 ) {
-      return("too big");
+      return(clonestr("{\"error\":\"too big, max size 16190 characters of hex as string.\"}"));
     }
     *chunk->data = data;
     chunk->datalen = chunklen;
@@ -1759,6 +1761,7 @@ char *LP_streamerqadd(cJSON *argjson) {
     portable_mutex_lock(&streamerlock);
     DL_APPEND(streamq,chunk);
     portable_mutex_unlock(&streamerlock);
+    return(clonestr("{\"sucess\":\"added data sent.\"}"));
 }
 
 char *LP_streamerqget() {
