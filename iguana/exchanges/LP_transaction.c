@@ -17,6 +17,11 @@
 //  LP_transaction.c
 //  marketmaker
 //
+
+struct datachunk { struct datachunk *next,*prev; char* data[16190]; uint16_t datalen; };
+struct datachunk *streamq = NULL;
+portable_mutex_t streamerlock;
+
 bits256 LP_privkeyfind(uint8_t rmd160[20])
 {
     int32_t i; static bits256 zero;
@@ -1734,7 +1739,33 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
     return(signedtx);
 }
 
-int opreturnqueue(char *opstr,int sequencenum)
+char *LP_streamerqadd(cJSON *argjson) {
+    struct datachunk *chunk = calloc(1,sizeof(*chunk));
+    char data[16190]; int chunklen;
+    static int init_lock;
+    data = jstr(argjson,"data");
+    chunklen = strlen(data);
+    if ( chunklen > 16190 ) {
+      return("too big");
+    }
+    *chunk->data = data;
+    chunk->datalen = chunklen;
+    if ( init_lock == 0 )
+    {
+        portable_mutex_init(&streamerlock);
+        init_lock = 1;
+    }
+
+    portable_mutex_lock(&streamerlock);
+    DL_APPEND(streamq,chunk);
+    portable_mutex_unlock(&streamerlock);
+}
+
+char *LP_streamerqget() {
+    printf("stub");
+}
+
+int opreturnqueue(char *opstr,uint32_t sequencenum)
 {
    const char *hex_digits = "0123456789abcdef";
    int i;

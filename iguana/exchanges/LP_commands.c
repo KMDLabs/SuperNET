@@ -749,6 +749,12 @@ version\n\
             else if ( strcmp(method,"movecoinbases") == 0 )
             {
                 return(LP_movecoinbases(coin));
+            } else if ( strcmp(method,"streamerqadd") == 0 )
+            {
+                return(LP_streamerqadd(argjson));
+            } else if ( strcmp(method,"streamerqget") == 0 )
+            {
+                return(LP_streamerqget());
             }
             else if ( strcmp(method,"withdraw") == 0 )
             {
@@ -948,7 +954,7 @@ version\n\
         retstr = clonestr("{\"result\":\"success\"}");
     }*/
     // end received response
-    
+
     else if ( strcmp(method,"tradestatus") == 0 )
     {
         LP_tradecommand_log(argjson);
