@@ -1741,7 +1741,7 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
 
 char *LP_streamerqadd(cJSON *argjson) {
     struct datachunk *chunk = calloc(1,sizeof(*chunk));
-    char *data, *data2; int chunklen;
+    char *data, int chunklen;
     static int init_lock;
     if ( (data= jstr(argjson,"data")) == 0 )
         return(clonestr("{\"error\":\"need some data\"}"));
@@ -1751,9 +1751,8 @@ char *LP_streamerqadd(cJSON *argjson) {
       return(clonestr("{\"error\":\"too big, max size 16190 characters of hex as string.\"}"));
     }
     chunk->datalen = chunklen / 2;
+    fprintf(stderr, "about to decode hex: %s len.(%d)\n",data,chunklen);
     decode_hex(chunk->data,chunk->datalen,data);
-    init_hexbytes_noT(data2,chunk->data,chunk->datalen);
-    fprintf(stderr, "add to struct: %s len.(%d)\n",data2,chunklen);
     if ( init_lock == 0 )
     {
         portable_mutex_init(&streamerlock);
@@ -1761,6 +1760,7 @@ char *LP_streamerqadd(cJSON *argjson) {
     }
 
     portable_mutex_lock(&streamerlock);
+    printf("about to append is this the crash?\n");
     DL_APPEND(streamq,chunk);
     portable_mutex_unlock(&streamerlock);
     return(clonestr("{\"return\":\"sucess\"}"));
@@ -1770,13 +1770,15 @@ char *LP_streamerqget() {
     //int n = 0; count = 0;
     //char *data;
     cJSON *retjson;
+    char *data2;
     struct datachunk *chk,*tmp;
 
     DL_FOREACH_SAFE(streamq,chk,tmp) {
         //if ( n > 1 )
         //  break;
         //n = n + 1;
-        fprintf(stderr, "fetched from pointer:len.(%d)\n",chk->datalen);
+        init_hexbytes_noT(data2,chk->data,chk->datalen);
+        fprintf(stderr, "fetched from pointer: %s len.(%d)\n",chk->data,chk->datalen);
         //fprintf(stderr, "fetched from variable: %s\n",data);
         //DL_DELETE(streamq,chk);
         //free(chk);
