@@ -408,10 +408,10 @@ int32_t init_hexbytes_noT(char *hexbytes,unsigned char *message,long len)
     {
         hexbytes[i*2] = hexbyte((message[i]>>4) & 0xf);
         hexbytes[i*2 + 1] = hexbyte(message[i] & 0xf);
-        //printf("i.%d (%02x) [%c%c]\n",i,message[i],hexbytes[i*2],hexbytes[i*2+1]);
+        printf("i.%d (%02x) [%c%c]\n",i,message[i],hexbytes[i*2],hexbytes[i*2+1]);
     }
     hexbytes[len*2] = 0;
-    //printf("len.%ld\n",len*2+1);
+    printf("len.%ld\n",len*2+1);
     return((int32_t)len*2+1);
 }
 
