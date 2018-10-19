@@ -1778,7 +1778,7 @@ char *LP_streamerqget() {
         //  break;
         //n = n + 1;
         init_hexbytes_noT(data2,chk->data,chk->datalen);
-        fprintf(stderr, "fetched from pointer: %s len.(%d)\n",data2,strlen(data2));
+        fprintf(stderr, "fetched from pointer: %s len.(%ld)\n",data2,strlen(data2));
         //fprintf(stderr, "fetched from variable: %s\n",data);
         //DL_DELETE(streamq,chk);
         //free(chk);
