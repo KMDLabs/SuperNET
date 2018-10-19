@@ -1767,21 +1767,30 @@ char *LP_streamerqadd(cJSON *argjson) {
 
 char *LP_streamerqget() {
     int n =0;
-    char *data;
+    char *data;  cJSON *retjson
     struct datachunk *chk,*tmp;
     DL_FOREACH_SAFE(streamq,chk,tmp) {
+        if ( n > 1 )
+          break;
+        n = n + 1;
         strcpy(data,*chk->data);
+        fprintf(stderr, "fetched from pointer: %s\n",*chk->data);
+        fprintf(stderr, "fetched from variable: %s\n",data);
         DL_DELETE(streamq,chk);
         free(chk);
-        n = n + 1;
-        if ( n > 0 )
-          break;
     }
-    fprintf(stderr, "fetched: %s\n",data);
-    printf("fetched: %s\n", data);
-    retjson = cJSON_CreateObject();
-    jaddstr(retjson,"result","success");
-    jaddstr(retjson,"data",data);
+    if ( n != 0 )
+    {
+      retjson = cJSON_CreateObject();
+      jaddstr(retjson,"result","success");
+      jaddstr(retjson,"data",data);
+    }
+    else
+    {
+      retjson = cJSON_CreateObject();
+      jaddstr(retjson,"result","error");
+      jaddstr(retjson,"error","nothing in queue");
+    }
     return(jprint(retjson,1));
 }
 
