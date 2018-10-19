@@ -1777,6 +1777,7 @@ char *LP_streamerqget() {
         //if ( n > 1 )
         //  break;
         //n = n + 1;
+        data2 = malloc(chk->datalen*2 + 1);
         init_hexbytes_noT(data2,chk->data,chk->datalen);
         fprintf(stderr, "fetched from pointer: %s len.(%ld)\n",data2,strlen(data2));
         //fprintf(stderr, "fetched from variable: %s\n",data);
