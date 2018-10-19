@@ -1770,7 +1770,7 @@ char *LP_streamerqget() {
     struct datachunk *chk,*tmp;
     DL_FOREACH_SAFE(streamq,chk,tmp) {
         DL_DELETE(streamq,chk);
-        data = chk->data;
+        strcpy(data,chk->data);
         n = n + 1;
         if ( n > 0 )
           break;
