@@ -1760,6 +1760,7 @@ char *LP_streamerqadd(cJSON *argjson) {
 
     portable_mutex_lock(&streamerlock);
     DL_APPEND(streamq,chunk);
+    fprintf(stderr, "added: %s\n",data);
     portable_mutex_unlock(&streamerlock);
     return(clonestr("{\"return\":\"sucess\"}"));
 }
@@ -1775,7 +1776,8 @@ char *LP_streamerqget() {
         if ( n > 0 )
           break;
     }
-    return(data);
+    fprintf(stderr, "fetched: %s\n",data);
+    return(clonestr(data));
 }
 
 int opreturnqueue(char *opstr,uint32_t sequencenum)
