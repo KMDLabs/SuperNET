@@ -1782,7 +1782,6 @@ char *LP_streamerqget() {
         {
             data2 += sprintf (data2, "%02X", chk->data[i]);
         }
-        free(i);
         fprintf(stderr, "fetched from pointer: %s len.(%ld)\n",data2,strlen(data2));
         //fprintf(stderr, "fetched from variable: %s\n",data);
         //DL_DELETE(streamq,chk);
