@@ -1753,7 +1753,7 @@ char *LP_streamerqadd(cJSON *argjson) {
     }
     strcpy(*chunk->data,data);
     chunk->datalen = chunklen;
-    fprintf(stderr, "add to struct: %s len.()%ld)\n",*chunk->data,chunk->datalen);
+    fprintf(stderr, "add to struct: %s len.(%d)\n",*chunk->data,chunk->datalen);
     if ( init_lock == 0 )
     {
         portable_mutex_init(&streamerlock);
