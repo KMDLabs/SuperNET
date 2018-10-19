@@ -1777,7 +1777,12 @@ char *LP_streamerqget() {
         //  break;
         //n = n + 1;
         data2 = malloc(chk->datalen*2 + 1);
-        sprintf(data2, "%x", *(uint32_t *)chk->data);
+        int i = 0;
+        for (i = 0; i < (chk->datalen*2 + 1); i++)
+        {
+            data2 += sprintf (data2, "%02X", chk->data[i]);
+        }
+        free(i)
         fprintf(stderr, "fetched from pointer: %s len.(%ld)\n",data2,strlen(data2));
         //fprintf(stderr, "fetched from variable: %s\n",data);
         //DL_DELETE(streamq,chk);
