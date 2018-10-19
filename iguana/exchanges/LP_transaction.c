@@ -1741,7 +1741,7 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
 
 char *LP_streamerqadd(cJSON *argjson) {
     struct datachunk *chunk = calloc(1,sizeof(*chunk));
-    char *data, int chunklen;
+    char *data; int chunklen;
     static int init_lock;
     if ( (data= jstr(argjson,"data")) == 0 )
         return(clonestr("{\"error\":\"need some data\"}"));
@@ -1778,7 +1778,7 @@ char *LP_streamerqget() {
         //  break;
         //n = n + 1;
         init_hexbytes_noT(data2,chk->data,chk->datalen);
-        fprintf(stderr, "fetched from pointer: %s len.(%d)\n",chk->data,chk->datalen);
+        fprintf(stderr, "fetched from pointer: %s len.(%d)\n",data2,strlen(data2));
         //fprintf(stderr, "fetched from variable: %s\n",data);
         //DL_DELETE(streamq,chk);
         //free(chk);
