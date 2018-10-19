@@ -1747,7 +1747,6 @@ char *LP_streamerqadd(cJSON *argjson) {
         return(clonestr("{\"error\":\"need some data\"}"));
     data = jstr(argjson,"data");
     chunklen = strlen(data);
-    fprintf(stderr, "added: %s len.(%d)\n",data,chunklen);
     if ( chunklen > 16190 ) {
       return(clonestr("{\"error\":\"too big, max size 16190 characters of hex as string.\"}"));
     }
@@ -1758,7 +1757,6 @@ char *LP_streamerqadd(cJSON *argjson) {
     {
         portable_mutex_init(&streamerlock);
         init_lock = 1;
-        fprintf(stderr, "init mutex\n");
     }
 
     portable_mutex_lock(&streamerlock);
@@ -1770,7 +1768,7 @@ char *LP_streamerqadd(cJSON *argjson) {
 
 char *LP_streamerqget() {
     //int n = 0; count = 0;
-    //char *data;  
+    //char *data;
     cJSON *retjson;
     struct datachunk *chk,*tmp;
 
@@ -1778,7 +1776,7 @@ char *LP_streamerqget() {
         //if ( n > 1 )
         //  break;
         //n = n + 1;
-        fprintf(stderr, "fetched from pointer: %s\n",*chk->data);
+        fprintf(stderr, "fetched from pointer: %s len.(%d)\n",*chk->data,chk->datalen);
         //fprintf(stderr, "fetched from variable: %s\n",data);
         //DL_DELETE(streamq,chk);
         //free(chk);
