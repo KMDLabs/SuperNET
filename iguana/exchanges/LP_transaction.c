@@ -18,7 +18,7 @@
 //  marketmaker
 //
 
-struct datachunk { struct datachunk *next,*prev; char* data[16190]; uint16_t datalen; };
+struct datachunk { struct datachunk *next,*prev; uint8_t data[8095]; uint16_t datalen; };
 struct datachunk *streamq = NULL;
 portable_mutex_t streamerlock;
 
@@ -1741,7 +1741,7 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
 
 char *LP_streamerqadd(cJSON *argjson) {
     struct datachunk *chunk = calloc(1,sizeof(*chunk));
-    char *data; int chunklen;
+    char *data, *data2; int chunklen;
     static int init_lock;
     if ( (data= jstr(argjson,"data")) == 0 )
         return(clonestr("{\"error\":\"need some data\"}"));
@@ -1750,9 +1750,10 @@ char *LP_streamerqadd(cJSON *argjson) {
     if ( chunklen > 16190 ) {
       return(clonestr("{\"error\":\"too big, max size 16190 characters of hex as string.\"}"));
     }
-    *chunk->data = data;
-    chunk->datalen = chunklen;
-    fprintf(stderr, "add to struct: %s len.(%d)\n",*chunk->data,chunk->datalen);
+    chunk->datalen = chunklen / 2;
+    decode_hex(chunk->data,chk->datalen,data)
+    init_hexbytes_noT(data2,chk->data,chk->datalen);
+    fprintf(stderr, "add to struct: %s len.(%d)\n",data2,chunklen);
     if ( init_lock == 0 )
     {
         portable_mutex_init(&streamerlock);
@@ -1761,7 +1762,6 @@ char *LP_streamerqadd(cJSON *argjson) {
 
     portable_mutex_lock(&streamerlock);
     DL_APPEND(streamq,chunk);
-    fprintf(stderr, "added: %s\n",*chunk->data);
     portable_mutex_unlock(&streamerlock);
     return(clonestr("{\"return\":\"sucess\"}"));
 }
