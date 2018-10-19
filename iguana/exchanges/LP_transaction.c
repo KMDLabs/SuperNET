@@ -1751,7 +1751,7 @@ char *LP_streamerqadd(cJSON *argjson) {
     if ( chunklen > 16190 ) {
       return(clonestr("{\"error\":\"too big, max size 16190 characters of hex as string.\"}"));
     }
-    strcpy(*chunk->data,data);
+    *chunk->data = data;
     chunk->datalen = chunklen;
     fprintf(stderr, "add to struct: %s len.(%d)\n",*chunk->data,chunk->datalen);
     if ( init_lock == 0 )
