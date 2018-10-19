@@ -1747,15 +1747,18 @@ char *LP_streamerqadd(cJSON *argjson) {
         return(clonestr("{\"error\":\"need some data\"}"));
     data = jstr(argjson,"data");
     chunklen = strlen(data);
+    fprintf(stderr, "added: %s len.()%ld)\n",data,chunklen);
     if ( chunklen > 16190 ) {
       return(clonestr("{\"error\":\"too big, max size 16190 characters of hex as string.\"}"));
     }
     strcpy(*chunk->data,data);
     chunk->datalen = chunklen;
+    fprintf(stderr, "add to struct: %s len.()%ld)\n",*chunk->data,chunk->datalen);
     if ( init_lock == 0 )
     {
         portable_mutex_init(&streamerlock);
         init_lock = 1;
+        fprintf(stderr, "init mutex\n");
     }
 
     portable_mutex_lock(&streamerlock);
