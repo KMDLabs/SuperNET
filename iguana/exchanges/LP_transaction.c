@@ -1751,8 +1751,8 @@ char *LP_streamerqadd(cJSON *argjson) {
       return(clonestr("{\"error\":\"too big, max size 16190 characters of hex as string.\"}"));
     }
     chunk->datalen = chunklen / 2;
-    decode_hex(chunk->data,chk->datalen,data)
-    init_hexbytes_noT(data2,chk->data,chk->datalen);
+    decode_hex(chunk->data,chunk->datalen,data)
+    init_hexbytes_noT(data2,chunk->data,chunk->datalen);
     fprintf(stderr, "add to struct: %s len.(%d)\n",data2,chunklen);
     if ( init_lock == 0 )
     {
@@ -1776,7 +1776,7 @@ char *LP_streamerqget() {
         //if ( n > 1 )
         //  break;
         //n = n + 1;
-        fprintf(stderr, "fetched from pointer: %s len.(%d)\n",*chk->data,chk->datalen);
+        fprintf(stderr, "fetched from pointer:len.(%d)\n",chk->datalen);
         //fprintf(stderr, "fetched from variable: %s\n",data);
         //DL_DELETE(streamq,chk);
         //free(chk);
