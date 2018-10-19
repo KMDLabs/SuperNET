@@ -1760,7 +1760,6 @@ char *LP_streamerqadd(cJSON *argjson) {
     }
 
     portable_mutex_lock(&streamerlock);
-    printf("about to append is this the crash?\n");
     DL_APPEND(streamq,chunk);
     portable_mutex_unlock(&streamerlock);
     return(clonestr("{\"return\":\"sucess\"}"));
@@ -1778,7 +1777,8 @@ char *LP_streamerqget() {
         //  break;
         //n = n + 1;
         data2 = malloc(chk->datalen*2 + 1);
-        init_hexbytes_noT(data2,chk->data,chk->datalen);
+        char str[9];
+        sprintf(data2, "%x", *(uint32_t *)chk->data);
         fprintf(stderr, "fetched from pointer: %s len.(%ld)\n",data2,strlen(data2));
         //fprintf(stderr, "fetched from variable: %s\n",data);
         //DL_DELETE(streamq,chk);
