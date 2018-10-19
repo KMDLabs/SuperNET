@@ -1770,16 +1770,16 @@ char *LP_streamerqadd(cJSON *argjson) {
 
 char *LP_streamerqget() {
     //int n = 0; count = 0;
-    char *data;  cJSON *retjson;
+    //char *data;  
+    cJSON *retjson;
     struct datachunk *chk,*tmp;
 
     DL_FOREACH_SAFE(streamq,chk,tmp) {
         //if ( n > 1 )
         //  break;
         //n = n + 1;
-        strcpy(data,*chk->data);
         fprintf(stderr, "fetched from pointer: %s\n",*chk->data);
-        fprintf(stderr, "fetched from variable: %s\n",data);
+        //fprintf(stderr, "fetched from variable: %s\n",data);
         //DL_DELETE(streamq,chk);
         //free(chk);
     }
