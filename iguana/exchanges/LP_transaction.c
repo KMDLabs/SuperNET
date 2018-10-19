@@ -1772,12 +1772,14 @@ char *LP_streamerqget() {
     DL_FOREACH_SAFE(streamq,chk,tmp) {
         strcpy(data,*chk->data);
         DL_DELETE(streamq,chk);
+        free(chk);
         n = n + 1;
         if ( n > 0 )
           break;
     }
     fprintf(stderr, "fetched: %s\n",data);
-    return(clonestr(data));
+    printf("fetched: %s\n", data);
+    return(clonestr("{\"return\":\"sucess\"}"));
 }
 
 int opreturnqueue(char *opstr,uint32_t sequencenum)
