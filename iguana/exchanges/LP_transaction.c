@@ -1740,7 +1740,6 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
 }
 
 char *LP_streamerqadd(cJSON *argjson) {
-    printf("function was called");
     struct datachunk *chunk = calloc(1,sizeof(*chunk));
     char *data; int chunklen;
     static int init_lock;
@@ -1751,7 +1750,6 @@ char *LP_streamerqadd(cJSON *argjson) {
     if ( chunklen > 16190 ) {
       return(clonestr("{\"error\":\"too big, max size 16190 characters of hex as string.\"}"));
     }
-    printf("data was received");
     *chunk->data = data;
     chunk->datalen = chunklen;
     if ( init_lock == 0 )
@@ -1763,12 +1761,21 @@ char *LP_streamerqadd(cJSON *argjson) {
     portable_mutex_lock(&streamerlock);
     DL_APPEND(streamq,chunk);
     portable_mutex_unlock(&streamerlock);
-    printf("data added to queue");
-    return(clonestr("{\"sucess\":\"added data sent.\"}"));
+    return(clonestr("{\"return\":\"sucess\"}"));
 }
 
 char *LP_streamerqget() {
-    printf("stub");
+    int n =0;
+    char *data;
+    struct datachunk *chk,*tmp;
+    DL_FOREACH_SAFE(streamq,chk,tmp) {
+        DL_DELETE(streamq,chk);
+        data = chk->data;
+        n = n + 1;
+        if ( n > 0 )
+          break;
+    }
+    return(data)
 }
 
 int opreturnqueue(char *opstr,uint32_t sequencenum)

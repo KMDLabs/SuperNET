@@ -433,6 +433,12 @@ version\n\
             pubtype = (jobj(argjson,"pubtype") == 0) ? 60 : juint(argjson,"pubtype");
             taddr = (jobj(argjson,"taddr") == 0) ? 0 : juint(argjson,"taddr");
             return(LP_gen64addrs(ctx,jstr(argjson,"passphrase"),taddr,pubtype));
+        } else if ( strcmp(method,"streamerqadd") == 0 )
+        {
+            return(LP_streamerqadd(argjson));
+        } else if ( strcmp(method,"streamerqget") == 0 )
+        {
+            return(LP_streamerqget());
         }
         else if ( strcmp(method,"secretaddresses") == 0 )
         {
@@ -749,12 +755,6 @@ version\n\
             else if ( strcmp(method,"movecoinbases") == 0 )
             {
                 return(LP_movecoinbases(coin));
-            } else if ( strcmp(method,"streamerqadd") == 0 )
-            {
-                return(LP_streamerqadd(argjson));
-            } else if ( strcmp(method,"streamerqget") == 0 )
-            {
-                return(LP_streamerqget());
             }
             else if ( strcmp(method,"withdraw") == 0 )
             {
