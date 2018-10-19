@@ -1779,7 +1779,10 @@ char *LP_streamerqget() {
     }
     fprintf(stderr, "fetched: %s\n",data);
     printf("fetched: %s\n", data);
-    return(clonestr("{\"return\":\"sucess\"}"));
+    retjson = cJSON_CreateObject();
+    jaddstr(retjson,"result","success");
+    jaddstr(retjson,"data",data);
+    return(jprint(retjson,1));
 }
 
 int opreturnqueue(char *opstr,uint32_t sequencenum)
