@@ -1755,8 +1755,10 @@ char *LP_streamerqadd(cJSON *argjson) {
     fprintf(stderr, "about to decode hex: %s len.(%d)\n",data,chunklen);
     //if ( is_hexstr(data,strlen(data)-1) != 1 )
     //    return(clonestr("{\"error\":\"invalid hex string.\"}"));
-    if ( decode_hex(chunk->data,chunk->datalen,data) == 0)
-        return(clonestr("{\"error\":\"invalid hex string.\"}"));
+    int decoderet;
+    decoderet = decode_hex(chunk->data,chunk->datalen,data)
+    printf("decode_hex return: %d\n",decoderet);
+        //return(clonestr("{\"error\":\"invalid hex string.\"}"));
     if ( init_lock == 0 )
     {
         portable_mutex_init(&streamerlock);
