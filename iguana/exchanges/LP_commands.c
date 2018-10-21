@@ -750,7 +750,7 @@ version\n\
             {
                 if ( (ptr= LP_coinsearch(coin)) != 0 )
                     LP_txblast(ptr,argjson);
-                    return(clonestr("{\"result\":\"blast thread started\"}"))
+                    return(clonestr("{\"result\":\"blast thread started\"}"));
                 else return(clonestr("{\"error\":\"cant find coind\"}"));
             }
             else if ( strcmp(method,"movecoinbases") == 0 )
