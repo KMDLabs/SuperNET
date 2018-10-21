@@ -752,7 +752,7 @@ version\n\
                         args->coin = ptr;
                         args->argjson = argjson;
                         printf("starting tx blaster thread.\n");
-                        if ( OS_thread_create(malloc(sizeof(pthread_t)),NULL,(void *)LP_txblast,(void *)ptr,(void *)args) != 0 )
+                        if ( OS_thread_create(malloc(sizeof(pthread_t)),NULL,(void *)LP_txblast,(void *)args) != 0 )
                         {
                             printf("error launching tx blster thread \n");
                         }
