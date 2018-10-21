@@ -348,6 +348,7 @@ int32_t is_hexstr(char *str,int32_t n)
         return(0);
     for (i=0; str[i]!=0; i++)
     {
+				printf("checking : %d\n",str[i]);
         if ( n > 0 && i >= n )
             break;
         if ( _unhex(str[i]) < 0 ) {
