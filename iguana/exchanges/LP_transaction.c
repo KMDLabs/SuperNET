@@ -1773,32 +1773,49 @@ char *LP_streamerqget() {
     struct datachunk *chk,*tmp, *tmp2;
     int count = 0;
     DL_COUNT(streamq,tmp2,count)
-    printf("list count: %d\n",count);
-    DL_FOREACH_SAFE(streamq,chk,tmp) {
+    if ( count != 0) {
+        DL_FOREACH_SAFE(streamq,chk,tmp) {
         data = malloc(chk->datalen*2 + 1);
         init_hexbytes_noT(data,chk->data,chk->datalen);
         fprintf(stderr, "fetched from list: %s len.(%ld)\n",data,strlen(data));
         DL_DELETE(streamq,chk);
         free(chk);
         break;
+      }
+    } else {
+        return(clonestr("{\"error\":\"empty queue\"}"));
     }
     retjson = cJSON_CreateObject();
     jaddstr(retjson,"data",data);
     return(jprint(retjson,1));
 }
 
-int opreturnqueue(char *opstr,uint32_t sequencenum)
+int opreturnqueue(char *opstr)
 {
-   const char *hex_digits = "0123456789abcdef";
-   int i;
-   char seqnum[9];
-   snprintf(seqnum,9,"%08x",sequencenum);
-   strcat(opstr,seqnum);
-   // start loop at 72, as this is the length of txid and seqnum.
-   for( i = 72 ; i < 1000; i++ ) {
-      opstr[i] = hex_digits[ ( rand() % 16 ) ];
+  char *data;
+  cJSON *retjson;
+  struct datachunk *chk,*tmp, *tmp2;
+  int count = 0;
+  static int32_t sequencenum;
+  DL_COUNT(streamq,tmp2,count)
+  if ( count != 0) {
+      DL_FOREACH_SAFE(streamq,chk,tmp) {
+      data = malloc(chk->datalen*2 + 1);
+      init_hexbytes_noT(data,chk->data,chk->datalen);
+      fprintf(stderr, "fetched from list: %s len.(%ld)\n",data,strlen(data));
+      DL_DELETE(streamq,chk);
+      free(chk);
+      break;
     }
-    return(1);
+  } else {
+      return(0);
+  }
+
+  char seqnum[9];
+  snprintf(seqnum,9,"%08x",sequencenum);
+  strcat(opstr,seqnum);
+  strcat(opstr,data);
+  return(1);
 }
 
 char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
@@ -1837,9 +1854,17 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         else
             strcpy(opretstr,bits256_str(str,signedtxid));
 
-        // call the queue function to fetch the next chunk of data.
-        if (opreturnqueue(opretstr,i) != 1) {
-            return(0);
+        // call the queue function to fetch the next chunk of data,
+        // if the queue is empty we will wait for it to fill.
+        int waits = 0;
+        while (opreturnqueue(opretstr) != 1) {
+            printf("waiting for data : %d\n",waits);
+            sleep(1);
+            waits = waits+1;
+            if (waits >= 360) {
+                printf("finished waiting, there is no data in the queue.");
+                break;
+            }
         }
 
         if ( (rawtx= LP_createblasttransaction(&change,&changeout,&txobj,&vins,&V,coin,utxotxid,utxovout,utxovalue,privkey,outputs,txfee,opretstr)) != 0 )
