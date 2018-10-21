@@ -1741,7 +1741,7 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
 
 char *LP_streamerqadd(cJSON *argjson) {
     struct datachunk *chunk = calloc(1,sizeof(*chunk));
-    char *data,*tmpdata[16190]; int32_t chunklen = 16190,datalen,chunks;
+    char *data,tmpdata[16190]; int32_t chunklen = 16190,datalen,chunks;
     static int init_lock;
     if ( (data= jstr(argjson,"data")) == 0 )
         return(clonestr("{\"error\":\"need some data\"}"));
