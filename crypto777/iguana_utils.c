@@ -344,6 +344,7 @@ int32_t is_hexstr(char *str,int32_t n)
         if ( n > 0 && i >= n )
             break;
         if ( _unhex(str[i]) < 0 )
+						printf("found invaild hex code\n");
             break;
     }
     if ( n == 0 )
