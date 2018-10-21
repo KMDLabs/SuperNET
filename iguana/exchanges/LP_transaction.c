@@ -1769,6 +1769,7 @@ char *LP_streamerqadd(cJSON *argjson) {
         if ( y > datalen) {
           tmpdata[n] = '\0';
           chunk->datalen = n;
+          free(tmpdata);
           break;
         }
       }
