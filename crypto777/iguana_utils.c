@@ -339,11 +339,13 @@ int32_t isahexstr(char *str,int32_t n)
     int32_t i;
     if (( str == 0 || str[0] == 0 ) || n == 0 )
         return(0);
+		fprintf(stderr, "loop\n");
     for (i=0; i <= n; i++)
     {
         if ( _unhex(str[i]) < 0 ) {
             return(0);
 				}
+				fprintf(stderr, "loop\n");
     }
     return(1);
 }
@@ -380,8 +382,8 @@ unsigned char _decode_hex(char *hex) { return((unhex(hex[0])<<4) | unhex(hex[1])
 int32_t decode_hex(unsigned char *bytes,int32_t n,char *hex)
 {
     int32_t adjust,i = 0;
-  	printf("decode.(%s) len.%d\n",hex,n*2+1);
-    if ( isahexstr(hex,n*2+1) <= 0 )
+  	printf("decode.(%s) len.%d\n",hex,n*2-1);
+    if ( isahexstr(hex,n*2-1) <= 0 )
     {
         memset(bytes,0,n);
         return(0);
