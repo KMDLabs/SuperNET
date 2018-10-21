@@ -591,7 +591,7 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                         LP_queuecommand(&retstr,buf,IPC_ENDPOINT,1,queueid);
                         free(buf);
                         retstr = clonestr("{\"result\":\"success\",\"status\":\"queued\"}");
-                    } else retstr = stats_JSON(ctx,1,"127.0.0.1",-1,arg,remoteaddr,port);
+                    } else retstr = stats_JSON(ctx,0,"127.0.0.1",-1,arg,remoteaddr,port);
                 } else retstr = clonestr("{\"error\":\"invalid remote method\"}");
 #else
                 if ( IPC_ENDPOINT >= 0 && (queueid= juint(arg,"queueid")) > 0 || fastflag == 1)
@@ -599,7 +599,7 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                     buf = jprint(arg,0);
                     LP_queuecommand(&retstr,buf,IPC_ENDPOINT,1,queueid);
                     free(buf);
-                } else retstr = stats_JSON(ctx,1,LP_myipaddr,-1,arg,remoteaddr,port);
+                } else retstr = stats_JSON(ctx,0,LP_myipaddr,-1,arg,remoteaddr,port);
 #endif
                 if ( fastflag == 0 )
                     portable_mutex_unlock(&LP_commandmutex);
