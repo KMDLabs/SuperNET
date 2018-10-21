@@ -339,12 +339,13 @@ int32_t isahexstr(char *str,int32_t n)
     int32_t i;
     if (( str == 0 || str[0] == 0 ) || n == 0 )
         return(0);
+		fprintf(stderr, "%d\n",str[0]);
     for (i=0; i <= n; i++)
     {
         if ( _unhex(str[i]) < 0 ) {
             return(0);
-						fprintf(stderr, "char.%d  loop.%d\n",str[i],i);
 				}
+				fprintf(stderr, "char.%d  loop.%d\n",str[i],i);
     }
     return(1);
 }
