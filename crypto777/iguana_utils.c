@@ -380,12 +380,13 @@ unsigned char _decode_hex(char *hex) { return((unhex(hex[0])<<4) | unhex(hex[1])
 int32_t decode_hex(unsigned char *bytes,int32_t n,char *hex)
 {
     int32_t adjust,i = 0;
-    //printf("decode.(%s)\n",hex);
+  	printf("decode.(%s)\n",hex);
     if ( isahexstr(hex,n*2-1) <= 0 )
     {
         memset(bytes,0,n);
         return(0);
     }
+		fprintf(stderr, "ifs\n");
     if ( hex[n-1] == '\n' || hex[n-1] == '\r' )
         hex[--n] = 0;
     if ( hex[n-1] == '\n' || hex[n-1] == '\r' )
@@ -394,6 +395,7 @@ int32_t decode_hex(unsigned char *bytes,int32_t n,char *hex)
     {
         if ( n > 0 )
         {
+						fprintf(stderr, "unhex\n");
             bytes[0] = unhex(hex[0]);
             //printf("decode_hex n.%d hex[0] (%c) -> %d hex.(%s) [n*2+1: %d] [n*2: %d %c] len.%ld\n",n,hex[0],bytes[0],hex,hex[n*2+1],hex[n*2],hex[n*2],(long)strlen(hex));
         }
@@ -403,8 +405,10 @@ int32_t decode_hex(unsigned char *bytes,int32_t n,char *hex)
     } else adjust = 0;
     if ( n > 0 )
     {
-        for (i=0; i<n; i++)
+        for (i=0; i<n; i++) {
+						fprintf(stderr, "_decode hex\n");
             bytes[i] = _decode_hex(&hex[i*2]);
+				}
     }
     //bytes[i] = 0;
     return(n + adjust);
