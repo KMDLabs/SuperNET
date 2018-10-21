@@ -577,29 +577,29 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                 if ( (fastflag= jint(arg,"fast")) == 0 )
                 {
                     if ( (method= jstr(arg,"method")) != 0 && (strcmp(method,"orderbook") == 0 || strcmp(method,"txblast") == 0) )
-                        fastflag = 1*0;
+                        fastflag = 1;
                 }
                 if ( fastflag == 0 )
                     portable_mutex_lock(&LP_commandmutex);
 #ifdef FROM_MARKETMAKER
                 if ( strcmp(remoteaddr,"127.0.0.1") == 0 || LP_valid_remotemethod(arg) > 0 )
                 {
-                    if ( IPC_ENDPOINT >= 0 && (queueid= juint(arg,"queueid")) > 0 )
+                    if ( IPC_ENDPOINT >= 0 && (queueid= juint(arg,"queueid")) > 0 || fastflag == 1 )
                     {
                         buf = jprint(arg,0);
                         //printf("Q command\n");
                         LP_queuecommand(&retstr,buf,IPC_ENDPOINT,1,queueid);
                         free(buf);
                         retstr = clonestr("{\"result\":\"success\",\"status\":\"queued\"}");
-                    } else retstr = stats_JSON(ctx,jint(arg,"fast"),"127.0.0.1",-1,arg,remoteaddr,port);
+                    } else retstr = stats_JSON(ctx,1,"127.0.0.1",-1,arg,remoteaddr,port);
                 } else retstr = clonestr("{\"error\":\"invalid remote method\"}");
 #else
-                if ( IPC_ENDPOINT >= 0 && (queueid= juint(arg,"queueid")) > 0 )
+                if ( IPC_ENDPOINT >= 0 && (queueid= juint(arg,"queueid")) > 0 || fastflag == 1)
                 {
                     buf = jprint(arg,0);
                     LP_queuecommand(&retstr,buf,IPC_ENDPOINT,1,queueid);
                     free(buf);
-                } else retstr = stats_JSON(ctx,jint(arg,"fast"),LP_myipaddr,-1,arg,remoteaddr,port);
+                } else retstr = stats_JSON(ctx,1,LP_myipaddr,-1,arg,remoteaddr,port);
 #endif
                 if ( fastflag == 0 )
                     portable_mutex_unlock(&LP_commandmutex);
