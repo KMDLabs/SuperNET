@@ -1756,7 +1756,7 @@ char *LP_streamerqadd(cJSON *argjson) {
     //if ( is_hexstr(data,strlen(data)-1) != 1 )
     //    return(clonestr("{\"error\":\"invalid hex string.\"}"));
     int decoderet;
-    decoderet = decode_hex(chunk->data,chunk->datalen,data)
+    decoderet = decode_hex(chunk->data,chunk->datalen,data);
     printf("decode_hex return: %d\n",decoderet);
         //return(clonestr("{\"error\":\"invalid hex string.\"}"));
     if ( init_lock == 0 )
