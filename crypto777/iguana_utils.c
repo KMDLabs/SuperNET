@@ -334,7 +334,7 @@ int32_t _unhex(char c)
     return(-1);
 }
 
-int32_t is_hexstr(char *str,int32_t n)
+int32_t isahexstr(char *str,int32_t n)
 {
     int32_t i;
     if (( str == 0 || str[0] == 0 ) || n == 0 )
@@ -346,6 +346,23 @@ int32_t is_hexstr(char *str,int32_t n)
 				}
     }
     return(1);
+}
+
+int32_t is_hexstr(char *str,int32_t n)
+{
+    int32_t i;
+    if ( str == 0 || str[0] == 0 )
+        return(0);
+    for (i=0; str[i]!=0; i++)
+    {
+        if ( n > 0 && i >= n )
+            break;
+        if ( _unhex(str[i]) < 0 )
+            break;
+    }
+    if ( n == 0 )
+        return(i);
+    return(i == n);
 }
 
 int32_t unhex(char c)
@@ -364,7 +381,7 @@ int32_t decode_hex(unsigned char *bytes,int32_t n,char *hex)
 {
     int32_t adjust,i = 0;
     //printf("decode.(%s)\n",hex);
-    if ( is_hexstr(hex,n*2-1) <= 0 )
+    if ( isahexstr(hex,n*2-1) <= 0 )
     {
         memset(bytes,0,n);
         return(0);
