@@ -1795,14 +1795,14 @@ int opreturnqueue(char *opstr)
   return(1);
 }
 
-char *LP_txblast(void *argp)
+char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
 {
     static void *ctx;
-    txblast_args* argS = (txblast_args*) argp;
+    /*txblast_args* argS = (txblast_args*) argp;
     struct iguana_info *coin;
     coin = argS->coin;
     cJSON *argjson;
-    argjson = argS->argjson;
+    argjson = argS->argjson; */
 
     const char *txid0 = "0000000000000000000000000000000000000000000000000000000000000000";
     int32_t broadcast,i,num,numblast,utxovout,completed=0,numvouts,changeout; char *passphrase,changeaddr[64],vinaddr[64],wifstr[65],blastaddr[65],str[65],*signret,*signedtx=0,*rawtx=0; struct vin_info V; uint32_t locktime,starttime; uint8_t pubkey33[33]; cJSON *retjson,*item,*outputs,*vins=0,*txobj=0,*privkeys=0; struct iguana_msgtx msgtx; bits256 privkey,pubkey,checktxid,utxotxid,signedtxid; uint64_t txfee,utxovalue,change;

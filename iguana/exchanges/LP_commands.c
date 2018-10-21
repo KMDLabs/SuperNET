@@ -746,8 +746,9 @@ version\n\
             else if ( strcmp(method,"txblast") == 0 )
             {
                 if ( (ptr= LP_coinsearch(coin)) != 0 ) {
-                    //LP_txblast(ptr,argjson);
-                    txblast_args* args = malloc(sizeof *args);
+                    printf("starting tx blaster thread.\n");
+                    return(jprint(LP_txblast(ptr,argjson));
+                    /*txblast_args* args = malloc(sizeof *args);
                     if (args != NULL) {
                         args->coin = ptr;
                         args->argjson = argjson;
@@ -756,7 +757,7 @@ version\n\
                         {
                             printf("error launching tx blster thread \n");
                         }
-                    }
+                    } */
                 }
                 else return(clonestr("{\"error\":\"cant find coind\"}"));
             }
