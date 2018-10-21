@@ -348,6 +348,7 @@ int32_t is_hexstr(char *str,int32_t n)
     }
     if ( n == 0 )
         return(i);
+		printf("i: %d\n",i );
     return(i == n);
 }
 
