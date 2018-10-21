@@ -1773,7 +1773,6 @@ char *LP_streamerqadd(cJSON *argjson) {
       }
       printf("y.%d  n.%d chunk.%d str.%s\n strorig.%s\n",y,n,z,tmpdata,data);
       fprintf(stderr, "adding to list: %s len.(%d)\n",tmpdata,chunk->datalen);
-      fprintf(stderr, "about to decode hex\n");
       if (decode_hex(chunk->data,chunk->datalen,tmpdata) == 0 ) {
         return(clonestr("{\"error\":\"invalid hex string.\"}"));
       }
