@@ -1774,7 +1774,7 @@ char *LP_streamerqget() {
     struct datachunk *chk,*tmp;
 
     DL_FOREACH_SAFE(streamq,chk,tmp) {
-        data2 = malloc(chk->datalen*2 + 1);
+        data = malloc(chk->datalen*2 + 1);
         init_hexbytes_noT(data,chk->data,chk->datalen);
         fprintf(stderr, "fetched from pointer: %s len.(%ld)\n",data,strlen(data));
         DL_DELETE(streamq,chk);
