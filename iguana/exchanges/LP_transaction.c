@@ -1798,7 +1798,8 @@ int opreturnqueue(char *opstr)
 char *LP_txblast(void *argp)
 {
     static void *ctx;
-    struct iguana_info coin;
+    txblast_args* argS = (txblast_args*) argp;
+    struct *iguana_info coin;
     coin = *argp->coin;
     cJSON argjson;
     argjson = *argp->argjson;

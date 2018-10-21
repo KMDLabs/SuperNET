@@ -321,11 +321,11 @@ struct iguana_info
     bits256 cachedmerkle,notarizedhash; int32_t cachedmerkleheight;
 };
 
-struct txblast_args
+typedef struct
 {
     struct iguana_info *coin;
     cJSON argjson;
-};
+} txblast_args;
 
 struct _LP_utxoinfo { bits256 txid; uint64_t value; int32_t height; uint32_t vout:30,suppress:1,pad:1; };
 
