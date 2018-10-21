@@ -382,7 +382,7 @@ unsigned char _decode_hex(char *hex) { return((unhex(hex[0])<<4) | unhex(hex[1])
 int32_t decode_hex(unsigned char *bytes,int32_t n,char *hex)
 {
     int32_t adjust,i = 0;
-  	printf("decode.(%s) len.%d\n",hex,n);
+  	printf("decode.(%s) len.%d\n",hex,n*2-1);
     if ( isahexstr(hex,n*2-1) <= 0 )
     {
         memset(bytes,0,n);
