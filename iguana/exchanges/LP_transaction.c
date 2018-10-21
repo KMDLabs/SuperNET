@@ -1771,15 +1771,15 @@ char *LP_streamerqget() {
     //int n = 0; count = 0;
     char *data;
     cJSON *retjson;
-    char *data2;
     struct datachunk *chk,*tmp;
 
     DL_FOREACH_SAFE(streamq,chk,tmp) {
         data2 = malloc(chk->datalen*2 + 1);
-        init_hexbytes_noT(data2,chk->data,chk->datalen);
-        fprintf(stderr, "fetched from pointer: %s len.(%ld)\n",data2,strlen(data2));
+        init_hexbytes_noT(data,chk->data,chk->datalen);
+        fprintf(stderr, "fetched from pointer: %s len.(%ld)\n",data,strlen(data));
         DL_DELETE(streamq,chk);
         free(chk);
+        break;
     }
     retjson = cJSON_CreateObject();
     jaddstr(retjson,"data",data);
