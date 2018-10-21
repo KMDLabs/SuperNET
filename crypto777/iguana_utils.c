@@ -384,6 +384,7 @@ int32_t decode_hex(unsigned char *bytes,int32_t n,char *hex)
   	printf("decode.(%s) len.%d\n",hex,n);
     if ( isahexstr(hex,n*2-1) <= 0 )
     {
+				fprintf(stderr, "retunr 0 for isahexstring\n");
         memset(bytes,0,n);
         return(0);
     }
