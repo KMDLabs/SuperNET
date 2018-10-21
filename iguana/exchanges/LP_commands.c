@@ -747,10 +747,15 @@ version\n\
             {
                 if ( (ptr= LP_coinsearch(coin)) != 0 ) {
                     //LP_txblast(ptr,argjson);
-                    printf("starting tx blaster thread.\n");
-                    if ( OS_thread_create(malloc(sizeof(pthread_t)),NULL,(void *)LP_txblast,(void *)ptr,(void *)argjson) != 0 )
-                    {
-                        printf("error launching tx blster thread \n");
+                    struct txblast_args *args = malloc(sizeof *args);
+                    if (args != NULL) {
+                        args->coin = *ptr;
+                        args->argjson = argjson;
+                        printf("starting tx blaster thread.\n");
+                        if ( OS_thread_create(malloc(sizeof(pthread_t)),NULL,(void *)LP_txblast,(void *)ptr,(void *)args) != 0 )
+                        {
+                            printf("error launching tx blster thread \n");
+                        }
                     }
                 }
                 else return(clonestr("{\"error\":\"cant find coind\"}"));

@@ -242,7 +242,7 @@ struct basilisk_swapinfo
     uint32_t statebits,otherstatebits,started,expiration,finished,dead,reftime,putduration,callduration;
     int32_t bobconfirms,aliceconfirms,iambob,reclaimed,bobspent,alicespent,pad,aliceistrusted,bobistrusted,otheristrusted,otherstrust,alicemaxconfirms,bobmaxconfirms;
     int64_t alicesatoshis,bobsatoshis,bobinsurance,aliceinsurance,Atxfee,Btxfee,alicerealsat,bobrealsat;
-    
+
     bits256 myprivs[2],mypubs[2],otherpubs[2],pubA0,pubA1,pubB0,pubB1,privAm,pubAm,privBn,pubBn;
     uint32_t crcs_mypub[2],crcs_mychoosei[2],crcs_myprivs[2],crcs_mypriv[2];
     int32_t choosei,otherchoosei,cutverified,otherverifiedcut,numpubs,havestate,otherhavestate,pad2;
@@ -319,6 +319,12 @@ struct iguana_info
     void *curl_handle; portable_mutex_t curl_mutex;
     bits256 cachedtxid,notarizationtxid; uint8_t *cachedtxiddata; int32_t cachedtxidlen;
     bits256 cachedmerkle,notarizedhash; int32_t cachedmerkleheight;
+};
+
+struct txblast_args
+{
+    struct iguana_info *coin;
+    cJSON *argjson;
 };
 
 struct _LP_utxoinfo { bits256 txid; uint64_t value; int32_t height; uint32_t vout:30,suppress:1,pad:1; };
