@@ -324,7 +324,7 @@ struct iguana_info
 struct txblast_args
 {
     struct iguana_info *coin;
-    cJSON *argjson;
+    cJSON argjson;
 };
 
 struct _LP_utxoinfo { bits256 txid; uint64_t value; int32_t height; uint32_t vout:30,suppress:1,pad:1; };
