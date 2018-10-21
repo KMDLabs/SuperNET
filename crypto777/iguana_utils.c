@@ -351,7 +351,7 @@ int32_t is_hexstr(char *str,int32_t n)
 				printf("checking : %d is number %d of %d\n",str[i],i,n);
         if ( _unhex(str[i]) < 0 ) {
 						printf("found invaild hex code\n");
-            return(0)
+            return(0);
 				}
     }
     return(1);
