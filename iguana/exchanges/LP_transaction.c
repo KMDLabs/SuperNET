@@ -1810,7 +1810,7 @@ int opreturnqueue(char *opstr)
   } else {
       return(0);
   }
-  sequencenum = sequencenum+1
+  sequencenum = sequencenum+1;
   char seqnum[9];
   snprintf(seqnum,9,"%08x",sequencenum);
   strcat(opstr,seqnum);
