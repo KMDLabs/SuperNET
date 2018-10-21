@@ -1758,6 +1758,7 @@ char *LP_streamerqadd(cJSON *argjson) {
 
     chunks = (datalen/chunklen)+1;
     printf("chunks.%d datalen.%d\n",chunks,datalen);
+    portable_mutex_lock(&streamerlock);
     for ( z = 0; z < chunks;  z++) {
       for ( n = 0; n < chunklen; n++) {
         tmpdata[n] = data[y];
@@ -1773,10 +1774,9 @@ char *LP_streamerqadd(cJSON *argjson) {
       if (decode_hex(chunk->data,chunk->datalen,tmpdata) == 0 ) {
         return(clonestr("{\"error\":\"invalid hex string.\"}"));
       }
-      portable_mutex_lock(&streamerlock);
       DL_APPEND(streamq,chunk);
-      portable_mutex_unlock(&streamerlock);
     }
+    portable_mutex_unlock(&streamerlock);
     return(clonestr("{\"return\":\"sucess\"}"));
 }
 
