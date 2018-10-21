@@ -1769,25 +1769,20 @@ char *LP_streamerqadd(cJSON *argjson) {
 
 char *LP_streamerqget() {
     //int n = 0; count = 0;
-    //char *data;
+    char *data;
     cJSON *retjson;
     char *data2;
     struct datachunk *chk,*tmp;
 
     DL_FOREACH_SAFE(streamq,chk,tmp) {
-        //if ( n > 1 )
-        //  break;
-        //n = n + 1;
         data2 = malloc(chk->datalen*2 + 1);
         init_hexbytes_noT(data2,chk->data,chk->datalen);
         fprintf(stderr, "fetched from pointer: %s len.(%ld)\n",data2,strlen(data2));
-        //fprintf(stderr, "fetched from variable: %s\n",data);
-        //DL_DELETE(streamq,chk);
-        //free(chk);
+        DL_DELETE(streamq,chk);
+        free(chk);
     }
     retjson = cJSON_CreateObject();
-    jaddstr(retjson,"result","success");
-    //jaddstr(retjson,"data",data);
+    jaddstr(retjson,"data",data);
     return(jprint(retjson,1));
 }
 
