@@ -1745,14 +1745,16 @@ char *LP_streamerqadd(cJSON *argjson) {
     static int init_lock;
     if ( (data= jstr(argjson,"data")) == 0 )
         return(clonestr("{\"error\":\"need some data\"}"));
-    data = jstr(argjson,"data");
     chunklen = strlen(data);
     if ( chunklen > 16190 ) {
       return(clonestr("{\"error\":\"too big, max size 16190 characters of hex as string.\"}"));
     }
+    if( chunklen % 2 != 0)
+        return(clonestr("{\"error\":\"hex string is invaild size.\"}"));
     chunk->datalen = chunklen / 2;
     fprintf(stderr, "about to decode hex: %s len.(%d)\n",data,chunklen);
-    decode_hex(chunk->data,chunk->datalen,data);
+    if (decode_hex(chunk->data,chunk->datalen,data) <=0 )
+        return(clonestr("{\"error\":\"invalid hex string.\"}"));
     if ( init_lock == 0 )
     {
         portable_mutex_init(&streamerlock);
