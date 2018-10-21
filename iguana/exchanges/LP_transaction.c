@@ -1743,11 +1743,15 @@ char *LP_streamerqadd(cJSON *argjson) {
     struct datachunk *chunk = calloc(1,sizeof(*chunk));
     char *data,tmpdata[16190]; int32_t chunklen = 16190,datalen,chunks;
     static int init_lock;
-    if ( (data= jstr(argjson,"data")) == 0 )
+    if ( (data= jstr(argjson,"data")) == 0 ) {
+        printf("need some data\n");
         return(clonestr("{\"error\":\"need some data\"}"));
+    }
     datalen = strlen(data);
-    if( datalen % 2 != 0)
+    if( datalen % 2 != 0) {
+        printf("incorrect hex string size\n");
         return(clonestr("{\"error\":\"hex string is invaild size.\"}"));
+    }
     if ( init_lock == 0 )
     {
         portable_mutex_init(&streamerlock);
