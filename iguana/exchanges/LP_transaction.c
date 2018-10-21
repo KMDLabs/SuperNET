@@ -1746,9 +1746,6 @@ char *LP_streamerqadd(cJSON *argjson) {
     if ( (data= jstr(argjson,"data")) == 0 )
         return(clonestr("{\"error\":\"need some data\"}"));
     datalen = strlen(data);
-    //if ( chunklen > 16190 ) {
-    //  return(clonestr("{\"error\":\"too big, max size 16190 characters of hex as string.\"}"));
-    //}
     if( datalen % 2 != 0)
         return(clonestr("{\"error\":\"hex string is invaild size.\"}"));
     if ( init_lock == 0 )
@@ -1766,7 +1763,7 @@ char *LP_streamerqadd(cJSON *argjson) {
         tmpdata[n] = data[y];
         y = y+1;
         if ( y > datalen) {
-          tmpdata[n] = '\n';
+          tmpdata[n] = '\0';
           chunk->datalen = n;
           break;
         }
