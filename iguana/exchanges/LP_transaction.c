@@ -1760,13 +1760,13 @@ char *LP_streamerqadd(cJSON *argjson) {
     int  n = 0, z = 0, y = 0;
 
     chunks = (datalen/chunklen)+1;
-    printf("chunks.%d\n",chunks);
+    printf("chunks.%d datalen.%d\n",chunks,datalen);
     for ( z = 0; z < chunks;  z++) {
       for ( n = 0; n < chunklen; n++) {
         tmpdata[n] = data[y];
         y = y+1;
         if ( y > datalen) {
-          tmpdata[n] = '\0';
+          tmpdata[n] = '\n';
           chunk->datalen = n;
           break;
         }
