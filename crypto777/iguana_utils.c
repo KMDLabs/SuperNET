@@ -348,7 +348,6 @@ int32_t is_hexstr(char *str,int32_t n)
     }
     if ( n == 0 )
         return(i);
-		fprintf(stderr, "i.%d n.%d \n",i,n);
     return(i == n);
 }
 
