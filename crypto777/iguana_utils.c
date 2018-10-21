@@ -325,19 +325,12 @@ char hexbyte(int32_t c)
 
 int32_t _unhex(char c)
 {
-		printf("_unhex : %d\n",c);
-    if ( c >= '0' && c <= '9' ) {
-				printf("is number: %d\n",c );
+    if ( c >= '0' && c <= '9' )
         return(c - '0');
-		}
-    else if ( c >= 'a' && c <= 'f' ) {
-				printf("is lowercase letter: %d\n",c );
+    else if ( c >= 'a' && c <= 'f' )
         return(c - 'a' + 10);
-		}
-    else if ( c >= 'A' && c <= 'F' ) {
-				printf("is uppercase letter: %d\n",c );
+    else if ( c >= 'A' && c <= 'F' )
         return(c - 'A' + 10);
-		}
     return(-1);
 }
 
