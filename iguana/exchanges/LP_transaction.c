@@ -1752,7 +1752,7 @@ char *LP_streamerqadd(cJSON *argjson) {
     if( chunklen % 2 != 0)
         return(clonestr("{\"error\":\"hex string is invaild size.\"}"));
     chunk->datalen = chunklen / 2;
-    fprintf(stderr, "about to decode hex: %s len.(%d)\n",data,chunklen);
+    fprintf(stderr, "adding to list: %s len.(%d)\n",data,chunklen);
     if (decode_hex(chunk->data,chunk->datalen,data) == 0 )
       return(clonestr("{\"error\":\"invalid hex string.\"}"));
     if ( init_lock == 0 )
@@ -1768,15 +1768,16 @@ char *LP_streamerqadd(cJSON *argjson) {
 }
 
 char *LP_streamerqget() {
-    //int n = 0; count = 0;
     char *data;
     cJSON *retjson;
-    struct datachunk *chk,*tmp;
-
+    struct datachunk *chk,*tmp, *tmp2;
+    int count = 0;
+    DL_COUNT(streamq,tmp2,count)
+    printf("list count: %d\n",count);
     DL_FOREACH_SAFE(streamq,chk,tmp) {
         data = malloc(chk->datalen*2 + 1);
         init_hexbytes_noT(data,chk->data,chk->datalen);
-        fprintf(stderr, "fetched from pointer: %s len.(%ld)\n",data,strlen(data));
+        fprintf(stderr, "fetched from list: %s len.(%ld)\n",data,strlen(data));
         DL_DELETE(streamq,chk);
         free(chk);
         break;
