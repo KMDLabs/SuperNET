@@ -1799,9 +1799,9 @@ char *LP_txblast(void *argp)
 {
     static void *ctx;
     txblast_args* argS = (txblast_args*) argp;
-    struct iguana_info coin;
+    struct iguana_info *coin;
     coin = argS->coin;
-    cJSON argjson;
+    cJSON *argjson;
     argjson = argS->argjson;
 
     const char *txid0 = "0000000000000000000000000000000000000000000000000000000000000000";
