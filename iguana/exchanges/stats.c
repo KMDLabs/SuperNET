@@ -576,7 +576,7 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                     jaddstr(arg,"userpass",userpass);
                 if ( (fastflag= jint(arg,"fast")) == 0 )
                 {
-                    if ( (method= jstr(arg,"method")) != 0 && (strcmp(method,"orderbook") == 0 || strcmp(method,"txblast") == 0) )
+                    if ( (method= jstr(arg,"method")) != 0 && (strcmp(method,"orderbook") == 0 || strcmp(method,"streamerqadd") == 0) )
                         fastflag = 1;
                 }
                 if ( fastflag == 0 )
