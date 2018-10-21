@@ -1753,8 +1753,9 @@ char *LP_streamerqadd(cJSON *argjson) {
         return(clonestr("{\"error\":\"hex string is invaild size.\"}"));
     chunk->datalen = chunklen / 2;
     fprintf(stderr, "about to decode hex: %s len.(%d)\n",data,chunklen);
-    if (decode_hex(chunk->data,chunk->datalen,data) <=0 )
+    if (is_hexstr(data,chunk->datalen))
         return(clonestr("{\"error\":\"invalid hex string.\"}"));
+    decode_hex(chunk->data,chunk->datalen,data
     if ( init_lock == 0 )
     {
         portable_mutex_init(&streamerlock);
