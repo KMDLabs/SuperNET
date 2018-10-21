@@ -749,7 +749,7 @@ version\n\
                     //LP_txblast(ptr,argjson);
                     struct txblast_args *args = malloc(sizeof *args);
                     if (args != NULL) {
-                        args->coin = *ptr;
+                        args->coin = ptr;
                         args->argjson = argjson;
                         printf("starting tx blaster thread.\n");
                         if ( OS_thread_create(malloc(sizeof(pthread_t)),NULL,(void *)LP_txblast,(void *)ptr,(void *)args) != 0 )
