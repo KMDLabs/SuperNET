@@ -351,13 +351,10 @@ int32_t is_hexstr(char *str,int32_t n)
 				printf("checking : %d is number %d of %d\n",str[i],i,n);
         if ( _unhex(str[i]) < 0 ) {
 						printf("found invaild hex code\n");
-            break;
+            return(0)
 				}
     }
-    if ( n == 0 )
-        return(i);
-		printf("i: %d\n",i );
-    return(i == n);
+    return(1);
 }
 
 int32_t unhex(char c)
