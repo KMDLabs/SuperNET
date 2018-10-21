@@ -369,7 +369,7 @@ int32_t decode_hex(unsigned char *bytes,int32_t n,char *hex)
     if ( is_hexstr(hex,n*2-1) <= 0 )
     {
         memset(bytes,0,n);
-        return(n);
+        return(0);
     }
     if ( hex[n-1] == '\n' || hex[n-1] == '\r' )
         hex[--n] = 0;
