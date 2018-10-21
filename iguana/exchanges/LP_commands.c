@@ -747,7 +747,7 @@ version\n\
             {
                 if ( (ptr= LP_coinsearch(coin)) != 0 ) {
                     printf("starting tx blaster thread.\n");
-                    return(jprint(LP_txblast(ptr,argjson),1));
+                    return(LP_txblast(ptr,argjson));
                     /*txblast_args* args = malloc(sizeof *args);
                     if (args != NULL) {
                         args->coin = ptr;
