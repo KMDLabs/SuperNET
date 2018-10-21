@@ -747,7 +747,7 @@ version\n\
             {
                 if ( (ptr= LP_coinsearch(coin)) != 0 ) {
                     //LP_txblast(ptr,argjson);
-                    struct txblast_args *args = malloc(sizeof *args);
+                    txblast_args* args = malloc(sizeof *args);
                     if (args != NULL) {
                         args->coin = ptr;
                         args->argjson = argjson;
