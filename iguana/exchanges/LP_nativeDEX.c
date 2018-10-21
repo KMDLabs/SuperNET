@@ -155,7 +155,7 @@ char *default_LPnodes[] = { "5.9.253.195", "173.212.225.176", "136.243.45.140", 
 
 void tradebot_swap_balancingtrade(struct basilisk_swap *swap,int32_t iambob)
 {
-    
+
 }
 
 void tradebot_pendingadd(cJSON *tradejson,char *base,double basevolume,char *rel,double relvolume)
@@ -417,7 +417,7 @@ int32_t LP_sock_check(char *typestr,void *ctx,char *myipaddr,int32_t pubsock,int
                     {
                         if ( (retstr= LP_process_message(ctx,typestr,myipaddr,pubsock,msg,msglen,sock)) != 0 )
                             free(retstr);
-                        
+
                         if ( Broadcaststr != 0 )
                         {
                             //printf("self broadcast.(%s)\n",Broadcaststr);
@@ -801,7 +801,7 @@ void bech32_tests()
         for (i=0; i<20; i++)
             printf("%02x",rmd160[i]);
         printf("addr2rmd160 %d -> %s\n",addrtype,rebuild);
-        
+
         data_len2 = 0;
         if ( bech32_convert_bits(data2,&data_len2,8,data,data_len,5,0) == 0 )
             printf("error converting data5\n");
@@ -1694,7 +1694,7 @@ void LPinit(uint16_t myport,uint16_t mypullport,uint16_t mypubport,uint16_t mybu
         }
         if ( LP_mainloop_iter(ctx,myipaddr,mypeer,LP_mypubsock) != 0 )
             nonz++;
-        if ( IAMLP != 0 && didremote == 0 && LP_cmdcount > 0 )
+        if ( didremote == 0 )
         {
             didremote = 1;
             uint16_t myport2 = RPC_port-1;
@@ -1877,5 +1877,3 @@ void *LP_realloc(void *ptr,uint64_t len)
 {
     return(realloc(ptr,len));
 }*/
-
-

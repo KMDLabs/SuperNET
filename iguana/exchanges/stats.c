@@ -91,7 +91,7 @@ int32_t iguana_socket(int32_t bindflag,char *hostname,uint16_t port)
     struct sockaddr_in saddr; socklen_t addrlen,slen;
     addrlen = sizeof(saddr);
     struct hostent *hostent;
-    
+
     /**
      * gethostbyname() is deprecated and cause crash on x64 windows
      * the solution is to implement similar functionality by using getaddrinfo()
@@ -114,7 +114,7 @@ int32_t iguana_socket(int32_t bindflag,char *hostname,uint16_t port)
 
     if ( parse_ipaddr(ipaddr,hostname) != 0 )
         port = parse_ipaddr(ipaddr,hostname);
-    
+
 #if defined(_M_X64)
     retVal = getaddrinfo(ipaddr, NULL, &hints, &addrresult);
     for (returnptr = addrresult; returnptr != NULL && found == 0; returnptr = returnptr->ai_next) {
@@ -126,7 +126,7 @@ int32_t iguana_socket(int32_t bindflag,char *hostname,uint16_t port)
                 break;
         }
     }
-    
+
     // if we iterate through the loop and didn't find anything,
     // that means we failed in the dns lookup
     if (found == 0) {
@@ -147,7 +147,7 @@ int32_t iguana_socket(int32_t bindflag,char *hostname,uint16_t port)
     //#ifdef _WIN32
     //   saddr.sin_addr.s_addr = (uint32_t)calc_ipbits("127.0.0.1");
     //#else
-    
+
 #if defined(_M_X64)
     saddr.sin_addr.s_addr = sockaddr_ipv4->sin_addr.s_addr;
     // graceful cleanup
@@ -609,7 +609,7 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
         free_json(json);
         if ( tmpjson != 0 )
             free(tmpjson);
-//printf("stats_JSON rpc return.(%s)\n",retstr);
+        //printf("stats_JSON rpc return.(%s)\n",retstr);
         return(retstr);
     }
     free_json(argjson);

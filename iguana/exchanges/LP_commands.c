@@ -436,9 +436,6 @@ version\n\
         } else if ( strcmp(method,"streamerqadd") == 0 )
         {
             return(LP_streamerqadd(argjson));
-        } else if ( strcmp(method,"streamerqget") == 0 )
-        {
-            return(LP_streamerqget());
         }
         else if ( strcmp(method,"secretaddresses") == 0 )
         {
@@ -749,8 +746,12 @@ version\n\
             else if ( strcmp(method,"txblast") == 0 )
             {
                 if ( (ptr= LP_coinsearch(coin)) != 0 ) {
-                    LP_txblast(ptr,argjson);
-                    return(clonestr("{\"result\":\"blast thread started\"}"));
+                    //LP_txblast(ptr,argjson);
+                    printf("starting tx blaster thread.\n");
+                    if ( OS_thread_create(malloc(sizeof(pthread_t)),NULL,(void *)LP_txblast,(void *)ptr,(void *)argjson) != 0 )
+                    {
+                        printf("error launching tx blster thread \n");
+                    }
                 }
                 else return(clonestr("{\"error\":\"cant find coind\"}"));
             }

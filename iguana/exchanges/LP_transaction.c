@@ -1767,29 +1767,6 @@ char *LP_streamerqadd(cJSON *argjson) {
     return(clonestr("{\"return\":\"sucess\"}"));
 }
 
-char *LP_streamerqget() {
-    char *data;
-    cJSON *retjson;
-    struct datachunk *chk,*tmp, *tmp2;
-    int count = 0;
-    DL_COUNT(streamq,tmp2,count)
-    if ( count != 0) {
-        DL_FOREACH_SAFE(streamq,chk,tmp) {
-        data = malloc(chk->datalen*2 + 1);
-        init_hexbytes_noT(data,chk->data,chk->datalen);
-        fprintf(stderr, "fetched from list: %s len.(%ld)\n",data,strlen(data));
-        DL_DELETE(streamq,chk);
-        free(chk);
-        break;
-      }
-    } else {
-        return(clonestr("{\"error\":\"empty queue\"}"));
-    }
-    retjson = cJSON_CreateObject();
-    jaddstr(retjson,"data",data);
-    return(jprint(retjson,1));
-}
-
 int opreturnqueue(char *opstr)
 {
   char *data;
