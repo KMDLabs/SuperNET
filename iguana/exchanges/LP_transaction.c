@@ -1741,29 +1741,41 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
 
 char *LP_streamerqadd(cJSON *argjson) {
     struct datachunk *chunk = calloc(1,sizeof(*chunk));
-    char *data; int chunklen;
+    char *data,*tmpdata; int32_t chunklen = 16190,datalen,chunks;
     static int init_lock;
     if ( (data= jstr(argjson,"data")) == 0 )
         return(clonestr("{\"error\":\"need some data\"}"));
-    chunklen = strlen(data);
-    if ( chunklen > 16190 ) {
-      return(clonestr("{\"error\":\"too big, max size 16190 characters of hex as string.\"}"));
-    }
-    if( chunklen % 2 != 0)
+    datalen = strlen(data);
+    //if ( chunklen > 16190 ) {
+    //  return(clonestr("{\"error\":\"too big, max size 16190 characters of hex as string.\"}"));
+    //}
+    if( datalen % 2 != 0)
         return(clonestr("{\"error\":\"hex string is invaild size.\"}"));
-    chunk->datalen = chunklen / 2;
-    fprintf(stderr, "adding to list: %s len.(%d)\n",data,chunklen);
-    if (decode_hex(chunk->data,chunk->datalen,data) == 0 )
-      return(clonestr("{\"error\":\"invalid hex string.\"}"));
     if ( init_lock == 0 )
     {
         portable_mutex_init(&streamerlock);
         init_lock = 1;
     }
+    chunk->datalen = chunklen;
+    int  n = 1, z = 0, y = 1;
 
-    portable_mutex_lock(&streamerlock);
-    DL_APPEND(streamq,chunk);
-    portable_mutex_unlock(&streamerlock);
+    chunks = (datalen/chunklen)+1;
+    printf("chunks.%d\n",chunks);
+    for ( z = 0; z < chunks;  z++) {
+      for ( n = 0; n < chunklen; n++) {
+        tmpdata[n] = data[y];
+        y = y+1;
+        if ( y > datalen) {
+          chunk->datalen[n] = '\0';
+          chunk->datalen = n;
+          break;
+        }
+      }
+      printf("y.%d  n.%d chunk.%d str.%s\n strorig.%s\n",y,n,z,tmpdata,data);
+      fprintf(stderr, "adding to list: %s len.(%d)\n",tmpdata,chunk->data_len);
+      if (decode_hex(chunk->data,chunk->datalen,tmpdata) == 0 )
+        return(clonestr("{\"error\":\"invalid hex string.\"}"));
+    }
     return(clonestr("{\"return\":\"sucess\"}"));
 }
 
