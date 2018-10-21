@@ -383,7 +383,7 @@ int32_t decode_hex(unsigned char *bytes,int32_t n,char *hex)
 {
     int32_t adjust,i = 0;
   	printf("decode.(%s) len.%d\n",hex,n*2-1);
-    if ( isahexstr(hex,n*2-1) <= 0 )
+    if ( isahexstr(hex,n) <= 0 )
     {
         memset(bytes,0,n);
         return(0);
