@@ -1809,7 +1809,8 @@ char *LP_streamerqadd(cJSON *argjson) {
     return(clonestr("{\"return\":\"sucess\"}"));
 }
 
-int addtoqueue(char *tmpdata,int datalen) {
+int addtoqueue(char *tmpdata,int datalen)
+{
     struct datachunk *chunk = calloc(1,sizeof(*chunk));
     static int init_lock;
     if ( init_lock == 0 )
