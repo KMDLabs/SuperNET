@@ -1791,6 +1791,13 @@ char *LP_streamerqadd(cJSON *argjson) {
     if ( (sentrecvseq= jint(argjson,"seqid")) == 0 ) {
         return(clonestr("{\"error\":\"need a sequence ID\"}"));
     }
+    if ( sentrecvseq != recvseq) {
+        retjson = cJSON_CreateObject();
+        jaddstr(retjson,"error","receive sequence out of order.");
+        jaddnum(retjson,"receiveseq",recvseq);
+        jaddnum(retjson,"sentreceiveseq",sentrecvseq);
+        return(jprint(retjson,1));
+    }
     printf("recvseq.%d sentrecvseq.%d\n",recvseq,sentrecvseq);
     if ( (data= jstr(argjson,"data")) == 0 ) {
         return(clonestr("{\"error\":\"need some data\"}"));
