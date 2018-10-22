@@ -1780,7 +1780,7 @@ int addtoqueue(char *tmpdata,int datalen)
     portable_mutex_lock(&streamerlock);
     //fprintf(stderr, "adding to list: %s len.(%d)\n",tmpdata,chunk->datalen);
     decode_hex(chunk->data,chunk->datalen,tmpdata);
-    printf("size of chunk : %ld\n",sizeof(*chunk))
+    printf("size of chunk : %ld\n",sizeof(*chunk));
     DL_APPEND(streamq,chunk);
     portable_mutex_unlock(&streamerlock);
     return(1);
