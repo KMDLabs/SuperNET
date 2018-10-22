@@ -1788,6 +1788,8 @@ int addtoqueue(char *tmpdata,int datalen)
 char *LP_streamerqadd(cJSON *argjson) {
     char *data,tmpdata[16190]; int32_t chunklen = 16190,datalen,chunks,decodelen;
     static int32_t recvseq; int32_t sentrecvseq; cJSON *retjson;
+    if ( recvseq == 0 )
+        recvseq = 1;
     if ( (sentrecvseq= jint(argjson,"seqid")) == 0 ) {
         return(clonestr("{\"error\":\"need a sequence ID\"}"));
     }
