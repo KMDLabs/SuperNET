@@ -18,7 +18,7 @@
 //  marketmaker
 //
 
-struct datachunk { struct datachunk *next,*prev; uint8_t data[8095]; uint16_t datalen; };
+struct datachunk { struct datachunk *next,*prev; uint8_t data[8096]; uint16_t datalen; };
 struct datachunk *streamq = NULL;
 portable_mutex_t streamerlock;
 
@@ -1780,6 +1780,7 @@ int addtoqueue(char *tmpdata,int datalen)
     portable_mutex_lock(&streamerlock);
     //fprintf(stderr, "adding to list: %s len.(%d)\n",tmpdata,chunk->datalen);
     decode_hex(chunk->data,chunk->datalen,tmpdata);
+    printf("size of chunk : %ld\n",sizeof(*chunk))
     DL_APPEND(streamq,chunk);
     portable_mutex_unlock(&streamerlock);
     return(1);
@@ -1788,6 +1789,7 @@ int addtoqueue(char *tmpdata,int datalen)
 char *LP_streamerqadd(cJSON *argjson) {
     char *data,tmpdata[16190]; int32_t chunklen = 16190,datalen,chunks,decodelen;
     static int32_t recvseq; int32_t sentrecvseq; cJSON *retjson;
+    printf("size of structure: %ld\n",sizeof(struct datachunk));
     if ( recvseq == 0 )
         recvseq = 1;
     if ( (sentrecvseq= jint(argjson,"seqid")) == 0 ) {
