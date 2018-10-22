@@ -339,7 +339,7 @@ extern struct rpcrequest_info *LP_garbage_collector;
 uint16_t RPC_port;
 static int32_t spawned,maxspawned;
 
-char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *postflagp,char *urlstr,char *remoteaddr,char *filetype,uint16_t port)
+char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *postflagp,char *urlstr,char *remoteaddr,char *filetype,uint16_t port,int32_t sock)
 {
     static void *ctx;
     cJSON *tokens,*argjson,*origargjson,*tmpjson=0,*json = 0; long filesize; char symbol[64],buf[4096],*userpass=0,urlmethod[16],*data,url[8192],furl[8192],*retstr=0,*filestr,*token = 0; int32_t i,j,n,num=0; uint32_t queueid;
@@ -537,7 +537,7 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                         //free(buf);
                         //while ( retstr == 0 )
                         //    usleep(10000);
-                        if ( (retstr= stats_JSON(ctx,0,"127.0.0.1",-1,argjson,remoteaddr,port)) != 0 )
+                        if ( (retstr= stats_JSON(ctx,0,"127.0.0.1",sock,argjson,remoteaddr,port)) != 0 )
                         {
                             if ( (retitem= cJSON_Parse(retstr)) != 0 )
                                 jaddi(retarray,retitem);
@@ -550,7 +550,7 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                     //free(buf);
                     //while ( retstr == 0 )
                     //    usleep(10000);
-                    if ( (retstr= stats_JSON(ctx,0,LP_myipaddr,-1,argjson,remoteaddr,port)) != 0 )
+                    if ( (retstr= stats_JSON(ctx,0,LP_myipaddr,sock,argjson,remoteaddr,port)) != 0 )
                     {
                         if ( (retitem= cJSON_Parse(retstr)) != 0 )
                             jaddi(retarray,retitem);
@@ -561,7 +561,6 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                 }
                 free_json(origargjson);
                 retstr = jprint(retarray,1);
-                printf("stats_JSON rpc return first.(%s)\n",retstr);
             }
             else
             {
@@ -577,7 +576,7 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                     jaddstr(arg,"userpass",userpass);
                 if ( (fastflag= jint(arg,"fast")) == 0 )
                 {
-                    if ( (method= jstr(arg,"method")) != 0 && (strcmp(method,"orderbook") == 0 || strcmp(method,"streamerqadd") == 0) )
+                    if ( (method= jstr(arg,"method")) != 0 && (strcmp(method,"txblast") == 0 || strcmp(method,"streamerqadd") == 0) )
                         fastflag = 1;
                 }
                 if ( fastflag == 0 )
@@ -585,23 +584,22 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
 #ifdef FROM_MARKETMAKER
                 if ( strcmp(remoteaddr,"127.0.0.1") == 0 || LP_valid_remotemethod(arg) > 0 )
                 {
-                    if ( IPC_ENDPOINT >= 0 && (queueid= juint(arg,"queueid")) > 0 || fastflag == 0 )
+                    if ( fastflag == 0 )
                     {
                         buf = jprint(arg,0);
                         printf("Q command\n");
                         LP_queuecommand(&retstr,buf,IPC_ENDPOINT,1,queueid);
                         free(buf);
                         retstr = clonestr("{\"result\":\"success\",\"status\":\"queued\"}");
-                    } else retstr = stats_JSON(ctx,1,"127.0.0.1",-1,arg,remoteaddr,port);
+                    } else retstr = stats_JSON(ctx,1,"127.0.0.1",sock,arg,remoteaddr,port);
                 } else retstr = clonestr("{\"error\":\"invalid remote method\"}");
 #else
                 if ( IPC_ENDPOINT >= 0 && (queueid= juint(arg,"queueid")) > 0 || fastflag == 0 )
                 {
                     buf = jprint(arg,0);
-                    printf("Q command second one\n");
                     LP_queuecommand(&retstr,buf,IPC_ENDPOINT,1,queueid);
                     free(buf);
-                } else retstr = stats_JSON(ctx,1,LP_myipaddr,-1,arg,remoteaddr,port);
+                } else retstr = stats_JSON(ctx,1,LP_myipaddr,sock,arg,remoteaddr,port);
 #endif
                 if ( fastflag == 0 )
                     portable_mutex_unlock(&LP_commandmutex);
@@ -661,7 +659,6 @@ void LP_rpc_processreq(void *_ptr)
     if ( spawned < 0 )
         spawned = 0;
     spawned++;
-    maxspawned = 2;
     if ( spawned > maxspawned )
     {
         printf("max rpc threads spawned and alive %d <- %d\n",maxspawned,spawned);
@@ -723,7 +720,7 @@ void LP_rpc_processreq(void *_ptr)
     if ( recvlen > 0 )
     {
         jsonflag = postflag = 0;
-        retstr = stats_rpcparse(space,size,&jsonflag,&postflag,jsonbuf,remoteaddr,filetype,req->port);
+        retstr = stats_rpcparse(space,size,&jsonflag,&postflag,jsonbuf,remoteaddr,filetype,req->port,sock);
         if ( filetype[0] != 0 )
         {
             static cJSON *mimejson; char *tmp,*typestr=0; long tmpsize;
