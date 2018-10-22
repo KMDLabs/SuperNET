@@ -1823,7 +1823,7 @@ int addtoqueue(char *tmpdata,int datalen) {
     decode_hex(chunk->data,chunk->datalen,tmpdata);
     DL_APPEND(streamq,chunk);
     portable_mutex_unlock(&streamerlock);
-    return(1)
+    return(1);
 }
 
 int opreturnqueue(char *opstr)
