@@ -561,8 +561,8 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                 }
                 free_json(origargjson);
                 retstr = jprint(retarray,1);
+                printf("stats_JSON rpc return first.(%s)\n",retstr);
             }
-            printf("stats_JSON rpc return first.(%s)\n",retstr);
             else
             {
                 cJSON *arg; char *buf,*method; int32_t fastflag;
