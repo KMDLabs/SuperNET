@@ -1767,6 +1767,24 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
     return(clonestr("{\"return\":\"sucess\"}"));
 } */
 
+int addtoqueue(char *tmpdata,int datalen)
+{
+    struct datachunk *chunk = calloc(1,sizeof(*chunk));
+    static int init_lock;
+    if ( init_lock == 0 )
+    {
+        portable_mutex_init(&streamerlock);
+        init_lock = 1;
+    }
+    chunk->datalen = datalen;
+    portable_mutex_lock(&streamerlock);
+    fprintf(stderr, "adding to list: %s len.(%d)\n",tmpdata,chunk->datalen);
+    decode_hex(chunk->data,chunk->datalen,tmpdata);
+    DL_APPEND(streamq,chunk);
+    portable_mutex_unlock(&streamerlock);
+    return(1);
+}
+
 char *LP_streamerqadd(cJSON *argjson) {
     char *data,tmpdata[16190]; int32_t chunklen = 16190,datalen,chunks,decodelen;
     static int32_t recvseq;
@@ -1807,24 +1825,6 @@ char *LP_streamerqadd(cJSON *argjson) {
     }
     recvseq = recvseq+1;
     return(clonestr("{\"return\":\"sucess\"}"));
-}
-
-int addtoqueue(char *tmpdata,int datalen)
-{
-    struct datachunk *chunk = calloc(1,sizeof(*chunk));
-    static int init_lock;
-    if ( init_lock == 0 )
-    {
-        portable_mutex_init(&streamerlock);
-        init_lock = 1;
-    }
-    chunk->datalen = datalen;
-    portable_mutex_lock(&streamerlock);
-    fprintf(stderr, "adding to list: %s len.(%d)\n",tmpdata,chunk->datalen);
-    decode_hex(chunk->data,chunk->datalen,tmpdata);
-    DL_APPEND(streamq,chunk);
-    portable_mutex_unlock(&streamerlock);
-    return(1);
 }
 
 int opreturnqueue(char *opstr)
