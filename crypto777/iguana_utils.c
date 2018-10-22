@@ -342,6 +342,7 @@ int32_t isahexstr(char *str,int32_t n)
     for (i=0; i <= n; i++)
     {
         if ( _unhex(str[i]) < 0 ) {
+						printf("found non hex char.%d\n",str[i]);
             return(0);
 				}
     }

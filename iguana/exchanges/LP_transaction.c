@@ -1781,7 +1781,7 @@ char *LP_streamerqadd(cJSON *argjson) {
         return(clonestr("{\"error\":\"hex string is invaild size.\"}"));
     }
     if (isahexstr(data,datalen) == 0 ) {
-      printf("is not a hex string\n");
+      printf("is not a hex string.%s\n",data);
       return(clonestr("{\"error\":\"invalid hex string.\"}"));
     }
 
