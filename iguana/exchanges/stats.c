@@ -859,7 +859,6 @@ void stats_rpcloop(void *args)
         req->port = port;
         if ( 1 || spawned >= (IGUANA_MAXRPCTHREADS-1) ) {
             LP_rpc_processreq(req);
-            printf("no spawning new thread.\n");
         }
         // this might lead to "cant open file errors"
         else if ( (retval= OS_thread_create(&req->T,NULL,(void *)LP_rpc_processreq,req)) != 0 )
