@@ -1768,9 +1768,8 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
 } */
 
 char *LP_streamerqadd(cJSON *argjson) {
-    struct datachunk *chunk = calloc(1,sizeof(*chunk));
-    char *data,tmpdata[16190]; int32_t chunklen = 16190,datalen,chunks;
-    static int init_lock; static int32_t recvseq;
+    char *data,tmpdata[16190]; int32_t chunklen = 16190,datalen,chunks,decodelen;
+    static int32_t recvseq;
     if ( (data= jstr(argjson,"data")) == 0 ) {
         printf("need some data\n");
         return(clonestr("{\"error\":\"need some data\"}"));
@@ -1785,34 +1784,46 @@ char *LP_streamerqadd(cJSON *argjson) {
       return(clonestr("{\"error\":\"invalid hex string.\"}"));
     }
 
+    decodelen = chunklen / 2;
+    int  n = 0, z = 0, y = 0;
+    chunks = (datalen/chunklen)+1;
+    printf("chunks.%d total datalen.%d\n",chunks,datalen);
+    for ( z = 0; z < chunks;  z++)
+    {
+      for ( n = 0; n < chunklen; n++)
+      {
+          tmpdata[n] = data[y];
+          y = y+1;
+          if ( y > datalen) {
+              tmpdata[n] = '\0';
+              decodelen = n / 2;
+              break;
+          }
+      }
+      printf("y.%d  n.%d chunk.%d str.%s\n strorig.%s\n",y,n,z,tmpdata,data);
+      if ( addtoqueue(tmpdata,decodelen) == 1 ) {
+          printf("added chunk.\n");
+      }
+    }
+    recvseq = recvseq+1;
+    return(clonestr("{\"return\":\"sucess\"}"));
+}
+
+int addtoqueue(char *tmpdata,int datalen) {
+    struct datachunk *chunk = calloc(1,sizeof(*chunk));
+    static int init_lock;
     if ( init_lock == 0 )
     {
         portable_mutex_init(&streamerlock);
         init_lock = 1;
     }
-    chunk->datalen = chunklen / 2;
-    int  n = 0, z = 0, y = 0;
-    chunks = (datalen/chunklen)+1;
-    printf("chunks.%d total datalen.%d\n",chunks,datalen);
+    chunk->datalen = datalen;
     portable_mutex_lock(&streamerlock);
-    for ( z = 0; z < chunks;  z++) {
-      for ( n = 0; n < chunklen; n++) {
-        tmpdata[n] = data[y];
-        y = y+1;
-        if ( y > datalen) {
-          tmpdata[n] = '\0';
-          chunk->datalen = n / 2;
-          break;
-        }
-      }
-      printf("y.%d  n.%d chunk.%d str.%s\n strorig.%s\n",y,n,z,tmpdata,data);
-      fprintf(stderr, "adding to list: %s len.(%d)\n",tmpdata,chunk->datalen);
-      decode_hex(chunk->data,chunk->datalen,tmpdata);
-      DL_APPEND(streamq,chunk);
-    }
-    recvseq = recvseq+1;
+    fprintf(stderr, "adding to list: %s len.(%d)\n",tmpdata,chunk->datalen);
+    decode_hex(chunk->data,chunk->datalen,tmpdata);
+    DL_APPEND(streamq,chunk);
     portable_mutex_unlock(&streamerlock);
-    return(clonestr("{\"return\":\"sucess\"}"));
+    return(1)
 }
 
 int opreturnqueue(char *opstr)
@@ -1827,7 +1838,7 @@ int opreturnqueue(char *opstr)
       DL_FOREACH_SAFE(streamq,chk,tmp) {
       data = malloc(chk->datalen*2 + 1);
       init_hexbytes_noT(data,chk->data,chk->datalen);
-      fprintf(stderr, "fetched from list: %s len.(%ld)\n",data,strlen(data));
+      //fprintf(stderr, "fetched from list: %s len.(%ld)\n",data,strlen(data));
       DL_DELETE(streamq,chk);
       free(chk);
       break;
@@ -1840,6 +1851,7 @@ int opreturnqueue(char *opstr)
   snprintf(seqnum,9,"%08x",sequencenum);
   strcat(opstr,seqnum);
   strcat(opstr,data);
+  fprintf(stderr, "fetched from list: %s len.(%ld)\n",opstr,strlen(opstr));
   return(1);
 }
 
