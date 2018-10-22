@@ -1787,19 +1787,20 @@ int addtoqueue(char *tmpdata,int datalen)
 
 char *LP_streamerqadd(cJSON *argjson) {
     char *data,tmpdata[16190]; int32_t chunklen = 16190,datalen,chunks,decodelen;
-    static int32_t recvseq;
+    static int32_t recvseq; int32_t sentrecvseq;
+    if ( (sentrecvseq= jint(argjson,"seqid")) == 0 ) {
+        return(clonestr("{\"error\":\"need a sequence ID\"}"));
+    }
+    printf("recvseq.%d sentrecvseq.%d\n",recvseq,sentrecvseq);
     if ( (data= jstr(argjson,"data")) == 0 ) {
-        printf("need some data\n");
         return(clonestr("{\"error\":\"need some data\"}"));
     }
     datalen = strlen(data);
     if( datalen % 2 != 0) {
-        printf("incorrect hex string size\n");
         return(clonestr("{\"error\":\"hex string is invaild size.\"}"));
     }
     if (isahexstr(data,datalen) == 0 ) {
-      printf("is not a hex string.%s\n",data);
-      return(clonestr("{\"error\":\"invalid hex string.\"}"));
+        return(clonestr("{\"error\":\"invalid hex string.\"}"));
     }
 
     decodelen = chunklen / 2;
@@ -1818,13 +1819,16 @@ char *LP_streamerqadd(cJSON *argjson) {
               break;
           }
       }
-      printf("y.%d  n.%d chunk.%d str.%s\n strorig.%s\n",y,n,z,tmpdata,data);
       if ( addtoqueue(tmpdata,decodelen) == 1 ) {
-          printf("added chunk.\n");
+          printf(" added chunk.%d y.%d n.%d\n",z,y,n);
       }
     }
     recvseq = recvseq+1;
-    return(clonestr("{\"return\":\"sucess\"}"));
+    retjson = cJSON_CreateObject();
+    jaddstr(retjson,"result","success");
+    jaddnum(retjson,"receiveseq",recvseq);
+    return(jprint(retjson,1));
+    //return(clonestr("{\"return\":\"sucess\"}"));
 }
 
 int opreturnqueue(char *opstr)
@@ -1839,7 +1843,6 @@ int opreturnqueue(char *opstr)
       DL_FOREACH_SAFE(streamq,chk,tmp) {
       data = malloc(chk->datalen*2 + 1);
       init_hexbytes_noT(data,chk->data,chk->datalen);
-      //fprintf(stderr, "fetched from list: %s len.(%ld)\n",data,strlen(data));
       DL_DELETE(streamq,chk);
       free(chk);
       break;
