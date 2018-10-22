@@ -325,7 +325,6 @@ char hexbyte(int32_t c)
 
 int32_t _unhex(char c)
 {
-		printf("char: %d\n", c);
     if ( c >= '0' && c <= '9' )
         return(c - '0');
     else if ( c >= 'a' && c <= 'f' )
@@ -343,7 +342,6 @@ int32_t isahexstr(char *str,int32_t n)
     for (i=0; i < n; i++)
     {
         if ( _unhex(str[i]) < 0 ) {
-						printf("found non hex char.%d\n",str[i]);
             return(0);
 				}
     }

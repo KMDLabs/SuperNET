@@ -587,7 +587,6 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                     if ( fastflag == 0 )
                     {
                         buf = jprint(arg,0);
-                        printf("Q command\n");
                         LP_queuecommand(&retstr,buf,IPC_ENDPOINT,1,queueid);
                         free(buf);
                         retstr = clonestr("{\"result\":\"success\",\"status\":\"queued\"}");
@@ -609,7 +608,7 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
         free_json(json);
         if ( tmpjson != 0 )
             free(tmpjson);
-        printf("stats_JSON rpc return.(%s)\n",retstr);
+        //printf("stats_JSON rpc return.(%s)\n",retstr);
         return(retstr);
     }
     free_json(argjson);
