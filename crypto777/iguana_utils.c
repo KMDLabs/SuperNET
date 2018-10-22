@@ -325,6 +325,7 @@ char hexbyte(int32_t c)
 
 int32_t _unhex(char c)
 {
+		printf("char: %d\n", c);
     if ( c >= '0' && c <= '9' )
         return(c - '0');
     else if ( c >= 'a' && c <= 'f' )
