@@ -163,7 +163,7 @@ int32_t iguana_numthreads(struct iguana_info *coin,int32_t mask);
 void iguana_terminator(void *arg);
 
 int32_t is_hexstr(char *str,int32_t n);
-int32_t isahexstr(char *str,int32_t n)
+int32_t isahexstr(char *str,int32_t n);
 void iguana_initQ(queue_t *Q,char *name);
 void iguana_emitQ(struct iguana_info *coin,struct iguana_bundle *bp);
 void iguana_txdataQ(struct iguana_info *coin,struct iguana_peer *addr,FILE *fp,long fpos,int32_t datalen);
