@@ -1807,7 +1807,7 @@ char *LP_streamerqadd(cJSON *argjson) {
       }
       printf("y.%d  n.%d chunk.%d str.%s\n strorig.%s\n",y,n,z,tmpdata,data);
       fprintf(stderr, "adding to list: %s len.(%d)\n",tmpdata,chunk->datalen);
-      decode_hex(chunk->data,chunk->datalen,tmpdata)
+      decode_hex(chunk->data,chunk->datalen,tmpdata);
       DL_APPEND(streamq,chunk);
     }
     recvseq = recvseq+1;
