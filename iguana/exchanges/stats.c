@@ -562,6 +562,7 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                 free_json(origargjson);
                 retstr = jprint(retarray,1);
             }
+            printf("stats_JSON rpc return first.(%s)\n",retstr);
             else
             {
                 cJSON *arg; char *buf,*method; int32_t fastflag;
@@ -587,7 +588,7 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                     if ( IPC_ENDPOINT >= 0 && (queueid= juint(arg,"queueid")) > 0 || fastflag == 0 )
                     {
                         buf = jprint(arg,0);
-                        //printf("Q command\n");
+                        printf("Q command\n");
                         LP_queuecommand(&retstr,buf,IPC_ENDPOINT,1,queueid);
                         free(buf);
                         retstr = clonestr("{\"result\":\"success\",\"status\":\"queued\"}");
@@ -597,6 +598,7 @@ char *stats_rpcparse(char *retbuf,int32_t bufsize,int32_t *jsonflagp,int32_t *po
                 if ( IPC_ENDPOINT >= 0 && (queueid= juint(arg,"queueid")) > 0 || fastflag == 0 )
                 {
                     buf = jprint(arg,0);
+                    printf("Q command second one\n");
                     LP_queuecommand(&retstr,buf,IPC_ENDPOINT,1,queueid);
                     free(buf);
                 } else retstr = stats_JSON(ctx,1,LP_myipaddr,-1,arg,remoteaddr,port);
@@ -659,6 +661,7 @@ void LP_rpc_processreq(void *_ptr)
     if ( spawned < 0 )
         spawned = 0;
     spawned++;
+    maxspawned = 2;
     if ( spawned > maxspawned )
     {
         printf("max rpc threads spawned and alive %d <- %d\n",maxspawned,spawned);
@@ -858,8 +861,10 @@ void stats_rpcloop(void *args)
         req->sock = sock;
         req->ipbits = ipbits;
         req->port = port;
-        if ( 1 || spawned >= (IGUANA_MAXRPCTHREADS-1) )
+        if ( 1 || spawned >= (IGUANA_MAXRPCTHREADS-1) ) {
             LP_rpc_processreq(req);
+            printf("no spawning new thread.\n");
+        }
         // this might lead to "cant open file errors"
         else if ( (retval= OS_thread_create(&req->T,NULL,(void *)LP_rpc_processreq,req)) != 0 )
         {
