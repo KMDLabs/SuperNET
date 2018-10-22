@@ -1793,7 +1793,7 @@ char *LP_streamerqadd(cJSON *argjson) {
     chunk->datalen = chunklen / 2;
     int  n = 0, z = 0, y = 0;
     chunks = (datalen/chunklen)+1;
-    printf("chunks.%d datalen.%d\n",chunks,datalen);
+    printf("chunks.%d total datalen.%d\n",chunks,datalen);
     portable_mutex_lock(&streamerlock);
     for ( z = 0; z < chunks;  z++) {
       for ( n = 0; n < chunklen; n++) {
