@@ -1739,7 +1739,7 @@ char *bitcoin_signrawtransaction(int32_t *completedp,bits256 *signedtxidp,struct
     return(signedtx);
 }
 
-char *LP_streamerqadd(cJSON *argjson) {
+/*char *LP_streamerqadd(cJSON *argjson) {
     struct datachunk *chunk = calloc(1,sizeof(*chunk));
     char *data; int chunklen;
     static int init_lock;
@@ -1763,6 +1763,56 @@ char *LP_streamerqadd(cJSON *argjson) {
 
     portable_mutex_lock(&streamerlock);
     DL_APPEND(streamq,chunk);
+    portable_mutex_unlock(&streamerlock);
+    return(clonestr("{\"return\":\"sucess\"}"));
+} */
+
+char *LP_streamerqadd(cJSON *argjson) {
+    struct datachunk *chunk = calloc(1,sizeof(*chunk));
+    char *data,tmpdata[16190]; int32_t chunklen = 16190,datalen,chunks;
+    static int init_lock; static int32_t recvseq;
+    if ( (data= jstr(argjson,"data")) == 0 ) {
+        printf("need some data\n");
+        return(clonestr("{\"error\":\"need some data\"}"));
+    }
+    datalen = strlen(data);
+    if( datalen % 2 != 0) {
+        printf("incorrect hex string size\n");
+        return(clonestr("{\"error\":\"hex string is invaild size.\"}"));
+    }
+    if (isahexstr(data,datalen) == 0 ) {
+      printf("is not a hex string\n");
+      return(clonestr("{\"error\":\"invalid hex string.\"}"));
+    }
+
+    if ( init_lock == 0 )
+    {
+        portable_mutex_init(&streamerlock);
+        init_lock = 1;
+    }
+    chunk->datalen = chunklen / 2;
+    int  n = 0, z = 0, y = 0;
+    chunks = (datalen/chunklen)+1;
+    printf("chunks.%d datalen.%d\n",chunks,datalen);
+    portable_mutex_lock(&streamerlock);
+    for ( z = 0; z < chunks;  z++) {
+      for ( n = 0; n < chunklen; n++) {
+        tmpdata[n] = data[y];
+        y = y+1;
+        if ( y > datalen) {
+          tmpdata[n] = '\0';
+          chunk->datalen = n / 2;
+          break;
+        }
+      }
+      printf("y.%d  n.%d chunk.%d str.%s\n strorig.%s\n",y,n,z,tmpdata,data);
+      fprintf(stderr, "adding to list: %s len.(%d)\n",tmpdata,chunk->datalen);
+      if (decode_hex(chunk->data,chunk->datalen,tmpdata) == 0 ) {
+        return(clonestr("{\"error\":\"invalid hex string.\"}"));
+      }
+      DL_APPEND(streamq,chunk);
+    }
+    recvseq = recvseq+1;
     portable_mutex_unlock(&streamerlock);
     return(clonestr("{\"return\":\"sucess\"}"));
 }
