@@ -1791,7 +1791,7 @@ char *LP_streamerqadd(cJSON *argjson) {
     if ( recvseq == 0 )
         recvseq = 1;
     if ( (sentrecvseq= jint(argjson,"seqid")) == 0 ) {
-        return(clonestr("{\"error\":\"need a sequence ID\"}"));
+        return(clonestr("{\"error\":\"need a sequence ID starting at 1.\"}"));
     }
     if ( sentrecvseq != recvseq) {
         retjson = cJSON_CreateObject();
@@ -1864,7 +1864,7 @@ int opreturnqueue(char *opstr)
   snprintf(seqnum,9,"%08x",sequencenum);
   strcat(opstr,seqnum);
   strcat(opstr,data);
-  fprintf(stderr, "fetched from list: %s len.(%ld)\n",opstr,strlen(opstr));
+  fprintf(stderr, "fetched from list string of len.(%ld)\n",strlen(opstr));
   return(1);
 }
 
@@ -1942,7 +1942,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
                 {
                     if ( (signret= LP_sendrawtransaction(coin->symbol,signedtx,0)) != 0 )
                     {
-                        printf("LP_txblast.%s broadcast (%s) vs %s\n",coin->symbol,bits256_str(str,signedtxid),signret);
+                        //printf("LP_txblast.%s broadcast (%s) vs %s\n",coin->symbol,bits256_str(str,signedtxid),signret);
                         if ( is_hexstr(signret,0) == 64 )
                         {
                             decode_hex(checktxid.bytes,32,signret);
