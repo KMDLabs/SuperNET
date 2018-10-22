@@ -163,6 +163,7 @@ int32_t iguana_numthreads(struct iguana_info *coin,int32_t mask);
 void iguana_terminator(void *arg);
 
 int32_t is_hexstr(char *str,int32_t n);
+int32_t isahexstr(char *str,int32_t n)
 void iguana_initQ(queue_t *Q,char *name);
 void iguana_emitQ(struct iguana_info *coin,struct iguana_bundle *bp);
 void iguana_txdataQ(struct iguana_info *coin,struct iguana_peer *addr,FILE *fp,long fpos,int32_t datalen);
@@ -595,7 +596,7 @@ struct iguana_peer *iguana_peerfindipbits(struct iguana_info *coin,uint32_t ipbi
 int32_t basilisk_hashes_send(struct supernet_info *myinfo,struct iguana_info *virt,struct iguana_peer *addr,char *CMD,bits256 *txids,int32_t num);
 int32_t iguana_opreturn(struct supernet_info *myinfo,int32_t ordered,struct iguana_info *coin,uint32_t timestamp,struct iguana_bundle *bp,int64_t crypto777_payment,int32_t height,uint64_t hdrsi_unspentind,int64_t payment,uint32_t fileid,uint64_t scriptpos,uint32_t scriptlen);
 /*
-* because the address passed in a non-portable way we defined uint64_t as parameter to 
+* because the address passed in a non-portable way we defined uint64_t as parameter to
 * allow the pass of 64bit memory address in windows 64
 * @author - fadedreamz@gmail.com
 */
@@ -670,4 +671,3 @@ uint64_t _iguana_interest(uint32_t now,int32_t height,uint32_t txlocktime,uint64
 
 
 #endif
-
