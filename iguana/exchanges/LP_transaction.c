@@ -1986,7 +1986,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         utxovalue = change;
         // good place to update outputs[] for a fully programmable blast
     }
-exitblast:
+endblast:
     free_json(privkeys), privkeys = 0;
     retjson = cJSON_CreateObject();
     jaddstr(retjson,"result","success");
