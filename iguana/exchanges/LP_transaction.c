@@ -1916,12 +1916,12 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         // if the queue is empty we will wait for it to fill.
         int waits = 0;
         while (opreturnqueue(opretstr) != 1) {
-            printf("waiting for data : %d\n",waits);
+            printf("waiting for data for : %ds\n",waits);
             sleep(1);
             waits = waits+1;
-            if (waits >= 360) {
-                printf("finished waiting, there is no data in the queue.");
-                break;
+            if (waits >= 900) {
+                printf("There is no data in the queue for 15 mins, exit!");
+                goto endblast;
             }
         }
 
@@ -1986,6 +1986,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         utxovalue = change;
         // good place to update outputs[] for a fully programmable blast
     }
+exitblast:
     free_json(privkeys), privkeys = 0;
     retjson = cJSON_CreateObject();
     jaddstr(retjson,"result","success");
