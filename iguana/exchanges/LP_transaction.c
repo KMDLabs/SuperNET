@@ -1921,7 +1921,13 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
             waits = waits+1;
             if (waits >= 900) {
                 printf("There is no data in the queue for 15 mins, exit!");
-                goto endblast;
+                retjson = cJSON_CreateObject();
+                jaddstr(retjson,"error","timed out after receiving no data for 15mins.");
+                jaddnum(retjson,"completed",i);
+                jaddbits256(retjson,"lastutxo",utxotxid);
+                jaddnum(retjson,"lastutxovout",utxovout);
+                jaddnum(retjson,"lastutxovalue",dstr(utxovalue));
+                return(jprint(retjson,1));
             }
         }
 
