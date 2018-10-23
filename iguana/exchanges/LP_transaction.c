@@ -1880,7 +1880,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
     argjson = argS->argjson; */
 
     const char *txid0 = "0000000000000000000000000000000000000000000000000000000000000000";
-    int32_t broadcast,i,num,numblast,utxovout,completed=0,numvouts,changeout; char *passphrase,changeaddr[64],vinaddr[64],wifstr[65],blastaddr[65],str[65],*signret,*signedtx=0,*rawtx=0; struct vin_info V; uint32_t locktime,starttime; uint8_t pubkey33[33]; cJSON *retjson,*item,*outputs,*vins=0,*txobj=0,*privkeys=0; struct iguana_msgtx msgtx; bits256 privkey,pubkey,checktxid,utxotxid,signedtxid; uint64_t txfee,utxovalue,change;
+    int32_t broadcast,i,num,numblast,utxovout,completed=0,numvouts,changeout,timeout; char *passphrase,changeaddr[64],vinaddr[64],wifstr[65],blastaddr[65],str[65],*signret,*signedtx=0,*rawtx=0; struct vin_info V; uint32_t locktime,starttime; uint8_t pubkey33[33]; cJSON *retjson,*item,*outputs,*vins=0,*txobj=0,*privkeys=0; struct iguana_msgtx msgtx; bits256 privkey,pubkey,checktxid,utxotxid,signedtxid; uint64_t txfee,utxovalue,change;
     if ( ctx == 0 )
         ctx = bitcoin_ctx();
     if ( (passphrase= jstr(argjson,"password")) == 0 )
@@ -1893,6 +1893,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
     utxovalue = j64bits(argjson,"utxovalue");
     txfee = juint(argjson,"txfee");
     broadcast = juint(argjson,"broadcast");
+    timeout = juint(argjson,"timeout");
     conv_NXTpassword(privkey.bytes,pubkey.bytes,(uint8_t *)passphrase,(int32_t)strlen(passphrase));
     privkey.bytes[0] &= 248, privkey.bytes[31] &= 127, privkey.bytes[31] |= 64;
     bitcoin_priv2wif(coin->symbol,coin->wiftaddr,wifstr,privkey,coin->wiftype);
@@ -1919,15 +1920,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
             printf("waiting for data for : %ds\n",waits);
             sleep(1);
             waits = waits+1;
-            if (waits >= 20) {
-                printf("There is no data in the queue for 15 mins, exit!");
-                /*retjson = cJSON_CreateObject();
-                jaddstr(retjson,"error","timed out after receiving no data for 15mins.");
-                jaddnum(retjson,"completed",i);
-                jaddbits256(retjson,"lastutxo",utxotxid);
-                jaddnum(retjson,"lastutxovout",utxovout);
-                jaddnum(retjson,"lastutxovalue",dstr(utxovalue));
-                return(jprint(retjson,1)); */
+            if (waits >= timeout) {
                 goto endblast;
             }
         }
