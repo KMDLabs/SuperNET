@@ -1873,7 +1873,9 @@ int opreturnqueue(char *opstr)
 char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
 {
     static void *ctx;
-    char streamid[64]; char *streamid_string;
+    //char streamid[64];
+    char *streamid_string;
+    const char *txid0 = "0000000000000000000000000000000000000000000000000000000000000000";
     int32_t broadcast,i,num,numblast,utxovout,completed=0,numvouts,changeout,timeout; char *passphrase,changeaddr[64],vinaddr[64],wifstr[65],blastaddr[65],str[65],*signret,*signedtx=0,*rawtx=0; struct vin_info V; uint32_t locktime,starttime; uint8_t pubkey33[33]; cJSON *retjson,*item,*outputs,*vins=0,*txobj=0,*privkeys=0; struct iguana_msgtx msgtx; bits256 privkey,pubkey,checktxid,utxotxid,signedtxid; uint64_t txfee,utxovalue,change;
     if ( ctx == 0 )
         ctx = bitcoin_ctx();
@@ -1884,22 +1886,21 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         return(clonestr("{\"error\":\"need a streamid string of maximum 32 chars long.\"}"));
     if (strlen(streamid_string) > 32)
         return(clonestr("{\"error\":\"need a streamid string of maximum 32 chars long.\"}"));
-    printf("steam id : %s\n",streamid_string);
+    printf("stream id : %s\n",streamid_string);
 
-    int k,p;
+    /*int k,p;
 
-    /*set strH with nulls*/
     memset(streamid,0,sizeof(streamid));
 
-    /*converting str character into Hex and adding into strH*/
     for(k=0,p=0;k<strlen(streamid_string);k++,p+=2)
     {
         sprintf((char*)streamid+p,"%02X",streamid_string[k]);
     }
-    streamid[64]='\0'; /*adding NULL in the end*/
+    streamid[64]='\0';
 
     printf("Hexadecimal converted string is: \n");
     printf("%s\n",streamid);
+    */
 
     outputs = jarray(&numvouts,argjson,"outputs");
     utxotxid = jbits256(argjson,"utxotxid");
@@ -1927,7 +1928,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         char opretstr[16262] = {0};
         // on the first loop use null txid
         if ( i == 0 )
-            strcpy(opretstr,streamid);
+            strcpy(opretstr,txid0);
         else
             strcpy(opretstr,bits256_str(str,signedtxid));
 
