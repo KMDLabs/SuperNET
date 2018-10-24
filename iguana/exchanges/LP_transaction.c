@@ -1886,7 +1886,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         return(clonestr("{\"error\":\"need a streamid string of maximum 32 chars long.\"}"));
     if (strlen(streamid_string) > 32)
         return(clonestr("{\"error\":\"streamid is longer than 32 chars.\"}"));
-    printf("stream id : %s\n",streamid_string);
+    printf("stream id : %s\nlength:%ld\n",streamid_string,strlen(streamid_string));
 
     int k,p;
 
