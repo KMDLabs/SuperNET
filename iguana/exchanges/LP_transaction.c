@@ -1898,7 +1898,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
     }
     streamid[64]='\0';
 
-    printf("Hexadecimal converted string is: \n");
+    printf("Hexadecimal converted string is %d long: \n",strlen(streamid));
     printf("%s\n",streamid);
 
     outputs = jarray(&numvouts,argjson,"outputs");
