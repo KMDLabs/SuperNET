@@ -1898,11 +1898,6 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
          sprintf((char*)streamid+p,"%02X",0);
       }
     }
-    streamid[64]='\0'
-    for(k=0,p=0;k<32;k++,p+=2)
-    {
-        sprintf((char*)streamid+p,"%02X",streamid_string[k]);
-    }
     streamid[64]='\0';
 
     printf("Hexadecimal converted string is %ld long: \n",strlen(streamid));
