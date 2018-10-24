@@ -1864,6 +1864,7 @@ int opreturnqueue(char *opstr)
   sequencenum = sequencenum+1;
   char seqnum[9];
   snprintf(seqnum,9,"%08x",sequencenum);
+  printf("seqnumber in hexstr: %s\n",seqnum);
   strcat(opstr,seqnum);
   strcat(opstr,data);
   fprintf(stderr, "fetched from list string of len.(%ld)\n str.(%s)\n",strlen(opstr),opstr);
