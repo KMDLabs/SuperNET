@@ -1876,7 +1876,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
     char streamid[64];
     char *streamid_string;
     const char *txid0 = "0000000000000000000000000000000000000000000000000000000000000000";
-    int32_t broadcast,i,num,numblast,utxovout,completed=0,numvouts,changeout,timeout; char *passphrase,changeaddr[64],vinaddr[64],wifstr[65],blastaddr[65],str[65],*signret,*signedtx=0,*rawtx=0; struct vin_info V; uint32_t locktime,starttime; uint8_t pubkey33[33]; cJSON *retjson,*item,*outputs,*vins=0,*txobj=0,*privkeys=0; struct iguana_msgtx msgtx; bits256 privkey,pubkey,checktxid,utxotxid,signedtxid; uint64_t txfee,utxovalue,change;
+    int32_t broadcast,i,k,p,num,numblast,utxovout,completed=0,numvouts,changeout,timeout,len; char *passphrase,changeaddr[64],vinaddr[64],wifstr[65],blastaddr[65],str[65],*signret,*signedtx=0,*rawtx=0; struct vin_info V; uint32_t locktime,starttime; uint8_t pubkey33[33]; cJSON *retjson,*item,*outputs,*vins=0,*txobj=0,*privkeys=0; struct iguana_msgtx msgtx; bits256 privkey,pubkey,checktxid,utxotxid,signedtxid; uint64_t txfee,utxovalue,change;
     if ( ctx == 0 )
         ctx = bitcoin_ctx();
     if ( (passphrase= jstr(argjson,"password")) == 0 )
@@ -1884,14 +1884,21 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
 
     if ( (streamid_string= jstr(argjson,"streamid")) == 0 )
         return(clonestr("{\"error\":\"need a streamid string of maximum 32 chars long.\"}"));
-    if (strlen(streamid_string) > 32)
+    len = strlen(streamid_string);
+    if ( len > 32)
         return(clonestr("{\"error\":\"streamid is longer than 32 chars.\"}"));
     printf("stream id : %s\nlength:%ld\n",streamid_string,strlen(streamid_string));
 
-    int k,p;
-
     memset(streamid,0,sizeof(streamid));
-
+    for(k=0,p=0;k<32;k++,p+=2)
+    {
+       if ( k < len ) {
+         sprintf((char*)streamid+p,"%02X",streamid_string[k]);
+      } else {
+         sprintf((char*)streamid+p,"%02X",0);
+      }
+    }
+    streamid[64]='\0'
     for(k=0,p=0;k<32;k++,p+=2)
     {
         sprintf((char*)streamid+p,"%02X",streamid_string[k]);
@@ -1900,6 +1907,9 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
 
     printf("Hexadecimal converted string is %ld long: \n",strlen(streamid));
     printf("%s\n",streamid);
+    char *decodedhextest;
+    decode_hex(decodedhextest,32,streamid);
+    printf("decoded hex: %s\n",decodedhextest);
 
     outputs = jarray(&numvouts,argjson,"outputs");
     utxotxid = jbits256(argjson,"utxotxid");
