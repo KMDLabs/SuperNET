@@ -1866,7 +1866,7 @@ int opreturnqueue(char *opstr)
   snprintf(seqnum,9,"%08x",sequencenum);
   strcat(opstr,seqnum);
   strcat(opstr,data);
-  fprintf(stderr, "fetched from list string of len.(%ld)\n str.(%s)",strlen(opstr),opstr);
+  fprintf(stderr, "fetched from list string of len.(%ld)\n str.(%s)\n",strlen(opstr),opstr);
   return(1);
 }
 
@@ -1898,7 +1898,6 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
          sprintf((char*)streamid+p,"%02X",0);
       }
     }
-    streamid[32]='\0';
 
     printf("Hexadecimal converted string is %ld long: \n",strlen(streamid));
     printf("%s\n",streamid);
