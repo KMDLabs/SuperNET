@@ -1866,7 +1866,7 @@ int opreturnqueue(char *opstr)
   snprintf(seqnum,9,"%08x",sequencenum);
   strcat(opstr,seqnum);
   strcat(opstr,data);
-  fprintf(stderr, "fetched from list string of len.(%ld)\n",strlen(opstr));
+  fprintf(stderr, "fetched from list string of len.(%ld)\n str.(%s)",strlen(opstr),opstr);
   return(1);
 }
 
