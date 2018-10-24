@@ -1947,7 +1947,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         // if the queue is empty we will wait for it to fill.
         int waits = 0;
         while (opreturnqueue(opretstr) != 1) {
-            printf("waiting for data,  %ds of %ds\n string:%s",waits,timeout,opretstr);
+            printf("waiting for data,  %ds of %ds\n string:%s\n",waits,timeout,opretstr);
             sleep(10);
             waits = waits+1;
             if (waits >= timeout) {
