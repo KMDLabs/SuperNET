@@ -1892,7 +1892,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
 
     memset(streamid,0,sizeof(streamid));
 
-    for(k=0,p=0;k<strlen(streamid_string);k++,p+=2)
+    for(k=0,p=0;k<32;k++,p+=2)
     {
         sprintf((char*)streamid+p,"%02X",streamid_string[k]);
     }
@@ -1936,7 +1936,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         int waits = 0;
         while (opreturnqueue(opretstr) != 1) {
             printf("waiting for data,  %ds of %ds\n",waits,timeout);
-            sleep(1);
+            sleep(30);
             waits = waits+1;
             if (waits >= timeout) {
                 goto endblast;
