@@ -1902,7 +1902,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
 
     printf("Hexadecimal converted string is %ld long: \n",strlen(streamid));
     printf("%s\n",streamid);
-    char *decodedhextest;
+    char decodedhextest[32];
     decode_hex(decodedhextest,32,streamid);
     printf("decoded hex: %s\n",decodedhextest);
 
