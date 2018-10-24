@@ -1876,7 +1876,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
     char streamid[64];
     char *streamid_string;
     const char *txid0 = "0000000000000000000000000000000000000000000000000000000000000000";
-    int32_t broadcast,i,k,p,num,numblast,utxovout,completed=0,numvouts,changeout,timeout,len; char *passphrase,changeaddr[64],vinaddr[64],wifstr[65],blastaddr[65],str[65],*signret,*signedtx=0,*rawtx=0; struct vin_info V; uint32_t locktime,starttime; uint8_t pubkey33[33]; cJSON *retjson,*item,*outputs,*vins=0,*txobj=0,*privkeys=0; struct iguana_msgtx msgtx; bits256 privkey,pubkey,checktxid,utxotxid,signedtxid; uint64_t txfee,utxovalue,change;
+    int32_t broadcast,i,k,p,num,numblast,utxovout,completed=0,numvouts,changeout,timeout,len; char *passphrase,changeaddr[64],vinaddr[64],wifstr[65],blastaddr[65],str[65],*signret,*signedtx=0,*rawtx=0; struct vin_info V; uint32_t locktime,starttime; uint8_t pubkey33[33]; cJSON *retjson,*item,*outputs,*vins=0,*txobj=0,*privkeys=0; struct iguana_msgtx msgtx; bits256 privkey,pubkey,checktxid,utxotxid,signedtxid,firsttxid; uint64_t txfee,utxovalue,change;
     if ( ctx == 0 )
         ctx = bitcoin_ctx();
     if ( (passphrase= jstr(argjson,"password")) == 0 )
@@ -1886,7 +1886,7 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
         return(clonestr("{\"error\":\"need a streamid string of maximum 32 chars long.\"}"));
     len = strlen(streamid_string);
     if ( len > 32)
-        return(clonestr("{\"error\":\"streamid is longer than 32 chars.\"}"));
+        return(clonestr("{\"error\":\"streamid cannot be longer than 32 chars.\"}"));
     printf("stream id : %s\nlength:%ld\n",streamid_string,strlen(streamid_string));
 
     memset(streamid,0,sizeof(streamid));
@@ -1930,18 +1930,25 @@ char *LP_txblast(struct iguana_info *coin,cJSON *argjson)
     {
         // create opreturn string of max size that was found to fit into op_return from trial and error.
         char opretstr[16262] = {0};
-        // on the first loop use null txid
+        // on the first loop we use the first 32 bytes to store the streamID
         if ( i == 0 )
-            strcpy(opretstr,txid0);
-        else
+            strcpy(opretstr,streamid);
+        else if ( i == 1 ) {
+            // on the second loop we save the first TXID
+            firsttxid = signedtxid;
             strcpy(opretstr,bits256_str(str,signedtxid));
+        } else {
+            // every other TX has the first TXID at the start so the first one can be easily found by receiver.
+            strcpy(opretstr,bits256_str(str,firsttxid));
+        }
+
 
         // call the queue function to fetch the next chunk of data,
         // if the queue is empty we will wait for it to fill.
         int waits = 0;
         while (opreturnqueue(opretstr) != 1) {
             printf("waiting for data,  %ds of %ds\n",waits,timeout);
-            sleep(30);
+            sleep(1);
             waits = waits+1;
             if (waits >= timeout) {
                 goto endblast;
