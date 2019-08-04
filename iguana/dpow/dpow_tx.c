@@ -133,7 +133,7 @@ uint64_t dpow_notarybestk(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
 
 int32_t dpow_minnodes(struct dpow_block *bp)
 {
-    uint32_t time = time(NULL);
+    uint32_t time = (uint32_t)time(NULL);
     if ( time < bp->starttime+70 ) // 2 iterations of dpow_statemachinestart
         return bp->numnotaries/4*3;
     else if ( bp->numnotaries > 8 ) 
