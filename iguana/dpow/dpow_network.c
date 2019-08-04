@@ -17,6 +17,7 @@ extern uint16_t Notaries_port;
 extern int32_t Notaries_numseeds;
 extern char *Notaries_seeds[];
 extern char *Notaries_elected[65][2];
+extern int32_t Notaries_num;
 
 struct signed_nnpacket
 {
