@@ -2315,7 +2315,7 @@ int32_t dpow_nanomsg_update(struct supernet_info *myinfo)
                         dp = 0;
                         
                         // temporary code to detect nodes who have not updated to remove CFEK chains. 
-                        if ( np->senderind >= 0 && np->senderind < bp->numnotaries && strncmp(np->symbol,"CFEK",4) == 0 )
+                        if ( np->senderind >= 0 && np->senderind <  (int32_t)(sizeof(Notaries_elected)/sizeof(*Notaries_elected)) && strncmp(np->symbol,"CFEK",4) == 0 )
                             printf("[%s] sending packet for %s\n",Notaries_elected[np->senderind][0], np->symbol);
                         
                         for (i=0; i<myinfo->numdpows; i++)
