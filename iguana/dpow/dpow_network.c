@@ -1589,7 +1589,7 @@ int32_t dpow_minnodes(struct dpow_block *bp);
 
 void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
 {
-    int8_t bestks[64]; uint32_t sortbuf[64],wts[64],owts[64],counts[64]; int32_t i,j,z,k,n=0,median,numcrcs=0,numdiff,besti,bestmatches = 0,matches = 0; uint64_t masks[64],badmask,matchesmask,recvmask,topmask; uint32_t crcval=0; char srcaddr[64],destaddr[64];
+    int8_t bestks[64]; uint32_t sortbuf[64],wts[64],owts[64],counts[64]; int32_t i,j,z,k,n,median,numcrcs=0,numdiff,besti,bestmatches = 0,matches = 0; uint64_t masks[64],badmask,matchesmask,recvmask,topmask; uint32_t crcval=0; char srcaddr[64],destaddr[64];
     memset(wts,0,sizeof(wts));
     memset(owts,0,sizeof(owts));
     for (i=0; i<bp->numnotaries; i++)
@@ -1624,8 +1624,9 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         for (z=n=0; z<bp->numnotaries; z++)
             if ( (bp->notaries[z].recvmask & (1LL << k)) != 0 )
                 n++;
-        fprintf(stderr, "[%s] match_recvmask.%i vs %i \n", bp->srccoin->symbol, n, dpow_minnodes(bp));
-        //if ( n >= dpow_minnodes(bp) ) //bp->numnotaries/2 )
+        fprintf(stderr, "[%s] recvmask.%i vs %i \n",Notaries_elected[i[0], bp->srccoin->symbol, n, dpow_minnodes(bp));
+        if ( n < dpow_minnodes(bp) )
+            continue;
         
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
             continue;
