@@ -1995,9 +1995,10 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
             //fprintf(stderr,"{%d %x} ",senderind,paxwdcrc);
         }
         bp->notaries[bp->myind].paxwdcrc = bp->paxwdcrc;
-        if ( bp->bestmask == 0 )
+        bp->recvmask |= (1LL << senderind) | (1LL << bp->myind);
+        
+        if ( bp->bestmask == 0 || time(NULL) >= bp->starttime+70 )
         {
-            bp->recvmask |= (1LL << senderind) | (1LL << bp->myind);
             bp->bestmask = dpow_maskmin(bp->recvmask,bp,&bp->bestk);
         }
         
@@ -2028,21 +2029,7 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
                     else bp->destsigsmasks[bestk] &= ~(1LL << senderind);
                 }
             }
-        }
-        
-        // check that block has advanced by 1 on KMD before allowing bestmask to be decided
-        if ( strcmp(bp->destcoin->symbol,"KMD") == 0 )
-        {
-            if ( bp->destht_start == bp->destcoin->longestchain )
-                return;
-        }
-        else 
-        {
-            if ( bp->height == bp->srccoin->longestchain )
-                return;
-        }
-        //fprintf(stderr, "[%s] checkpoint ht.%i vs longestchain.%i\n",bp->srccoin->symbol, bp->destht_start, bp->destcoin->longestchain);
-        
+        }        
         if ( bp->bestk >= 0 )
         {
             flag = -1;

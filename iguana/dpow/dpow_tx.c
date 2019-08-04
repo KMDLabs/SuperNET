@@ -131,9 +131,20 @@ uint64_t dpow_notarybestk(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
     return(bestmask);
 }
 
+int32_t dpow_minnodes(struct dpow_block *bp)
+{
+    uint32_t time = time(NULL);
+    if ( time < bp->starttime+70 ) // 2 iterations of dpow_statemachinestart
+        return bp->numnotaries/4*3;
+    else if ( bp->numnotaries > 8 ) 
+        return bp->numnotaries/2;
+    else 
+        return 2;
+}
+
 uint64_t dpow_maskmin(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
 {
-    int32_t j,m,k; uint64_t bestmask,mask = 0;//bp->require0;
+    int32_t j,m,k,z,n; uint64_t bestmask,mask = 0;//bp->require0;
     bestmask = 0;
     *lastkp = -1;
     m = 0;//bp->require0;
@@ -144,15 +155,23 @@ uint64_t dpow_maskmin(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
         //    continue;
         if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
         {
-            mask |= (1LL << k);
-            if ( ++m == bp->minsigs )
+            for (z=n=0; z<bp->numnotaries; z++)
+                if ( (bp->notaries[z].recvmask & (1LL << k)) != 0 )
+                    n++;
+            fprintf(stderr, "[%s] match_recvmask.%i vs %i \n", bp->symbol, n, dpow_minnodes(bp));
+            if ( n >= dpow_minnodes(bp) ) //bp->numnotaries/2 )
             {
-                *lastkp = k;
-                bestmask = mask;
+                mask |= (1LL << k);
+                if ( ++m == bp->minsigs )
+                {
+                    *lastkp = k;
+                    bestmask = mask;
+                }
             }
         }
     }
-    bp->recvmask |= mask;
+    if ( time >= bp->starttime+70 )
+        bp->recvmask |= mask; // adding nodes who are in majorty of other nodes bestmask to your recvmask even if you cant see it, lets give it some time first. 
     if ( *lastkp >= 0 )
     {
         for (mask=j=0; j<bp->numnotaries; j++)
