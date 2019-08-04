@@ -1585,6 +1585,7 @@ int32_t dpow_crossconnected(uint64_t *badmaskp,struct dpow_block *bp,uint64_t be
     //printf("-> num.%d for bestmask.%llx\n",num,(long long)bestmask);
     return(num);
 }
+int32_t dpow_minnodes(struct dpow_block *bp);
 
 void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
 {
