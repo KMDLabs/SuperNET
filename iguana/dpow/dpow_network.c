@@ -1622,8 +1622,8 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         else 
         {
             //recvmask |= ~(1LL << i);
-            fprintf(stderr, "[%s] no utxos\n",Notaries_elected[i][0]);
-            // allow 1 iteration of dpow_statemachinestart before discarding a node as elegible
+            fprintf(stderr, "[%s] no utxos now.ui vs inelegible.%ui\n",Notaries_elected[i][0], time(NULL), bp->starttime+32 );
+            // allow 1 iteration of dpow_statemachinestart before discarding a node as inelegible
             if ( time(NULL) < bp->starttime+32 ) 
                 continue;
         }
@@ -1777,7 +1777,7 @@ void dpow_nanoutxoset(struct supernet_info *myinfo,struct dpow_info *dp,struct d
     }
     else
     {
-        //dpow_bestconsensus(dp,bp);
+        //dpow_bestconsensus(dp,bp); // converges bestmask sent to other nodes before all nodes have responded. 
         np->srcutxo = bp->notaries[bp->myind].src.prev_hash;
         np->srcvout = bp->notaries[bp->myind].src.prev_vout;
         np->destutxo = bp->notaries[bp->myind].dest.prev_hash;
@@ -1993,7 +1993,7 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
             {
                 bp->notaries[senderind].src.prev_hash = srcutxo;
                 bp->notaries[senderind].src.prev_vout = srcvout;
-                char str[65]; printf("%s senderind.%d <- %s/v%d\n",dp->symbol,senderind,bits256_str(str,srcutxo),srcvout);
+                //char str[65]; printf("%s senderind.%d <- %s/v%d\n",dp->symbol,senderind,bits256_str(str,srcutxo),srcvout);
             }
             if ( bits256_nonz(destutxo) != 0 )
             {
@@ -2015,7 +2015,7 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
             //fprintf(stderr,"{%d %x} ",senderind,paxwdcrc);
         }
         bp->notaries[bp->myind].paxwdcrc = bp->paxwdcrc;
-        fprintf(stderr, "recvmask.%lu adding senderind.%i myind.%i\n",bp->recvmask, senderind, bp->myind );
+        //fprintf(stderr, "recvmask.%lu adding senderind.%i myind.%i\n",bp->recvmask, senderind, bp->myind );
         bp->recvmask |= (1LL << senderind) | (1LL << bp->myind);
         
         if ( bp->bestmask == 0 ) // || time(NULL) >= bp->starttime+70 )
