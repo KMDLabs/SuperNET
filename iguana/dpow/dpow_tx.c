@@ -136,9 +136,9 @@ int32_t dpow_minnodes(struct dpow_block *bp)
     // these numbers will need adjusting. 
     uint32_t nowtime = (uint32_t)time(NULL);
     if ( nowtime < bp->starttime+30 ) // 30s after block was mined 80% of nodes
-        return bp->numnotaries-((bp->notaries+(bp->numnotaries % 2)) / 5);
+        return bp->numnotaries-((bp->numnotaries+(bp->numnotaries % 2)) / 5);
     else if ( nowtime < bp->starttime+60 ) // 60s after block was mined 75% of nodes
-        return bp->numnotaries-((bp->notaries+(bp->numnotaries % 2)) / 4);
+        return bp->numnotaries-((bp->numnotaries+(bp->numnotaries % 2)) / 4);
     else if ( nowtime < bp->starttime+120 )  // 120s after block was mined 50% of nodes
         return bp->numnotaries/2;
     else 
