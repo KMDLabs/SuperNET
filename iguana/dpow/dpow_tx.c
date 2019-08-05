@@ -136,10 +136,11 @@ int32_t dpow_minnodes(struct dpow_block *bp)
     uint32_t starttime = (uint32_t)time(NULL);
     if ( starttime < bp->starttime+70 ) // 2 iterations of dpow_statemachinestart
         return 5; //return bp->numnotaries/4*3;
-    else if ( bp->numnotaries > 8 ) 
-        return bp->numnotaries/2;
-    else 
-        return 2;
+    else return 4; 
+    //else if ( bp->numnotaries > 8 ) 
+    //    return bp->numnotaries/2;
+    //else 
+    //    return 2;
 }
 
 uint64_t dpow_maskmin(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
