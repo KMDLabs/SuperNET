@@ -1634,7 +1634,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         if ( n < dpow_minnodes(bp) )
             continue;
         jk++;
-        fprintf(stderr, "[%s] recvmask.%i vs %i \n",Notaries_elected[i][0], n, dpow_minnodes(bp)); 
+        fprintf(stderr, "[%s] recvmask.%i vs min %i duration.%u\n",Notaries_elected[i][0], n, dpow_minnodes(bp), (uint32_t)time(NULL)-bp->starttime+30); 
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
             continue;
         //if ( bp->require0 != 0 && (bp->notaries[i].bestmask & 1) == 0 )
