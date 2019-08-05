@@ -1623,16 +1623,17 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         {
             //recvmask |= ~(1LL << i);
             fprintf(stderr, "[%s] no utxos\n",Notaries_elected[i][0]);
+            continue;
         }
         
-        //k = DPOW_MODIND(bp,i);
-        //for (z=n=0; z<bp->numnotaries; z++)
-        //    if ( (bp->notaries[z].recvmask & (1LL << i)) != 0 )
-        //        n++;
-        //if ( n < dpow_minnodes(bp) )
-        //    continue;
-        //jk++;
-        //fprintf(stderr, "[%s] recvmask.%i vs %i \n",Notaries_elected[i][0], n, dpow_minnodes(bp));
+        k = DPOW_MODIND(bp,i);
+        for (z=n=0; z<bp->numnotaries; z++)
+            if ( (bp->notaries[z].recvmask & (1LL << k)) != 0 )
+                n++;
+        if ( n < dpow_minnodes(bp) )
+            continue;
+        jk++;
+        fprintf(stderr, "[%s] recvmask.%i vs %i \n",Notaries_elected[i][0], n, dpow_minnodes(bp));
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
             continue;
         //if ( bp->require0 != 0 && (bp->notaries[i].bestmask & 1) == 0 )
@@ -1652,8 +1653,8 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             numdiff++;
         }
     }
-    //if ( jk < dpow_minnodes(bp) )
-    //    return;
+    if ( jk < dpow_minnodes(bp) )
+        return;
     besti = -1, matches = 0;
     for (i=0; i<numdiff; i++)
     {
