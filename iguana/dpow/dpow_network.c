@@ -1624,7 +1624,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             //recvmask |= ~(1LL << i);
             fprintf(stderr, "[%s] no utxos\n",Notaries_elected[i][0]);
             // allow 1 iteration of dpow_statemachinestart before discarding a node as elegible
-            if ( starttime < bp->starttime+32 ) 
+            if ( time(NULL) < bp->starttime+32 ) 
                 continue;
         }
         
