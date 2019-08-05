@@ -1624,7 +1624,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         }
         else 
         {
-            fprintf(stderr, "node.%s no utxos\n",i);
+            fprintf(stderr, "node.%i no utxos\n",i);
             continue;        
         }
         k = DPOW_MODIND(bp,i);
