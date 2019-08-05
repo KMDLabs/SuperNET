@@ -1621,7 +1621,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             recvmask |= (1LL << i);
         else 
         {
-            recvmask |= ~(1LL << i);
+            //recvmask |= ~(1LL << i);
             fprintf(stderr, "[%s] no utxos\n",Notaries_elected[i][0]);
         }
         
@@ -1774,7 +1774,7 @@ void dpow_nanoutxoset(struct supernet_info *myinfo,struct dpow_info *dp,struct d
     }
     else
     {
-        dpow_bestconsensus(dp,bp);
+        //dpow_bestconsensus(dp,bp);
         np->srcutxo = bp->notaries[bp->myind].src.prev_hash;
         np->srcvout = bp->notaries[bp->myind].src.prev_vout;
         np->destutxo = bp->notaries[bp->myind].dest.prev_hash;
@@ -2012,7 +2012,7 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
             //fprintf(stderr,"{%d %x} ",senderind,paxwdcrc);
         }
         bp->notaries[bp->myind].paxwdcrc = bp->paxwdcrc;
-        fprintf(stderr, "recvmask.%i adding senderind.%i myind.%i\n",bp->recvmask, senderind, bp->myind );
+        fprintf(stderr, "recvmask.%lu adding senderind.%i myind.%i\n",bp->recvmask, senderind, bp->myind );
         bp->recvmask |= (1LL << senderind) | (1LL << bp->myind);
         
         if ( bp->bestmask == 0 ) // || time(NULL) >= bp->starttime+70 )
