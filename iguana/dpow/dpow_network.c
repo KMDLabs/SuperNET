@@ -1624,7 +1624,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         }
         else 
         {
-            fprintf(stderr, "node.%i no utxos\n",i);
+            fprintf(stderr, "node.%i no utxos duration.%u\n",i,(uint32_t)time(NULL)-bp->starttime);
             continue;        
         }
         k = DPOW_MODIND(bp,i);
@@ -1634,7 +1634,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         if ( n < dpow_minnodes(bp) )
             continue;
         jk++;
-        fprintf(stderr, "[%s] recvmask.%i vs min %i duration.%u\n",Notaries_elected[i][0], n, dpow_minnodes(bp), (uint32_t)time(NULL)-bp->starttime+30); 
+        fprintf(stderr, "[%s] recvmask.%i vs min.%i of max.%i duration.%u\n",Notaries_elected[i][0], n, dpow_minnodes(bp), bp->numnotaries, (uint32_t)time(NULL)-bp->starttime); 
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
             continue;
         //if ( bp->require0 != 0 && (bp->notaries[i].bestmask & 1) == 0 )
@@ -1654,6 +1654,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             numdiff++;
         }
     }
+    // checks we have minimum nodes that can see minimum nodes each. 
     if ( jk < dpow_minnodes(bp) )
         return;
     besti = -1, matches = 0;
@@ -2004,6 +2005,7 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
         {
             bp->notaries[bp->myind].src.prev_hash = bp->mysrcutxo;
             bp->notaries[bp->myind].dest.prev_hash = bp->mydestutxo;
+            
         }
         if ( bestmask != 0 )
             bp->notaries[senderind].bestmask = bestmask;
@@ -2022,6 +2024,7 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
             bp->bestmask = dpow_maskmin(bp->recvmask,bp,&bp->bestk);
         }
         
+        // calling this only here make sure we have as much data as possible before making a decision on who will notarize. 
         dpow_bestconsensus(dp,bp);
         if ( bp->bestk >= 0 )
             bp->notaries[bp->myind].bestk = bp->bestk;
