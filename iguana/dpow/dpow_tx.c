@@ -134,7 +134,7 @@ uint64_t dpow_notarybestk(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
 int32_t dpow_minnodes(struct dpow_block *bp)
 {
     uint32_t starttime = (uint32_t)time(NULL);
-    if ( starttime < bp->starttime+70 ) // 2 iterations of dpow_statemachinestart
+    if ( starttime < bp->starttime+32 ) // 1 iteration of dpow_statemachinestart
         return 5; //return bp->numnotaries/4*3;
     else //if ( starttime < bp->starttime+100 )
         return 4; 
@@ -162,12 +162,13 @@ uint64_t dpow_maskmin(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
             for (z=n=0; z<bp->numnotaries; z++)
                 if ( (bp->notaries[z].recvmask & (1LL << k)) != 0 )
                     n++;
-            //fprintf(stderr, "[%s] match_recvmask.%i vs %i \n", bp->srccoin->symbol, n, dpow_minnodes(bp));
+            
             if ( n >= dpow_minnodes(bp) ) //bp->numnotaries/2 )
             { 
                 mask |= (1LL << k);
                 if ( ++m == bp->minsigs )
                 {
+                    fprintf(stderr, "[%s] match_recvmask.%i vs %i \n", bp->srccoin->symbol, n, dpow_minnodes(bp));
                     *lastkp = k;
                     bestmask = mask;
                 }
