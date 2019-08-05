@@ -573,7 +573,7 @@ void dpow_statemachinestart(void *ptr)
         }
         sleep(1);
     }
-    starttime = checkpoint.timestamp; //(uint32_t)time(NULL);
+    starttime = (uint32_t)time(NULL); // checkpoint.timestamp;
     if ( bp->isratify == 0 )
     {
         bp->starttime = starttime;

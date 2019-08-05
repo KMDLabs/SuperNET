@@ -1619,15 +1619,16 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
     {
         if ( bits256_nonz(bp->notaries[i].src.prev_hash) != 0 && bits256_nonz(bp->notaries[i].dest.prev_hash) != 0 )
             recvmask |= (1LL << i);
+        else fprintf(stderr, "[%s] no utxos\n",Notaries_elected[i][0]);
         
         //k = DPOW_MODIND(bp,i);
-        for (z=n=0; z<bp->numnotaries; z++)
-            if ( (bp->notaries[z].recvmask & (1LL << i)) != 0 )
-                n++;
-        if ( n < dpow_minnodes(bp) )
-            continue;
-        jk++;
-        fprintf(stderr, "[%s] recvmask.%i vs %i \n",Notaries_elected[i][0], n, dpow_minnodes(bp));
+        //for (z=n=0; z<bp->numnotaries; z++)
+        //    if ( (bp->notaries[z].recvmask & (1LL << i)) != 0 )
+        //        n++;
+        //if ( n < dpow_minnodes(bp) )
+        //    continue;
+        //jk++;
+        //fprintf(stderr, "[%s] recvmask.%i vs %i \n",Notaries_elected[i][0], n, dpow_minnodes(bp));
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
             continue;
         //if ( bp->require0 != 0 && (bp->notaries[i].bestmask & 1) == 0 )
@@ -1647,8 +1648,8 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             numdiff++;
         }
     }
-    if ( jk < dpow_minnodes(bp) )
-        return;
+    //if ( jk < dpow_minnodes(bp) )
+    //    return;
     besti = -1, matches = 0;
     for (i=0; i<numdiff; i++)
     {
@@ -2007,9 +2008,10 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
             //fprintf(stderr,"{%d %x} ",senderind,paxwdcrc);
         }
         bp->notaries[bp->myind].paxwdcrc = bp->paxwdcrc;
+        fprintf(stderr, "recvmask.%i adding senderind.%i myind.%i\n",bp->recvmask, senderind, bp->myind );
         bp->recvmask |= (1LL << senderind) | (1LL << bp->myind);
         
-        if ( bp->bestmask == 0 || time(NULL) >= bp->starttime+70 )
+        if ( bp->bestmask == 0 ) // || time(NULL) >= bp->starttime+70 )
         {
             bp->bestmask = dpow_maskmin(bp->recvmask,bp,&bp->bestk);
         }
