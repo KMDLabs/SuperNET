@@ -134,9 +134,12 @@ uint64_t dpow_notarybestk(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
 int32_t dpow_minnodes(struct dpow_block *bp)
 {
     uint32_t starttime = (uint32_t)time(NULL);
-    if ( starttime < bp->starttime+70 ) // 2 iterations of dpow_statemachinestart
+    if ( starttime < bp->starttime+40 ) // 2 iterations of dpow_statemachinestart
         return 5; //return bp->numnotaries/4*3;
-    else return 4; 
+    else if ( starttime < bp->starttime+70 )
+        return 4; 
+    else if ( starttime < bp->starttime+100 )
+        return 3;
     //else if ( bp->numnotaries > 8 ) 
     //    return bp->numnotaries/2;
     //else 
@@ -171,7 +174,7 @@ uint64_t dpow_maskmin(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
             }
         }
     }
-    if ( (uint32_t)time(NULL) >= bp->starttime+70 )
+    if ( (uint32_t)time(NULL) >= bp->starttime+40 )
         bp->recvmask |= mask; // adding nodes who are in majorty of other nodes bestmask to your recvmask even if you cant see it, lets give it some time first. 
     if ( *lastkp >= 0 )
     {
