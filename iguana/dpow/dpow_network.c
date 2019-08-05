@@ -1624,10 +1624,9 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         for (z=n=0; z<bp->numnotaries; z++)
             if ( (bp->notaries[z].recvmask & (1LL << k)) != 0 )
                 n++;
-        fprintf(stderr, "[%s] recvmask.%i vs %i \n",Notaries_elected[i][0], n, dpow_minnodes(bp));
         if ( n < dpow_minnodes(bp) )
             continue;
-        
+        fprintf(stderr, "[%s] recvmask.%i vs %i \n",Notaries_elected[i][0], n, dpow_minnodes(bp));
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
             continue;
         //if ( bp->require0 != 0 && (bp->notaries[i].bestmask & 1) == 0 )
