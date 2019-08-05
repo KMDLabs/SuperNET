@@ -160,7 +160,7 @@ uint64_t dpow_maskmin(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
         if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
         {
             for (z=n=0; z<bp->numnotaries; z++)
-                if ( (bp->notaries[z].recvmask & (1LL << i)) != 0 )
+                if ( (bp->notaries[z].recvmask & (1LL << j)) != 0 )
                     n++;
             //fprintf(stderr, "[%s] match_recvmask.%i vs %i \n", bp->srccoin->symbol, n, dpow_minnodes(bp));
             if ( n >= dpow_minnodes(bp) ) //bp->numnotaries/2 )
