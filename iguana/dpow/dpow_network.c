@@ -2024,7 +2024,7 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
             bp->bestmask = dpow_maskmin(bp->recvmask,bp,&bp->bestk);
         }
         
-        // calling this only here make sure we have as much data as possible before making a decision on who will notarize. 
+        // calling this only here makes sure we have as much data as possible before making a decision on who will notarize. 
         dpow_bestconsensus(dp,bp);
         if ( bp->bestk >= 0 )
             bp->notaries[bp->myind].bestk = bp->bestk;
