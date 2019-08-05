@@ -1620,9 +1620,9 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         if ( bits256_nonz(bp->notaries[i].src.prev_hash) != 0 && bits256_nonz(bp->notaries[i].dest.prev_hash) != 0 )
             recvmask |= (1LL << i);
         
-        k = DPOW_MODIND(bp,i);
+        //k = DPOW_MODIND(bp,i);
         for (z=n=0; z<bp->numnotaries; z++)
-            if ( (bp->notaries[z].recvmask & (1LL << k)) != 0 )
+            if ( (bp->notaries[z].recvmask & (1LL << i)) != 0 )
                 n++;
         if ( n < dpow_minnodes(bp) )
             continue;
