@@ -1619,7 +1619,11 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
     {
         if ( bits256_nonz(bp->notaries[i].src.prev_hash) != 0 && bits256_nonz(bp->notaries[i].dest.prev_hash) != 0 )
             recvmask |= (1LL << i);
-        else fprintf(stderr, "[%s] no utxos\n",Notaries_elected[i][0]);
+        else 
+        {
+            recvmask |= ~(1LL << i);
+            fprintf(stderr, "[%s] no utxos\n",Notaries_elected[i][0]);
+        }
         
         //k = DPOW_MODIND(bp,i);
         //for (z=n=0; z<bp->numnotaries; z++)
@@ -1986,7 +1990,7 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
             {
                 bp->notaries[senderind].src.prev_hash = srcutxo;
                 bp->notaries[senderind].src.prev_vout = srcvout;
-                //char str[65]; printf("%s senderind.%d <- %s/v%d\n",dp->symbol,senderind,bits256_str(str,srcutxo),srcvout);
+                char str[65]; printf("%s senderind.%d <- %s/v%d\n",dp->symbol,senderind,bits256_str(str,srcutxo),srcvout);
             }
             if ( bits256_nonz(destutxo) != 0 )
             {
