@@ -1618,14 +1618,17 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
     for (jk=numdiff=i=0; i<bp->numnotaries; i++)
     {
         if ( bits256_nonz(bp->notaries[i].src.prev_hash) != 0 && bits256_nonz(bp->notaries[i].dest.prev_hash) != 0 )
+        {
             recvmask |= (1LL << i);
+            bp->recvmask |= recvmask;
+        }
         else 
         {
             //recvmask |= ~(1LL << i);
-            fprintf(stderr, "[%s] no utxos now.ui vs inelegible.%ui\n",Notaries_elected[i][0], time(NULL), bp->starttime+32 );
+            fprintf(stderr, "[%s] no utxos now.%ui vs inelegible.%ui\n",Notaries_elected[i][0], (uint32_t)time(NULL), bp->starttime+32 );
             // allow 1 iteration of dpow_statemachinestart before discarding a node as inelegible
             if ( time(NULL) < bp->starttime+32 ) 
-                continue;
+                return;
         }
         
         /*k = DPOW_MODIND(bp,i);
@@ -1697,7 +1700,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             printf(" <- problem nodes.%s\n",dp->symbol);
         }
     }
-    bp->recvmask |= recvmask;
+    
     if ( bp->bestmask == 0 )//|| (time(NULL) / 180) != bp->lastepoch )
     {
         bp->bestmask = dpow_notarybestk(bp->recvmask,bp,&bp->bestk);
