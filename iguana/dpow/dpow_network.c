@@ -2010,7 +2010,8 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
         }
         if ( utxos == 2 )
             bp->recvmask |= (1LL << senderind);
-        fprintf(stderr, "recvmask.%lu senderind.%i myind.%i\n",bp->recvmask, utxos == 2 ? senderind : -1, ((bp->recvmask & (1LL << bp->myind)) != 0) ? bp->myind : -1);
+        if ( rand() % 100 < 5)
+            fprintf(stderr, "recvmask.%lu senderind.%i myind.%i\n",bp->recvmask, utxos == 2 ? senderind : -1, ((bp->recvmask & (1LL << bp->myind)) != 0) ? bp->myind : -1);
         if ( bestmask != 0 )
             bp->notaries[senderind].bestmask = bestmask;
         if ( recvmask != 0 )

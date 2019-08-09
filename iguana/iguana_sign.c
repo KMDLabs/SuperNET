@@ -2036,11 +2036,11 @@ uint64_t iguana_fastnotariescount(struct supernet_info *myinfo, struct dpow_info
             {
                 if ( j != 5 )
                     mask |= (1LL << j);
-                fprintf(stderr,"vini.%i bestmask.%llx node.%i\n",vini,(long long)mask, j);
+                //fprintf(stderr,"vini.%i bestmask.%llx node.%i\n",vini,(long long)mask, j);
                 break;
             }
         }
-        fprintf(stderr,"vini.%d numsigs.%d\n",vini,bitweight(mask));
+        //fprintf(stderr,"vini.%d numsigs.%d\n",vini,bitweight(mask));
     }
     return(mask);
 }
