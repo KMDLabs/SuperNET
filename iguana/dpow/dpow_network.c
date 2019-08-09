@@ -1635,7 +1635,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             continue;
         jk++;
         if ( rand() % 100 < 2 )    
-            fprintf(stderr, "[%i] recvmask.%i vs min.%i of max.%i duration.%u bestmask.%llx\n",i, n, bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,(long long)bp->bestmask); 
+            fprintf(stderr, "[%i] recv.%i vs min.%i max.%i sec.%u best.%llx\n",i, n, bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,(long long)bp->bestmask); 
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
             continue;
         //if ( bp->require0 != 0 && (bp->notaries[i].bestmask & 1) == 0 )
