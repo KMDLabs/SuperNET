@@ -1634,7 +1634,8 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         if ( n < bp->minnodes )
             continue;
         jk++;
-        //fprintf(stderr, "[%i] recvmask.%i vs min.%i of max.%i duration.%u bestmask.%llx\n",i, n, bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,(long long)bp->bestmask); 
+        if ( rand() % 100 < 5 )    
+            fprintf(stderr, "[%i] recvmask.%i vs min.%i of max.%i duration.%u bestmask.%llx\n",i, n, bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,(long long)bp->bestmask); 
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
             continue;
         //if ( bp->require0 != 0 && (bp->notaries[i].bestmask & 1) == 0 )
@@ -2010,7 +2011,7 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
         }
         if ( utxos == 2 )
             bp->recvmask |= (1LL << senderind);
-        if ( rand() % 100 < 5)
+        if ( rand() % 100 < 5 )
             fprintf(stderr, "recvmask.%lu senderind.%i myind.%i\n",bp->recvmask, utxos == 2 ? senderind : -1, ((bp->recvmask & (1LL << bp->myind)) != 0) ? bp->myind : -1);
         if ( bestmask != 0 )
             bp->notaries[senderind].bestmask = bestmask;
