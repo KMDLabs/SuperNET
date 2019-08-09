@@ -425,8 +425,8 @@ THREE_STRINGS_AND_DOUBLE(iguana,dpow,symbol,dest,pubkey,freq)
         dp->minsigs = Notaries_minsigs; //DPOW_MIN_ASSETCHAIN_SIGS;
         if ( freq == 0 && (strcmp("CHIPS",dp->symbol) == 0) )
             dp->freq = DPOW_MAXFREQ;
-        //else if ( freq > 2 )
-        //    dp->freq = freq;
+        else if ( freq > 2 )
+            dp->freq = freq;
         else dp->freq = 2;
     }
     src = iguana_coinfind(dp->symbol);
