@@ -683,7 +683,7 @@ void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpo
                         // This could flag that utxo and skip it from now on, if its yours. Or you could track score of whos node is breaking notarizations. 
                         // Some nodes may call gettxout at a later time than others and it could return a false positive. 
                         bp->state = 0xffffffff;
-                        printf("dpow_sigscheck: [src.%s ht.%i] mismatched txid.%s vs %s\n",bp->srccoin->symbol,bp->height,bits256_str(str,txid),retstr);
+                        printf(BOLDRED"dpow_sigscheck: [src.%s ht.%i] mismatched txid.%s vs %s\n"RESET,bp->srccoin->symbol,bp->height,bits256_str(str,txid),retstr);
                         //dpow_heightfind2(myinfo,dp,bp->height);
 #ifdef LOGTX
                         FILE * fptr;
@@ -712,16 +712,16 @@ void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpo
                 */
                 
                 uint64_t maskdiff = bp->bestmask^failedbestmask;
-                fprintf(stderr, "failedbestmask.%llx bestmask.%llx maskdiff.%llx\n",(long long)failedbestmask, (long long)bp->bestmask, (long long)maskdiff );
+                fprintf(stderr, BOLDRED"failedbestmask.%llx bestmask.%llx maskdiff.%llx\n"RESET,(long long)failedbestmask, (long long)bp->bestmask, (long long)maskdiff );
                 for (j=0; j<bp->numnotaries; j++)
                     if ( (maskdiff & (1LL << j)) != 0 )
                     {
-                        fprintf(stderr, "node.%i has submitted incorrect sig, ban them from the next round\n", j);
+                        fprintf(stderr, BOLDRED"node.%i has submitted incorrect sig, ban them from the next round\n"RESET, j);
                         dp->lastbanheight[j] = bp->height;
                     }
                 
                 bp->state = 0xffffffff;
-                printf("failed notary tx verification\n");
+                printf(BOLDRED"failed notary tx verification\n"RESET);
             }
         } //else printf("numsigs.%d vs required.%d\n",numsigs,bp->minsigs);
     }
