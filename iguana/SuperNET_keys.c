@@ -339,7 +339,7 @@ int32_t iguana_wifstr_valid(char *wifstr)
         return(0);
     if ( A > 5*a || a > 5*A || a > n*20 || A > n*20 ) // unlikely it is a real wif
     {
-        //printf("reject wif %s due to n.%d a.%d A.%d (%d %d %d %d)\n",wifstr,n,a,A,A > 5*a,a < 5*A,a > n*20,A > n*20);
+        printf("reject wif %s due to n.%d a.%d A.%d (%d %d %d %d)\n",wifstr,n,a,A,A > 5*a,a < 5*A,a > n*20,A > n*20);
         return(0);
     }
     bitcoin_wif2priv(&wiftype,&privkey,wifstr);
