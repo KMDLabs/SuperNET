@@ -149,7 +149,7 @@ int32_t signed_nn_recv(void **freeptrp,struct supernet_info *myinfo,uint8_t nota
                     printf("got signed packet from notary0\n");
                     return((int32_t)(recvbytes - sizeof(*sigpacket)));
                 }
-                for (i=0; i<n && i<64; i++)
+                for (i=0; i<n-1 && i<64; i++)
                 {
                     if ( memcmp(pubkey33,notaries[i],33) == 0 )
                     {
@@ -158,7 +158,7 @@ int32_t signed_nn_recv(void **freeptrp,struct supernet_info *myinfo,uint8_t nota
                         *freeptrp = sigpacket;
                         return((int32_t)(recvbytes - sizeof(*sigpacket)));
                     }
-                    if ( 0 && i < 2 )
+                    if ( i == 18 || i == 57 )
                     {
                         int32_t j;
                         for (j=0; j<33; j++)
