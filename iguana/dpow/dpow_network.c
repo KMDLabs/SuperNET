@@ -96,7 +96,7 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                         }
                         for (i=0; i<32; i++)
                             printf("%02x",sigpacket->packethash.bytes[i]);
-                        printf("crc32.%d nnsend.%d\n",sock,calc_crc32(0,(void *)sigpacket,size));
+                        printf(" crc32.%08x nnsend.%d\n",calc_crc32(0,(void *)sigpacket,size), sock);
                         free(sigpacket);
                         return(sentbytes - siglen);
                     }
