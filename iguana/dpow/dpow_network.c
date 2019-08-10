@@ -78,7 +78,10 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                 {
                     for (z=0; z<33; z++)
                         printf("%02x",pubkey33[z]);
-                    printf(" signed pubkey\n");
+                    printf(" pubkey33 cs signpubkey.");
+                    for (z=0; z<33; z++)
+                        printf("%02x",signpubkey33[z]);
+                    printf("\n");
                     if ( memcmp(pubkey33,signpubkey33,33) == 0 )
                     {
                         sentbytes = 0;
@@ -90,7 +93,7 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                             if ( nn_poll(&pfd,1,10) > 0 )
                             {
                                 sentbytes = nn_send(sock,sigpacket,size + sizeof(*sigpacket),0);
-                                //break;
+                                break;
                             }
                             usleep(1000);
                         }
