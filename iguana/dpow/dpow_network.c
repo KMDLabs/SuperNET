@@ -69,10 +69,6 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                 break;
         }
         bitcoin_pubkey33(ctx,signpubkey33,privkey);
-        bitcoin_priv2wif(wifstr,privkey,188);
-        for (z=0; z<33; z++)
-            printf("%02x",signpubkey33[z]);
-        printf(" pubkey for pribkey %s", wifstr);
         for (k=0; k<33; k++)
         {
             if ( i < 10000 && (siglen= bitcoin_sign(ctx,"nnsend",sig,sigpacket->packethash,privkey,1)) > 0 && siglen == 65 )
@@ -97,7 +93,7 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                         }
                         //for (z=0; z<32; z++)
                         //    printf("%02x",sigpacket->packethash.bytes[z]);
-                        printf("crc32.%08x sentbytes.%d\n",calc_crc32(0,(void *)sigpacket,size), sentbytes);
+                        //printf("crc32.%08x sentbytes.%d\n",calc_crc32(0,(void *)sigpacket,size), sentbytes);
                         free(sigpacket);
                         return(sentbytes - siglen);
                     }
@@ -129,9 +125,9 @@ int32_t signed_nn_recv(void **freeptrp,struct supernet_info *myinfo,uint8_t nota
         recvbytes = 0;
     else*/ if ( (recvbytes= nn_recv(sock,&sigpacket,NN_MSG,0)) > 0 )
     {
-        for (i=0; i<32; i++)
-            printf("%02x",sigpacket->packethash.bytes[i]);
-        printf(" <- [%d] RECV.%d crc.%08x cmp.%d\n",i,recvbytes,calc_crc32(0,(void *)sigpacket,recvbytes),sigpacket->packetlen == recvbytes-sizeof(*sigpacket));
+        //for (i=0; i<32; i++)
+        //    printf("%02x",sigpacket->packethash.bytes[i]);
+        //printf(" <- [%d] RECV.%d crc.%08x cmp.%d\n",i,recvbytes,calc_crc32(0,(void *)sigpacket,recvbytes),sigpacket->packetlen == recvbytes-sizeof(*sigpacket));
     }
     if ( sigpacket != 0 && recvbytes > sizeof(*sigpacket) && sigpacket->packetlen == recvbytes-sizeof(*sigpacket) )
     {
@@ -147,7 +143,7 @@ int32_t signed_nn_recv(void **freeptrp,struct supernet_info *myinfo,uint8_t nota
                 {
                     *(void **)packetp = (void **)((uint64_t)sigpacket + sizeof(*sigpacket));
                     *freeptrp = sigpacket;
-                    printf("got signed packet from notary0\n");
+                    //printf("got signed packet from notary0\n");
                     return((int32_t)(recvbytes - sizeof(*sigpacket)));
                 }
                 for (i=0; i<n && i<64; i++)
@@ -160,9 +156,9 @@ int32_t signed_nn_recv(void **freeptrp,struct supernet_info *myinfo,uint8_t nota
                         return((int32_t)(recvbytes - sizeof(*sigpacket)));
                     }
                 }
-                for (i=0; i<33; i++)
-                    printf("%02x",pubkey33[i]);
-                printf(" invalid pubkey33 n.%d\n",n);
+                //for (i=0; i<33; i++)
+                //    printf("%02x",pubkey33[i]);
+                //printf(" invalid pubkey33 n.%d\n",n);
             } else printf("recoververify error nonce.%u packetlen.%d\n",sigpacket->nonce,sigpacket->packetlen);
         } else printf("hash mismatch or bad nonce.%u packetlen.%d\n",sigpacket->nonce,sigpacket->packetlen);
     } else if ( recvbytes > 0 )
