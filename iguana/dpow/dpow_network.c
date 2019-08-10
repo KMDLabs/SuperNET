@@ -95,7 +95,7 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                             usleep(1000);
                         }
                         for (i=0; i<32; i++)
-                            printf("%02x",(uint8_t *)sigpacket->packethash.bytes[i];
+                            printf("%02x",sigpacket->packethash.bytes[i]);
                         printf("crc32.%d nnsend.%d\n",sock,calc_crc32(0,(void *)sigpacket,size));
                         free(sigpacket);
                         return(sentbytes - siglen);
@@ -129,7 +129,7 @@ int32_t signed_nn_recv(void **freeptrp,struct supernet_info *myinfo,uint8_t nota
     else*/ if ( (recvbytes= nn_recv(sock,&sigpacket,NN_MSG,0)) > 0 )
     {
         for (i=0; i<32; i++)
-            printf("%02x",(uint8_t *)sigpacket->packethash.bytes[i];
+            printf("%02x",sigpacket->packethash.bytes[i]);
         printf(" <- [%d] RECV.%d crc.%08x cmp.%d\n",i,recvbytes,calc_crc32(0,(void *)sigpacket,recvbytes),sigpacket->packetlen == recvbytes-sizeof(*sigpacket));
     }
     if ( sigpacket != 0 && recvbytes > sizeof(*sigpacket) && sigpacket->packetlen == recvbytes-sizeof(*sigpacket) )
