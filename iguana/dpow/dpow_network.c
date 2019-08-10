@@ -56,7 +56,7 @@ void dex_init(struct supernet_info *myinfo)
 
 int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,int32_t sock,void *packet,int32_t size)
 {
-    int32_t z,k,i,j,sentbytes,siglen = 0; uint8_t sig[65],pubkey33[33],signpubkey33[33]; struct signed_nnpacket *sigpacket;
+    int32_t z,k,i,j,sentbytes,siglen = 0; uint8_t sig[65],pubkey33[33],signpubkey33[33]; struct signed_nnpacket *sigpacket; char wifstr[64];
     if ( (sigpacket= calloc(1,size + sizeof(*sigpacket))) != 0 )
     {
         sigpacket->packetlen = size;
@@ -69,6 +69,7 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                 break;
         }
         bitcoin_pubkey33(ctx,signpubkey33,privkey);
+        bitcoin_priv2wif(wifstr,privkey,188);
         for (z=0; z<33; z++)
             printf("%02x",signpubkey33[z]);
         printf(" pubkey for pribkey ");
