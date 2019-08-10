@@ -76,9 +76,9 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                 memcpy(sigpacket->sig64,sig+1,64);
                 if ( bitcoin_recoververify(ctx,"nnrecv",sigpacket->sig64,sigpacket->packethash,pubkey33,33) == 0 )
                 {
-                    //for (i=0; i<33; i++)
-                    //    printf("%02x",pubkey33[i]);
-                    //printf(" signed pubkey\n");
+                    for (i=0; i<33; i++)
+                        printf("%02x",pubkey33[i]);
+                    printf(" signed pubkey\n");
                     if ( memcmp(pubkey33,signpubkey33,33) == 0 )
                     {
                         sentbytes = 0;
@@ -96,7 +96,7 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                         }
                         //for (i=0; i<size+sizeof(*sigpacket); i++)
                         //    printf("%02x",((uint8_t *)sigpacket)[i]);
-                        //printf(" <- nnsend.%d\n",sock);
+                        printf("crc32.%d nnsend.%d\n",sock,calc_crc32(0,(void *)sigpacket,size));
                         free(sigpacket);
                         return(sentbytes - siglen);
                     }
@@ -128,9 +128,9 @@ int32_t signed_nn_recv(void **freeptrp,struct supernet_info *myinfo,uint8_t nota
         recvbytes = 0;
     else*/ if ( (recvbytes= nn_recv(sock,&sigpacket,NN_MSG,0)) > 0 )
     {
-        //for (i=0; i<recvbytes; i++)
-        //    printf("%02x",((uint8_t *)sigpacket)[i]);
-        //printf(" <- [%d] RECV.%d crc.%08x cmp.%d\n",i,recvbytes,calc_crc32(0,(void *)sigpacket,recvbytes),sigpacket->packetlen == recvbytes-sizeof(*sigpacket));
+        for (i=0; i<recvbytes; i++)
+            printf("%02x",((uint8_t *)sigpacket)[i]);
+        printf(" <- [%d] RECV.%d crc.%08x cmp.%d\n",i,recvbytes,calc_crc32(0,(void *)sigpacket,recvbytes),sigpacket->packetlen == recvbytes-sizeof(*sigpacket));
     }
     if ( sigpacket != 0 && recvbytes > sizeof(*sigpacket) && sigpacket->packetlen == recvbytes-sizeof(*sigpacket) )
     {
