@@ -56,7 +56,7 @@ void dex_init(struct supernet_info *myinfo)
 
 int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,int32_t sock,void *packet,int32_t size)
 {
-    int32_t i,j,sentbytes,siglen = 0; uint8_t sig[65],pubkey33[33],signpubkey33[33]; struct signed_nnpacket *sigpacket;
+    int32_t z,k,i,j,sentbytes,siglen = 0; uint8_t sig[65],pubkey33[33],signpubkey33[33]; struct signed_nnpacket *sigpacket;
     if ( (sigpacket= calloc(1,size + sizeof(*sigpacket))) != 0 )
     {
         sigpacket->packetlen = size;
@@ -69,15 +69,15 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                 break;
         }
         bitcoin_pubkey33(ctx,signpubkey33,privkey);
-        for (j=0; j<33; j++)
+        for (k=0; k<33; k++)
         {
             if ( i < 10000 && (siglen= bitcoin_sign(ctx,"nnsend",sig,sigpacket->packethash,privkey,1)) > 0 && siglen == 65 )
             {
                 memcpy(sigpacket->sig64,sig+1,64);
                 if ( bitcoin_recoververify(ctx,"nnrecv",sigpacket->sig64,sigpacket->packethash,pubkey33,33) == 0 )
                 {
-                    for (i=0; i<33; i++)
-                        printf("%02x",pubkey33[i]);
+                    for (z=0; z<33; z++)
+                        printf("%02x",pubkey33[z]);
                     printf(" signed pubkey\n");
                     if ( memcmp(pubkey33,signpubkey33,33) == 0 )
                     {
@@ -90,12 +90,12 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                             if ( nn_poll(&pfd,1,10) > 0 )
                             {
                                 sentbytes = nn_send(sock,sigpacket,size + sizeof(*sigpacket),0);
-                                break;
+                                //break;
                             }
                             usleep(1000);
                         }
-                        for (i=0; i<32; i++)
-                            printf("%02x",sigpacket->packethash.bytes[i]);
+                        for (z=0; z<32; z++)
+                            printf("%02x",sigpacket->packethash.bytes[z]);
                         printf(" crc32.%08x nnsend.%d\n",calc_crc32(0,(void *)sigpacket,size), sock);
                         free(sigpacket);
                         return(sentbytes - siglen);
