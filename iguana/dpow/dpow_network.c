@@ -166,9 +166,9 @@ int32_t signed_nn_recv(void **freeptrp,struct supernet_info *myinfo,uint8_t nota
                         printf(" pubkey[%d]\n",i);
                     }
                 }
-                //for (i=0; i<33; i++)
-                //    printf("%02x",pubkey33[i]);
-                //printf(" invalid pubkey33 n.%d\n",n);
+                for (i=0; i<33; i++)
+                    printf("%02x",pubkey33[i]);
+                printf(" invalid pubkey33 n.%d\n",n);
             } else printf("recoververify error nonce.%u packetlen.%d\n",sigpacket->nonce,sigpacket->packetlen);
         } else printf("hash mismatch or bad nonce.%u packetlen.%d\n",sigpacket->nonce,sigpacket->packetlen);
     } else if ( recvbytes > 0 )
