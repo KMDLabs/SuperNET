@@ -98,9 +98,9 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                             }
                             usleep(1000);
                         }
-                        for (z=0; z<32; z++)
-                            printf("%02x",sigpacket->packethash.bytes[z]);
-                        printf(" crc32.%08x sentbytes.%d\n",calc_crc32(0,(void *)sigpacket,size), sentbytes);
+                        //for (z=0; z<32; z++)
+                        //    printf("%02x",sigpacket->packethash.bytes[z]);
+                        printf("crc32.%08x sentbytes.%d\n",calc_crc32(0,(void *)sigpacket,size), sentbytes);
                         free(sigpacket);
                         return(sentbytes - siglen);
                     }
@@ -155,16 +155,6 @@ int32_t signed_nn_recv(void **freeptrp,struct supernet_info *myinfo,uint8_t nota
                 }
                 for (i=0; i<n && i<64; i++)
                 {
-                    if ( i == 18 || i == 57 )
-                    {
-                        int32_t j;
-                        for (j=0; j<33; j++)
-                            printf("%02x",notaries[i][j]);
-                        printf(" pubkey[%d] vs. ",i);
-                        for (j=0; j<33; j++)
-                            printf("%02x",pubkey33[j]);
-                        printf(" pubkey\n");
-                    }
                     if ( memcmp(pubkey33,notaries[i],33) == 0 )
                     {
                         *(void **)packetp = (void **)((uint64_t)sigpacket + sizeof(*sigpacket));
@@ -172,7 +162,6 @@ int32_t signed_nn_recv(void **freeptrp,struct supernet_info *myinfo,uint8_t nota
                         *freeptrp = sigpacket;
                         return((int32_t)(recvbytes - sizeof(*sigpacket)));
                     }
-                    
                 }
                 for (i=0; i<33; i++)
                     printf("%02x",pubkey33[i]);
