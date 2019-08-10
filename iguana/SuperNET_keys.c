@@ -319,7 +319,7 @@ int32_t iguana_wifstr_valid(char *wifstr)
     bits256 privkey,cmpkey; uint8_t wiftype; char cmpstr[128],cmpstr2[128]; int32_t i,len,n,a,A;
     if ( (len= (int32_t)strlen(wifstr)) < 50 || len > 54 )
     {
-        //printf("len.%d is wrong for wif %s\n",len,wifstr);
+        printf("len.%d is wrong for wif %s\n",len,wifstr);
         return(0);
     }
     memset(privkey.bytes,0,sizeof(privkey));
@@ -346,7 +346,7 @@ int32_t iguana_wifstr_valid(char *wifstr)
     bitcoin_priv2wif(cmpstr,privkey,wiftype);
     if ( strcmp(cmpstr,wifstr) == 0 )
     {
-        //printf("%s is valid wif\n",wifstr);
+        printf("%s is valid wif\n",wifstr);
         return(1);
     }
     else if ( bits256_nonz(privkey) != 0 )
@@ -355,9 +355,9 @@ int32_t iguana_wifstr_valid(char *wifstr)
         bitcoin_priv2wiflong(cmpstr2,privkey,wiftype);
         if ( bits256_cmp(privkey,cmpkey) == 0 )
             return(1);
-       // char str[65],str2[65]; printf("mismatched wifstr %s -> %s -> %s %s %s\n",wifstr,bits256_str(str,privkey),cmpstr,bits256_str(str2,cmpkey),cmpstr2);
+        char str[65],str2[65]; printf("mismatched wifstr %s -> %s -> %s %s %s\n",wifstr,bits256_str(str,privkey),cmpstr,bits256_str(str2,cmpkey),cmpstr2);
     }
-    //char str[65]; printf("%s is not a wif, privkey.%s\n",wifstr,bits256_str(str,privkey));
+    char str[65]; printf("%s is not a wif, privkey.%s\n",wifstr,bits256_str(str,privkey));
     return(0);
 }
 
@@ -366,6 +366,7 @@ void SuperNET_setkeys(struct supernet_info *myinfo,void *pass,int32_t passlen,in
     static uint8_t basepoint[32] = {9}; bits256 hash; uint8_t addrtype,usedwif = 0;
     if ( dosha256 != 0 )
     {
+        fprintf(stderr, "pass.%s\n",pass);
         memcpy(myinfo->secret,pass,passlen+1);
         if ( iguana_wifstr_valid((char *)pass) > 0 )
         {
@@ -382,11 +383,12 @@ void SuperNET_setkeys(struct supernet_info *myinfo,void *pass,int32_t passlen,in
         vcalc_sha256(0,hash.bytes,myinfo->myaddr.persistent.bytes,32);
         myinfo->myaddr.nxt64bits = hash.txid;
     }
+    
     RS_encode(myinfo->myaddr.NXTADDR,myinfo->myaddr.nxt64bits);
     bitcoin_pubkey33(myinfo->ctx,myinfo->persistent_pubkey33,myinfo->persistent_priv);
     bitcoin_address(myinfo->myaddr.BTC,0,myinfo->persistent_pubkey33,33);
     bitcoin_address(myinfo->myaddr.BTCD,60,myinfo->persistent_pubkey33,33);
-    if ( (0) && usedwif != 0 )
+    if ( (1) && usedwif != 0 )
         printf("usedwif for %s %s\n",myinfo->myaddr.BTCD,myinfo->myaddr.BTC);
 }
 
@@ -478,5 +480,3 @@ char *SuperNET_keysinit(struct supernet_info *myinfo,char *argjsonstr)
     printf("(%s) %s %llu session(%s %s) persistent.%llx %llx\n",myinfo->ipaddr,myinfo->myaddr.NXTADDR,(long long)myinfo->myaddr.nxt64bits,bits256_str(str,myinfo->privkey),bits256_str(str2,myinfo->myaddr.pubkey),(long long)myinfo->persistent_priv.txid,(long long)myinfo->myaddr.persistent.txid);
     return(coinargs);
 }
-
-
