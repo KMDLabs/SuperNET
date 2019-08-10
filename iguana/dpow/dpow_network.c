@@ -139,14 +139,14 @@ int32_t signed_nn_recv(void **freeptrp,struct supernet_info *myinfo,uint8_t nota
         {
             if ( bitcoin_recoververify(myinfo->ctx,"nnrecv",sigpacket->sig64,sigpacket->packethash,pubkey33,33) == 0 )
             {
-                char *notary0 = "03b7621b44118017a16043f19b30cc8a4cfe068ac4e42417bae16ba460c80f3828";
+                char *notary0 = "02f93c559a62cee528f87826f8c8f5bd423d47f137c04493c3e1ea8db1c040d647";
                 // expand to official notaries
                 decode_hex(pubkey0,33,notary0);
                 if ( memcmp(pubkey0,pubkey33,33) == 0 )
                 {
                     *(void **)packetp = (void **)((uint64_t)sigpacket + sizeof(*sigpacket));
                     *freeptrp = sigpacket;
-                    //printf("got signed packet from notary0\n");
+                    printf("got signed packet from notary0\n");
                     return((int32_t)(recvbytes - sizeof(*sigpacket)));
                 }
                 for (i=0; i<n && i<64; i++)
@@ -2210,7 +2210,7 @@ void dpow_send(struct supernet_info *myinfo,struct dpow_info *dp,struct dpow_blo
     memcpy(np->ipbits,dp->ipbits,dp->numipbits * sizeof(*dp->ipbits));
     //for (i=0; i<np->numipbits; i++)
     //    printf("%08x ",np->ipbits[i]);
-    //printf(" dpow_send.(%d) size.%d numipbits.%d myind.%d\n",datalen,size,np->numipbits,bp->myind);
+    printf(" dpow_send.(%d) size.%d numipbits.%d myind.%d\n",datalen,size,np->numipbits,bp->myind);
     if ( bp->isratify == 0 )
     {
         if ( strcmp(bp->destcoin->symbol,"KMD") == 0 )
