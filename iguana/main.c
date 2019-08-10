@@ -2044,7 +2044,6 @@ FOUR_STRINGS(SuperNET,login,handle,password,permanentfile,passphrase)
                 myinfo->decryptstr = decryptstr;
                 if ( (passphrase= jstr(argjson,"passphrase")) != 0 )
                 {
-                    fprintf(stderr, "passphrase.%s\n",passphrase);
                     SuperNET_setkeys(myinfo,passphrase,(int32_t)strlen(passphrase),1);
                     free_json(argjson);
                     myinfo->expiration = (uint32_t)(time(NULL) + 3600);
