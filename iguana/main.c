@@ -134,7 +134,7 @@ void SuperNET_MYINFOadd(struct supernet_info *myinfo)
         MYINFOS = realloc(MYINFOS,(num + 2) * sizeof(*MYINFOS));
         char str[65]; 
         bitcoin_priv2wif(str,myinfo->myaddr.persistent,188);
-        printf("MYNFOadd[%d] <- %s\n",num,str));
+        printf("MYNFOadd[%d] <- %s\n",num,str);
         
         MYINFOS[num] = calloc(1,sizeof(*myinfo));
         *MYINFOS[num] = *myinfo;
