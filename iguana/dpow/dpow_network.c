@@ -72,10 +72,7 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
         bitcoin_priv2wif(wifstr,privkey,188);
         for (z=0; z<33; z++)
             printf("%02x",signpubkey33[z]);
-        printf(" pubkey for pribkey ");
-        for (z=0; z<32; z++)
-            printf("%02x",privkey.bytes[z]);
-        printf("\n");
+        printf(" pubkey for pribkey %s", wifstr);
         for (k=0; k<33; k++)
         {
             if ( i < 10000 && (siglen= bitcoin_sign(ctx,"nnsend",sig,sigpacket->packethash,privkey,1)) > 0 && siglen == 65 )
