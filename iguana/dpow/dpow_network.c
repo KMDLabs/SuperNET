@@ -69,19 +69,19 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                 break;
         }
         bitcoin_pubkey33(ctx,signpubkey33,privkey);
+        for (z=0; z<33; z++)
+            printf("%02x",signpubkey33[z]);
+        printf(" pubkey for pribkey ");
+        for (z=0; z<32; z++)
+            printf("%02x",privkey.bytes[z]);
+        printf("\n");
         for (k=0; k<33; k++)
         {
             if ( i < 10000 && (siglen= bitcoin_sign(ctx,"nnsend",sig,sigpacket->packethash,privkey,1)) > 0 && siglen == 65 )
             {
                 memcpy(sigpacket->sig64,sig+1,64);
                 if ( bitcoin_recoververify(ctx,"nnrecv",sigpacket->sig64,sigpacket->packethash,pubkey33,33) == 0 )
-                {
-                    for (z=0; z<33; z++)
-                        printf("%02x",pubkey33[z]);
-                    printf(" pubkey33 cs signpubkey.");
-                    for (z=0; z<33; z++)
-                        printf("%02x",signpubkey33[z]);
-                    printf("\n");
+                {            
                     if ( memcmp(pubkey33,signpubkey33,33) == 0 )
                     {
                         sentbytes = 0;
@@ -99,7 +99,7 @@ int32_t signed_nn_send(struct supernet_info *myinfo,void *ctx,bits256 privkey,in
                         }
                         for (z=0; z<32; z++)
                             printf("%02x",sigpacket->packethash.bytes[z]);
-                        printf(" crc32.%08x nnsend.%d\n",calc_crc32(0,(void *)sigpacket,size), sock);
+                        printf(" crc32.%08x sentbytes.%d\n",calc_crc32(0,(void *)sigpacket,size), sentbytes);
                         free(sigpacket);
                         return(sentbytes - siglen);
                     }
