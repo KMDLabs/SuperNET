@@ -145,7 +145,7 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
             for (z=n=0; z<bp->numnotaries; z++)
                 if ( (bp->notaries[z].recvmask & (1LL << k)) != 0 )
                     n++;
-            //fprintf(stderr, "[%i] match_recvmask.%i vs %i \n",k, n, bp->minnodes);
+            fprintf(stderr, "k.%i match_recvmask.%i vs %i \n",k, n, bp->minnodes);
             if ( n >= bp->minnodes )
             { 
                 mask |= (1LL << k);
