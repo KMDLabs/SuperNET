@@ -154,7 +154,7 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
                 {
                     *lastkp = k;
                     bestmask = mask;
-                    printf(" ht.%i bestk.%d %llx \n",ht,lastkp,(long long)bestmask);
+                    printf(" ht.%i bestk.%d %llx \n",bp->height,lastkp,(long long)bestmask);
                 }
             }
         }
