@@ -153,7 +153,7 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
             {
                 *lastkp = k;
                 bestmask = mask;
-                printf(" ht.%i bestk.%d %llx minnodes.%i vs nodes.%i\n",bp->height,*lastkp,(long long)bestmask, bp->minnodes, n);
+                printf("[%s] ht.%i bestk.%d %llx minnodes.%i vs nodes.%i\n",bp->srccoin->symbol,bp->height,*lastkp,(long long)bestmask, bp->minnodes, n);
             }
         }
     }
