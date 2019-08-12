@@ -154,12 +154,13 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
     printf("\n");
     for (j=0; j<bp->numnotaries; j++)
     {
-        k = DPOW_MODIND(bp,j,dp->freq);
-        fprintf(stderr, CYAN">>>>k.%i vs newk.%i \n"RESET, k, (k+rndnodes[k>>1]));
+        k = i = DPOW_MODIND(bp,j,dp->freq);
+        //fprintf(stderr, CYAN">>>>k.%i vs newk.%i \n"RESET, k, (k+rndnodes[k>>1]));
         if ( (bp->recvmask & (1LL << k)) == 0 ) 
             k += rndnodes[k>>1];
         if ( k >= bp->numnotaries ) k -= bp->numnotaries;
-        fprintf(stderr, GREEN">>>>>>>>>>>>>newk.%i \n"RESET, k);
+        if ( k != i )
+            fprintf(stderr, GREEN"k.%i >>>>>>>>>>>>> newk.%i \n"RESET,i, k);
         if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
         {
             mask |= (1LL << k);
