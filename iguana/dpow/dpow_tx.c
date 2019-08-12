@@ -133,7 +133,7 @@ uint64_t dpow_notarybestk(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
 
 uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *bp,int8_t *lastkp)
 {
-    int32_t j,m,k,z,n; uint64_t bestmask,mask = 0;//bp->require0;
+    int32_t j,m,k,z,n,i; uint64_t bestmask,mask = 0;//bp->require0;
     bestmask = 0;
     *lastkp = -1;
     m = 0;//bp->require0;
@@ -157,6 +157,15 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
             }
         }
     }
+    // replace offline nodes with online nodes. 
+    uint8_t rndnodes[32];
+    printf("random nodes: ");
+    for ( i=0; i<32; i++ )
+    {
+        rndnodes[i] = dp->prevnotatxid.bytes[i] % bp->numnotaries;
+        printf("%i, ", rndnodes[i]);
+    }
+    printf("\n");
     //bp->recvmask |= mask;
     if ( *lastkp >= 0 )
     {
@@ -674,6 +683,7 @@ void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpo
                                 dp->lastrecvmask = bp->recvmask;
                                 dp->prevDESTHEIGHT = bp->pendingprevDESTHT;
                                 dp->previous = dp->last;
+                                dp->prevnotatxid = bp->srctxid;
                             }
                         } else printf("sendtxid mismatch got %s instead of %s\n",bits256_str(str,txid),bits256_str(str2,signedtxid));
                     }
