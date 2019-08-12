@@ -143,9 +143,25 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
     if ( n < bp->minnodes )
         return(bestmask);
 
+    // replace offline nodes with online nodes. 
+    uint8_t rndnodes[32];
+    printf("random nodes: ");
+    for ( i=0; i<32; i++ )
+    {
+        rndnodes[i] = dp->prevnotatxid.bytes[i] % bp->numnotaries;
+        printf("%i, ", rndnodes[i]);
+    }
+    printf("\n");
     for (j=0; j<bp->numnotaries; j++)
     {                    
+        //if ( (recvmask & (1LL << j)) == 0 ) 
+        //    continue;
         k = DPOW_MODIND(bp,j,dp->freq);
+        if ( (recvmask & (1LL << k)) == 0 ) 
+            k += rndnodes[j>>];
+        if ( k >= 64 ) k -= 64;
+        if ( (recvmask & (1LL << k)) == 0 ) 
+            continue;
         if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
         {
             mask |= (1LL << k);
@@ -157,15 +173,6 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
             }
         }
     }
-    // replace offline nodes with online nodes. 
-    uint8_t rndnodes[32];
-    printf("random nodes: ");
-    for ( i=0; i<32; i++ )
-    {
-        rndnodes[i] = dp->prevnotatxid.bytes[i] % bp->numnotaries;
-        printf("%i, ", rndnodes[i]);
-    }
-    printf("\n");
     //bp->recvmask |= mask;
     if ( *lastkp >= 0 )
     {
