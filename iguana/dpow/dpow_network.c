@@ -2205,7 +2205,7 @@ void dpow_send(struct supernet_info *myinfo,struct dpow_info *dp,struct dpow_blo
     memcpy(np->ipbits,dp->ipbits,dp->numipbits * sizeof(*dp->ipbits));
     //for (i=0; i<np->numipbits; i++)
     //    printf("%08x ",np->ipbits[i]);
-    printf(" dpow_send.(%d) size.%d numipbits.%d myind.%d\n",datalen,size,np->numipbits,bp->myind);
+    //printf(" dpow_send.(%d) size.%d numipbits.%d myind.%d\n",datalen,size,np->numipbits,bp->myind);
     if ( bp->isratify == 0 )
     {
         if ( strcmp(bp->destcoin->symbol,"KMD") == 0 )
