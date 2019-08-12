@@ -688,7 +688,7 @@ void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpo
                                 dp->lastrecvmask = bp->recvmask;
                                 dp->prevDESTHEIGHT = bp->pendingprevDESTHT;
                                 dp->previous = dp->last;
-                                dp->prevnotatxid = bp->srctxid;
+                                dp->prevnotatxid = bp->desttxid;
                             }
                         } else printf("sendtxid mismatch got %s instead of %s\n",bits256_str(str,txid),bits256_str(str2,signedtxid));
                     }

@@ -230,7 +230,7 @@ int32_t dpow_opreturn_parsesrc(bits256 *blockhashp,int32_t *heightp,bits256 *txi
     return(-1);
 }
 
-bits256 dpow_calcMoM(uint32_t *MoMdepthp,struct supernet_info *myinfo,struct iguana_info *coin,int32_t height)
+bits256 dpow_calcMoM(uint32_t *MoMdepthp,bits256 *prevnotatxid, struct supernet_info *myinfo,struct iguana_info *coin,int32_t height)
 {
     bits256 MoM; cJSON *MoMjson,*infojson; int32_t prevMoMheight;
     *MoMdepthp = 0;
@@ -253,6 +253,9 @@ bits256 dpow_calcMoM(uint32_t *MoMdepthp,struct supernet_info *myinfo,struct igu
                 free_json(MoMjson);
             }
         }
+        if ( bits256_nonz(prevnotatxid) == 0 )
+            if (prevnotatxid= jbits256(infojson,"notarizedtxid")) == 0 )
+                fprintf(stderr, "error\n");
         free_json(infojson);
     }
     if ( bits256_nonz(MoM) == 0 )
@@ -290,11 +293,15 @@ void dpow_statemachinestart(void *ptr)
     dpow_getchaintip(myinfo,&merkleroot,&srchash,&srctime,dp->srctx,&dp->numsrctx,src);
     MoMdepth = 0;
     memset(&MoM,0,sizeof(MoM));
+    MoM = dpow_calcMoM(&MoMdepth,&dp->prevnotatxid,myinfo,src,checkpoint.blockhash.height);
     if ( strcmp(src->symbol,"KMD") == 0 )
+    {
+        MoMdepth = 0;
+        memset(&MoM,0,sizeof(MoM));
         kmdheight = checkpoint.blockhash.height;
+    }
     else if ( strcmp(dest->symbol,"KMD") == 0 )
     {
-        MoM = dpow_calcMoM(&MoMdepth,myinfo,src,checkpoint.blockhash.height);
         kmdheight = dest->longestchain;
     }
     if ( (bp= dpow_heightfind(myinfo,dp, checkpoint.blockhash.height)) == 0 )
