@@ -254,8 +254,7 @@ bits256 dpow_calcMoM(uint32_t *MoMdepthp,bits256 *prevnotatxid, struct supernet_
             }
         }
         if ( bits256_nonz(*prevnotatxid) == 0 )
-            if ((prevnotatxid= jbits256(infojson,"notarizedtxid") >= 0 )
-                fprintf(stderr, "error\n");
+            jbits256(infojson,"notarizedtxid")
         free_json(infojson);
     }
     if ( bits256_nonz(MoM) == 0 )
