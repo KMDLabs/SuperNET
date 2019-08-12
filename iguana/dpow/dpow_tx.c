@@ -159,8 +159,6 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
         if ( (bp->recvmask & (1LL << k)) == 0 ) 
             k += rndnodes[k>>1];
         if ( k >= bp->numnotaries ) k -= bp->numnotaries;
-        if ( k != i )
-            fprintf(stderr, GREEN"k.%i >>>>>>>>>>>>> newk.%i \n"RESET,i, k);
         if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
         {
             mask |= (1LL << k);
@@ -168,7 +166,9 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
             {
                 *lastkp = k;
                 bestmask = mask;
-                printf("[%s] ht.%i bestk.%d %llx minnodes.%i vs nodes.%i\n",bp->srccoin->symbol,bp->height,*lastkp,(long long)bestmask, bp->minnodes, n);
+                fprintf(stderr,"[%s] ht.%i %llx minnodes.%i vs nodes.%i",bp->srccoin->symbol,bp->height,(long long)bestmask, bp->minnodes, n);
+                if ( k != i )
+                    fprintf(stderr, GREEN" k.%i >>>>>>>>>>>>> newk.%i\n"RESET,i, k);
             }
         }
     }
