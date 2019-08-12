@@ -156,7 +156,7 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
     {
         k = DPOW_MODIND(bp,j,dp->freq);
         if ( (bp->recvmask & (1LL << k)) == 0 ) 
-            k =+ rndnodes[j>>1];
+            k += rndnodes[j>>1];
         if ( k >= bp->numnotaries ) k -= bp->numnotaries;
         if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
         {
