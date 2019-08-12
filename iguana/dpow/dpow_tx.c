@@ -133,7 +133,7 @@ uint64_t dpow_notarybestk(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
 
 uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *bp,int8_t *lastkp)
 {
-    int32_t j,m,k,z,n,i; uint64_t bestmask,mask = 0;//bp->require0;
+    int32_t j,m,k,z,n,i,p; uint64_t bestmask,mask = 0;//bp->require0;
     bestmask = 0;
     *lastkp = -1;
     m = 0;//bp->require0;
@@ -152,13 +152,16 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
         printf("%i, ", rndnodes[i]);
     }
     printf("\n");
-    for (j=0; j<bp->numnotaries; j++)
+    for (j=p=0; j<bp->numnotaries; j++)
     {
         k = i = DPOW_MODIND(bp,j,dp->freq);
         //fprintf(stderr, CYAN">>>>k.%i vs newk.%i \n"RESET, k, (k+rndnodes[k>>1]));
-        if ( (bp->recvmask & (1LL << k)) == 0 ) 
+        while ( (bp->recvmask & (1LL << k)) == 0 && p < bp->numnotaries ) 
+        {
             k += rndnodes[k>>1];
-        if ( k >= bp->numnotaries ) k -= bp->numnotaries;
+            if ( k >= bp->numnotaries ) k -= bp->numnotaries;
+            p++;
+        }
         if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
         {
             mask |= (1LL << k);
