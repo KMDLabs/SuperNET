@@ -1617,12 +1617,17 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             //fprintf(stderr, "node.%i no utxos duration.%u\n",i,(uint32_t)time(NULL)-bp->starttime);
             continue;        
         }
-        k = DPOW_MODIND(bp,i,dp->freq);
-        for (z=n=0; z<bp->numnotaries; z++)
-            if ( (bp->notaries[z].recvmask & (1LL << k)) != 0 )
-                n++;
-        if ( n < bp->minnodes )
+        //k = DPOW_MODIND(bp,i,dp->freq);
+        //for (z=n=0; z<bp->numnotaries; z++)
+        //    if ( (bp->notaries[z].recvmask & (1LL << k)) != 0 )
+        //        n++;
+        //if ( n < bp->minnodes )
+        //    continue;
+        //for (z=n=0; z<bp->numnotaries; z++)
+        if ( bitweight(bp->notaries[i].recvmask) < bp->minnodes )
             continue;
+        //if ( n < bp->minnodes )
+        //    continue;
         jk++;
         if ( rand() % 100 < 1 )    
             fprintf(stderr, "[%i] recv.%i vs min.%i max.%i sec.%u best.%llx\n",i, n, bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,(long long)bp->bestmask); 

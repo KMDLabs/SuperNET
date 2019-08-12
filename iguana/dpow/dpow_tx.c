@@ -137,25 +137,23 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
     bestmask = 0;
     *lastkp = -1;
     m = 0;//bp->require0;
+    for (z=n=0; z<bp->numnotaries; z++)
+        if ( bitweight(bp->notaries[z].recvmask) >= bp->minnodes )
+            n++;
+    if ( n < bp->minnodes )
+        return(bestmask);
+
     for (j=0; j<bp->numnotaries; j++)
-    {
+    {                    
         k = DPOW_MODIND(bp,j,dp->freq);
         if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
         {
-            for (z=n=0; z<bp->numnotaries; z++)
-                if ( (bp->notaries[z].recvmask & (1LL << z)) != 0 )
-                    n++;
-            fprintf(stderr, "k.%i j.%i n.%i\n",k, j, n);
-            if ( n >= bp->minnodes )
-            { 
-                printf("[%i] match_recvmask.%i vs %i \n",j, n, bp->minnodes);
-                mask |= (1LL << k);
-                if ( ++m == bp->minsigs )
-                {
-                    *lastkp = k;
-                    bestmask = mask;
-                    printf(" ht.%i bestk.%d %llx \n",bp->height,*lastkp,(long long)bestmask);
-                }
+            mask |= (1LL << k);
+            if ( ++m == bp->minsigs )
+            {
+                *lastkp = k;
+                bestmask = mask;
+                printf(" ht.%i bestk.%d %llx minnodes.%i vs nodes.%i\n",bp->height,*lastkp,(long long)bestmask, bp->minnodes, n);
             }
         }
     }
