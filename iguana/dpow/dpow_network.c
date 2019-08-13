@@ -1661,7 +1661,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
     {
         if ( ((1LL << i) & masks[besti]) != 0 )
         {
-            fprintf(stderr, "[%i] matches.%d bestmatches.%d bestk.%d bestmask.%llx maskes_best.%llx)\n",matches,bestmatches,bp->notaries[i].bestk,(long long)bp->notaries[i].bestmask,(long long)masks[besti]);
+            fprintf(stderr, "[%i] matches.%d bestmatches.%d bestk.%d bestmask.%llx maskes_best.%llx)\n",i,matches,bestmatches,bp->notaries[i].bestk,(long long)bp->notaries[i].bestmask,(long long)masks[besti]);
             if ( bp->notaries[i].bestmask == masks[besti] )
                 bestmatches++;
         }
