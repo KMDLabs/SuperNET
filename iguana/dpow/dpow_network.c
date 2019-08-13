@@ -2002,10 +2002,10 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
         {
             bp->recvmask |= (1LL << senderind);
             if ( rand() % 100 < 1 )
-                fprintf(stderr, MAGENTA"[%s] : %s is in recvmask %llx\n"RESET,dp->symbol,Notaries_elected[senderind][1],(long long)bp->recvmask,senderind);
+                fprintf(stderr, MAGENTA"[%s] : %s is in recvmask %llx\n"RESET,dp->symbol,Notaries_elected[senderind][1],(long long)bp->recvmask);
         }
         if ( (bp->recvmask & (1LL << bp->myind)) == 0 )
-            fprintf(stderr, RED"[%s] : %s is not in recvmask %llx\n"RESET,dp->symbol,Notaries_elected[bp->myind][1],(long long)bp->recvmask,bp->myind);
+            fprintf(stderr, RED"[%s] : %s is not in recvmask %llx\n"RESET,dp->symbol,Notaries_elected[bp->myind][1],(long long)bp->recvmask);
         
         if ( bestmask != 0 )
             bp->notaries[senderind].bestmask = bestmask;
