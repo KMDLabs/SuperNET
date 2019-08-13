@@ -1620,8 +1620,8 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         if ( bitweight(bp->notaries[i].recvmask) < bp->minnodes )
             continue;
         jk++;
-        if ( rand() % 1000 < 3 )    
-            fprintf(stderr, "[%i] recv.%i vs min.%i max.%i sec.%u bestk.%i\n",i, bitweight(bp->notaries[i].recvmask), bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,bp->notaries[i].bestk); 
+        //if ( rand() % 1000 < 3 )    
+        //    fprintf(stderr, "[%i] recv.%i vs min.%i max.%i sec.%u bestk.%i\n",i, bitweight(bp->notaries[i].recvmask), bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,bp->notaries[i].bestk); 
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
             continue;
         //if ( bp->require0 != 0 && (bp->notaries[i].bestmask & 1) == 0 )
@@ -1637,7 +1637,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             masks[numdiff] = bp->notaries[i].bestmask;
             bestks[numdiff] = bp->notaries[i].bestk;
             counts[numdiff]++;
-            //fprintf(stderr,"j.%d numdiff.%d (%d %llx).%d\n",j,numdiff,bp->notaries[i].bestk,(long long)bp->notaries[i].bestmask,counts[numdiff]);
+            fprintf(stderr,"j.%d numdiff.%d (%d %llx).%d\n",j,numdiff,bestks[numdiff],(long long)masks[numdiff],counts[numdiff]);
             numdiff++;
         }
     }
@@ -1647,7 +1647,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
     besti = -1, matches = 0;
     for (i=0; i<numdiff; i++)
     {
-        fprintf(stderr,"[%i] bestks.%d masks.%llx counts.%d numdiff.%d",i,bestks[i],(long long)masks[i],counts[i],numdiff);
+        //fprintf(stderr,"[%i] bestks.%d masks.%llx counts.%d numdiff.%d",i,bestks[i],(long long)masks[i],counts[i],numdiff);
         if ( counts[i] > matches && bitweight(masks[i]) == bp->minsigs )
         {
             if ( dpow_crossconnected(&badmask,bp,masks[i]) == bp->minsigs )
@@ -1661,7 +1661,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
     {
         if ( ((1LL << i) & masks[besti]) != 0 )
         {
-            fprintf(stderr, "[%i] matches.%d bestmatches.%d bestk.%d bestmask.%llx maskes_best.%llx)\n",i,matches,bestmatches,bp->notaries[i].bestk,(long long)bp->notaries[i].bestmask,(long long)masks[besti]);
+            //fprintf(stderr, "[%i] matches.%d bestmatches.%d bestk.%d bestmask.%llx maskes_best.%llx)\n",i,matches,bestmatches,bp->notaries[i].bestk,(long long)bp->notaries[i].bestmask,(long long)masks[besti]);
             if ( bp->notaries[i].bestmask == masks[besti] )
                 bestmatches++;
         }
