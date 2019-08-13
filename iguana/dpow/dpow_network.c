@@ -1659,7 +1659,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         }
     }
     //if ( besti == -1 )
-        fprintf(stderr,RED"bestki.%i bestmatches.%i"RESET,besti,matches);
+        fprintf(stderr,RED"bestki.%i bestmatches.%i "RESET,besti,matches);
     for (i=0; i<bp->numnotaries; i++)
     {
         if ( ((1LL << i) & masks[besti]) != 0 )
@@ -1669,11 +1669,11 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
                 bestmatches++;
             else 
             {
-                fprintf(stderr, "missing node.%i  ", i);
+                fprintf(stderr, CYAN"missing node.%i  "RESET, i);
             }
         }
     }
-    fprintf(stderr, "bestmatches.%i\n",bestmatches);
+    fprintf(stderr, GREEN" bestmatches.%i\n"RESET,bestmatches);
     if ( (bestmatches > bp->bestmatches || (bestmatches == bp->bestmatches && matches > bp->matches)) && besti >= 0 && bestks[besti] >= 0 && masks[besti] != 0 && (recvmask & masks[besti]) == masks[besti] )
     {
         bp->matches = matches;
