@@ -1620,7 +1620,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         if ( bitweight(bp->notaries[i].recvmask) < bp->minnodes )
             continue;
         jk++;
-        if ( rand() % 1000 < 2 )    
+        if ( rand() % 100 < 1 )    
             fprintf(stderr, "[%i] recv.%i vs min.%i max.%i sec.%u bestk.%i\n",i, bitweight(bp->notaries[i].recvmask), bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,bp->notaries[i].bestk); 
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
             continue;
@@ -1637,7 +1637,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             masks[numdiff] = bp->notaries[i].bestmask;
             bestks[numdiff] = bp->notaries[i].bestk;
             counts[numdiff]++;
-            fprintf(stderr,"j.%d numdiff.%d (%d %llx).%d\n",j,numdiff,bp->notaries[i].bestk,(long long)bp->notaries[i].bestmask,counts[numdiff]);
+            //fprintf(stderr,"j.%d numdiff.%d (%d %llx).%d\n",j,numdiff,bp->notaries[i].bestk,(long long)bp->notaries[i].bestmask,counts[numdiff]);
             numdiff++;
         }
     }
@@ -1647,7 +1647,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
     besti = -1, matches = 0;
     for (i=0; i<numdiff; i++)
     {
-        fprintf(stderr,"(%d %llx).%d ",bestks[i],(long long)masks[i],counts[i]);
+        //fprintf(stderr,"(%d %llx).%d ",bestks[i],(long long)masks[i],counts[i]);
         if ( counts[i] > matches && bitweight(masks[i]) == bp->minsigs )
         {
             if ( dpow_crossconnected(&badmask,bp,masks[i]) == bp->minsigs )
