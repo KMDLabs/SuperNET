@@ -1621,7 +1621,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             continue;
         jk++;
         
-        if ( rand() % 10000 < 15)    
+        if ( rand() % 10000 < 2)    
             fprintf(stderr, "[%i] recv.%i vs min.%i max.%i sec.%u bestk.%i\n",i, bitweight(bp->notaries[i].recvmask), bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,bp->notaries[i].bestk); 
         
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
@@ -1659,7 +1659,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         }
     }
     if ( besti == -1 )
-        fprintf(stderr,RED"bestki.%i "RESET,besti);
+        fprintf(stderr,RED"<<<<<<<<< fail dpow_crossconnected numdiff.%i"RESET, numdiff);
     for (i=0; i<bp->numnotaries; i++)
     {
         if ( ((1LL << i) & masks[besti]) != 0 )
@@ -1667,13 +1667,8 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             //fprintf(stderr, "[%i] matches.%d bestmatches.%d bestk.%d bestmask.%llx maskes_best.%llx)\n",i,matches,bestmatches,bp->notaries[i].bestk,(long long)bp->notaries[i].bestmask,(long long)masks[besti]);
             if ( bp->notaries[i].bestmask == masks[besti] )
                 bestmatches++;
-            else 
-            {
-                fprintf(stderr, CYAN"missing node.%i  "RESET, i);
-            }
         }
     }
-    fprintf(stderr, GREEN" bestmatches.%i\n"RESET,bestmatches);
     if ( (bestmatches > bp->bestmatches || (bestmatches == bp->bestmatches && matches > bp->matches)) && besti >= 0 && bestks[besti] >= 0 && masks[besti] != 0 && (recvmask & masks[besti]) == masks[besti] )
     {
         bp->matches = matches;
