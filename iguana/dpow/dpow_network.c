@@ -1637,7 +1637,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             masks[numdiff] = bp->notaries[i].bestmask;
             bestks[numdiff] = bp->notaries[i].bestk;
             counts[numdiff]++;
-            //printf("j.%d numdiff.%d (%d %llx).%d\n",j,numdiff,bp->notaries[i].bestk,(long long)bp->notaries[i].bestmask,counts[numdiff]);
+            fprintf(stderr,"j.%d numdiff.%d (%d %llx).%d\n",j,numdiff,bp->notaries[i].bestk,(long long)bp->notaries[i].bestmask,counts[numdiff]);
             numdiff++;
         }
     }
@@ -1647,7 +1647,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
     besti = -1, matches = 0;
     for (i=0; i<numdiff; i++)
     {
-        //printf("(%d %llx).%d ",bestks[i],(long long)masks[i],counts[i]);
+        fprintf(stderr,"(%d %llx).%d ",bestks[i],(long long)masks[i],counts[i]);
         if ( counts[i] > matches && bitweight(masks[i]) == bp->minsigs )
         {
             if ( dpow_crossconnected(&badmask,bp,masks[i]) == bp->minsigs )
