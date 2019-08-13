@@ -1620,8 +1620,8 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
         if ( bitweight(bp->notaries[i].recvmask) < bp->minnodes )
             continue;
         jk++;
-        //if ( rand() % 1000 < 5 )    
-        //    fprintf(stderr, "[%i] recv.%i vs min.%i max.%i sec.%u best.%llx\n",i, bitweight(bp->notaries[i].recvmask), bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,(long long)bp->bestmask); 
+        if ( rand() % 1000 < 2 )    
+            fprintf(stderr, "[%i] recv.%i vs min.%i max.%i sec.%u bestk.%i\n",i, bitweight(bp->notaries[i].recvmask), bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,bp->notaries[i].bestk); 
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
             continue;
         //if ( bp->require0 != 0 && (bp->notaries[i].bestmask & 1) == 0 )
