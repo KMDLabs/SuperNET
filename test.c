@@ -43,10 +43,14 @@ int32_t bitweight(uint64_t x)
 
 uint64_t bestk(int32_t ht, int8_t *lastkp)
 {
-    int32_t j,m,k,z,n,p; uint64_t bestmask,mask = 0;//bp->require0;
+    int32_t j,m,k,z,n,p,i; uint64_t bestmask,mask = 0;//bp->require0;
     //uint8_t badnodes[64]={0};
     bestmask = 0;
     *lastkp = -1;
+    uint8_t rndnodes[32];
+    for ( m=0; m<32; m++ )
+        rndnodes[m] = rand() % numnodes;
+    
     m = 0;//bp->require0;
     for (z=n=0; z<numnodes; z++)
         if ( bitweight(recvmask) >= minnodes )
@@ -55,11 +59,19 @@ uint64_t bestk(int32_t ht, int8_t *lastkp)
         return(bestmask);
     for (j=0; j<numnodes; j++)
     {
-        if ( (recvmask & (1LL << j)) == 0 ) 
-            continue;
-        k = DPOW_MODIND(ht,j,freq);
-        if ( (recvmask & (1LL << k)) == 0 ) 
-            k = k-;
+        //if ( (recvmask & (1LL << j)) == 0 ) 
+        //    continue;
+        k = i = DPOW_MODIND(ht,j,freq);
+        for ( p=0; p<32; p++ ) 
+        {
+            if ( (recvmask & (1LL << k)) != 0 )
+                break;
+            k += rndnodes[(k>>1)]+p;
+            while ( k >= numnodes ) 
+                k -= numnodes;
+            fprintf(stderr, CYAN">>>>>>> p.%i k.%i vs newk.%i inrecv.%i \n"RESET, p, i, k, ((recvmask & (1LL << k)) != 0));
+            indexes[k]++;
+        }
         if ( (recvmask & (1LL << k)) == 0 ) 
             continue;
         mask |= (1LL << k);
@@ -137,9 +149,9 @@ int main()
                 break;
         }
     }
-    //for (i=0; i<numnodes; i++) 
+    for (i=0; i<numnodes; i++) 
     {
-    //    printf("index.%i amount.%i\n",i, indexes[i]);
+        printf("k.%i total.%i\n",i, indexes[i]);
     }
     for (int p=0; p<numnodes; p++ )
         fprintf(stderr, "node.%i count.%i \n",p,nodes[p]);
