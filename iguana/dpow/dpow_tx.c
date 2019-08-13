@@ -164,7 +164,7 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
                 k -= bp->numnotaries;
             fprintf(stderr, CYAN">>>>>>> p.%i k.%i vs newk.%i inrecv.%i \n"RESET, p, i, k, ((bp->recvmask & (1LL << k)) != 0));
         }
-        if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
+        if ( (mask & (1LL << k)) == 0 && bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
         {
             mask |= (1LL << k);
             if ( ++m == bp->minsigs )
