@@ -176,7 +176,7 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
             }
         }
     }
-    //bp->recvmask |= mask;
+    bp->recvmask |= mask;
     if ( *lastkp >= 0 )
     {
         for (mask=j=0; j<bp->numnotaries; j++)

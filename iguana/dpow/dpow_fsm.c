@@ -639,13 +639,13 @@ void dpow_statemachinestart(void *ptr)
         }
         if ( bp->state != 0xffffffff )
         {
-            fprintf(stderr, "iterations.%i minnodes.%i\n", iterations, bp->minnodes);
+            fprintf(stderr, "[%s] iterations.%i minnodes.%i\n",bp->srccoin->symbol, iterations, bp->minnodes);
             dpow_send(myinfo,dp,bp,srchash,bp->hashmsg,0,bp->height,(void *)"ping",0);
             dpow_nanomsg_update(myinfo);
             // on each iteration lower amount of needed nodes in recvmask by 1/8th of the total nodes. 
             // when first launched this will be 0 because you wont have lastrecvmask. After one notarizaion has passed all nodes online will have the same lastrecvmask. 
             // This gives us an ideal target, the recvmask continues to update for the entire duration and is a consensus value agreed upon by all nodes. 
-            if ( iterations > 2 )
+            if ( iterations > 1 )
             {
                 bp->minnodes -= ((bp->numnotaries+(bp->numnotaries % 2)) / 8);
                 if ( bp->minnodes < bp->minsigs ) 
