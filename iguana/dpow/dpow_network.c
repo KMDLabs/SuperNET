@@ -1621,7 +1621,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             continue;
         jk++;
         
-        if ( rand() % 10000 < 10 )    
+        if ( rand() % 10000 < 15)    
             fprintf(stderr, "[%i] recv.%i vs min.%i max.%i sec.%u bestk.%i\n",i, bitweight(bp->notaries[i].recvmask), bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,bp->notaries[i].bestk); 
         
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
@@ -1655,6 +1655,10 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             {
                 matches = counts[i];
                 besti = i;
+            }
+            else 
+            {
+                fprintf(stderr,RED"FAILED node: [%i] bestk.%d masks.%llx counts.%d numdiff.%d"RESET,i,bestks[i],(long long)masks[i],counts[i],numdiff);
             }
         }
     }
