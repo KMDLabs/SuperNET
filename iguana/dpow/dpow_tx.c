@@ -145,7 +145,7 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
 
     // replace offline nodes with online nodes. 
     uint8_t rndnodes[32];
-    fprintf(stderr, BLUE"random nodes: "");
+    fprintf(stderr, BLUE"random nodes: ");
     for ( i=0; i<32; i++ )
     {
         rndnodes[i] = dp->prevnotatxid.bytes[i] % bp->numnotaries;
