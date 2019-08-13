@@ -645,7 +645,7 @@ void dpow_statemachinestart(void *ptr)
             // on each iteration lower amount of needed nodes in recvmask by 1/8th of the total nodes. 
             // when first launched this will be 0 because you wont have lastrecvmask. After one notarizaion has passed all nodes online will have the same lastrecvmask. 
             // This gives us an ideal target, the recvmask continues to update for the entire duration and is a consensus value agreed upon by all nodes. 
-            if ( iterations > 1 )
+            if ( iterations > 2 )
             {
                 bp->minnodes -= ((bp->numnotaries+(bp->numnotaries % 2)) / 8);
                 if ( bp->minnodes < bp->minsigs ) 
