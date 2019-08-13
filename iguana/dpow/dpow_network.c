@@ -1658,8 +1658,8 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             }
         }
     }
-    //if ( besti == -1 )
-        fprintf(stderr,RED"bestki.%i bestmatches.%i "RESET,besti,matches);
+    if ( besti == -1 )
+        fprintf(stderr,RED"bestki.%i "RESET,besti,matches);
     for (i=0; i<bp->numnotaries; i++)
     {
         if ( ((1LL << i) & masks[besti]) != 0 )
