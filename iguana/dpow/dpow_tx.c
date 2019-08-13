@@ -167,14 +167,14 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
         if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
         {
             mask |= (1LL << k);
-            fprintf(stderr, "addtobstmsk.%i, ", k);
             if ( ++m == bp->minsigs )
             {
                 *lastkp = k;
                 bestmask = mask;
-                fprintf(stderr,"[%s] ht.%i %llx minnodes.%i vs nodes.%i best.k%i",bp->srccoin->symbol,bp->height,(long long)bestmask, bp->minnodes, n, bp->notaries[k].bestk);
+                fprintf(stderr,"[%s] ht.%i %llx minnodes.%i vs nodes.%i bestk.%i",bp->srccoin->symbol,bp->height,(long long)bestmask, bp->minnodes, n, k);
                 if ( k != i )
-                    fprintf(stderr, GREEN" k.%i >>>>>>>>>>>>> newk.%i\n"RESET,i, k);
+                    fprintf(stderr, GREEN" >>>>>>>>>>>>> newk.%i"RESET,k);
+                fprintf(stderr, "\n");
             }
         }
     }
