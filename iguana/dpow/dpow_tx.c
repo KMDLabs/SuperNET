@@ -171,10 +171,10 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
             {
                 *lastkp = k;
                 bestmask = mask;
-                char str[128]; sprintf(str,CYAN" -> newbestk.%i", k); 
-                fprintf(stderr,GREEN"[%s] ht.%i %llx minnodes.%i vs nodes.%i bestk.%i %s\n"RESET,bp->srccoin->symbol,bp->height,(long long)bestmask, bp->minnodes, n, i, (k != i) ? str : "");
+                char str[128]; sprintf(str,CYAN" -> newbestk.%i"RESET, k); 
+                fprintf(stderr,GREEN"[%s] ht.%i %llx minnodes.%i vs nodes.%i bestk.%i %s\n"RESET,bp->srccoin->symbol,bp->height,(long long)bestmask, bp->minnodes, n, i, (k == i ? (char)" " : str));
             }
-        }
+    }
     }
     bp->recvmask |= mask;
     if ( *lastkp >= 0 )
