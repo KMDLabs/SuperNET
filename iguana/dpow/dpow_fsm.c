@@ -570,8 +570,8 @@ void dpow_statemachinestart(void *ptr)
     bp->hashmsg = checkpoint.blockhash.hash;
     bp->myind = myind;
     bp->minnodes = bitweight(dp->lastrecvmask)-1; // use one less than the maximum possible may need to lower it more than this. 
-    if ( bp->minnodes < bp->minsigs )
-        bp->minnodes = bp->minsigs;
+    if ( bp->minnodes < bp->minsigs*2 )
+        bp->minnodes = bp->minsigs*2;
     while ( bp->isratify == 0 && dp->destupdated == 0 )
     {
         if ( dp->checkpoint.blockhash.height > checkpoint.blockhash.height ) //(checkpoint.blockhash.height % 100) != 0 &&
@@ -618,7 +618,7 @@ void dpow_statemachinestart(void *ptr)
         {
             if ( bp->isratify == 0 )
             {
-                printf("abort %s ht.%d due to new checkpoint.%d\n",dp->symbol,checkpoint.blockhash.height,dp->checkpoint.blockhash.height);
+                printf(YELLOW"abort %s ht.%d due to new checkpoint.%d\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->checkpoint.blockhash.height);
                 break;
             }
         }
@@ -633,7 +633,7 @@ void dpow_statemachinestart(void *ptr)
             checkhash = dpow_getblockhash(myinfo,bp->srccoin,bp->height);
             if ( bits256_cmp(checkhash,bp->hashmsg) != 0 )
             {
-                printf("%s ht.%d %s got reorged to %s, abort notarization\n",bp->srccoin->symbol,bp->height,bits256_str(str,bp->hashmsg),bits256_str(str2,checkhash));
+                printf(YELLOW"%s ht.%d %s got reorged to %s, abort notarization\n"RESET,bp->srccoin->symbol,bp->height,bits256_str(str,bp->hashmsg),bits256_str(str2,checkhash));
                 break;
             }
         }

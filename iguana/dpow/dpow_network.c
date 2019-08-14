@@ -1658,8 +1658,9 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             }
         }
     }
-    if ( besti == -1 )
-        fprintf(stderr,RED"<<<<<<<<< fail dpow_crossconnected numdiff.%i"RESET, numdiff);
+    //if ( besti == -1 )
+    //    fprintf(stderr,RED"<<<<<<<<< fail dpow_crossconnected numdiff.%i\n"RESET, numdiff);
+    // fails all the time... 
     for (i=0; i<bp->numnotaries; i++)
     {
         if ( ((1LL << i) & masks[besti]) != 0 )

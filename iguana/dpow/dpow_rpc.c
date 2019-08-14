@@ -804,7 +804,7 @@ char *dpow_sendrawtransaction(struct supernet_info *myinfo,struct iguana_info *c
         paramstr = jprint(array,1);
         retstr = bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"sendrawtransaction",paramstr);
         char colour[16];
-        sprintf(colour,mine != 0 ? GREEN : RED);
+        sprintf(colour,mine != 0 ? GREEN : YELLOW);
         fprintf(stderr,"%s>>>>>>>>>>> %s dpow_sendrawtransaction (%s)\n"RESET,colour,coin->symbol,retstr);
         free(paramstr);
         return(retstr);
