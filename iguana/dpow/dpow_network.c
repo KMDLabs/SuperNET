@@ -2029,20 +2029,6 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
                 }
             }
         }
-        
-        // check that block has advanced by 1 on KMD before allowing bestmask to be decided
-        if ( strcmp(bp->destcoin->symbol,"KMD") == 0 )
-        {
-            if ( bp->destht_start == bp->destcoin->longestchain )
-                return;
-        }
-        else 
-        {
-            if ( bp->height == bp->srccoin->longestchain )
-                return;
-        }
-        //fprintf(stderr, "[%s] checkpoint ht.%i vs longestchain.%i\n",bp->srccoin->symbol, bp->destht_start, bp->destcoin->longestchain);
-        
         if ( bp->bestk >= 0 )
         {
             flag = -1;
