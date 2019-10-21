@@ -65,13 +65,11 @@ int8_t is_STAKED(const char *chain_name)
     if ( chain_name[0] == 0 )
         return(0);
     if ( (strcmp(chain_name, "LABS") == 0) || (strncmp(chain_name, "LABS", 4) == 0) )
-        ret = 3; // These chains are allowed coin emissions.
-    else if ( (strncmp(chain_name, "CFEKOD", 6) == 0) ) // temp for testing KMD on demand chains
-        ret = DPOW_CHECKPOINTFREQ;
+        ret = 1; // These chains are allowed coin emissions.
     else if ( (strcmp(chain_name, "CFEK") == 0) || (strncmp(chain_name, "CFEK", 4) == 0) )
         ret = 2; // These chains have no speical rules at all.
     else if ( (strcmp(chain_name, "TEST") == 0) || (strncmp(chain_name, "TEST", 4) == 0) )
-        ret = 1; // These chains are for testing consensus to create a chain etc. Not meant to be actually used for anything important.
+        ret = 3; // These chains are for testing consensus to create a chain etc. Not meant to be actually used for anything important.
     return(ret);
 };
 #endif
@@ -85,12 +83,10 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
     dpow_fifoupdate(myinfo,dp->srcfifo,dp->last);
     if ( strcmp(dp->dest,"KMD") == 0 )
     {
-        // Nodes who join do not get sent the prevKMD height so they all have diffrent numbers based on when they started dpow.
-        // mitigated somewhat by saving the KMD height when a round is triggered to start and then updating the prevDESTHEIGHT, when it successfully completes. 
         int supressfreq;
 #if STAKED
-        if ( (supressfreq= (is_STAKED(dp->symbol))) == 0 )
-            supressfreq = DPOW_CHECKPOINTFREQ;
+        if ( (is_STAKED(dp->symbol)) != 0 )
+            supressfreq = 5;
 #endif
         if ( dp->DESTHEIGHT < dp->prevDESTHEIGHT+supressfreq )
         {
@@ -168,7 +164,7 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
             {
                 dp->threads[threadind].allocated = 1;
                 pthread_detach(dp->threads[threadind].thread);
-                printf("[%s:%i] created thread %lu...\n", dp->symbol, checkpoint.blockhash.height, threadind);
+                //printf("[%s:%i] created thread %lu...\n", dp->symbol, checkpoint.blockhash.height, threadind);
             }
         } else printf(RED"[%s:%i] reached maximum threads.\n"RESET, dp->symbol, checkpoint.blockhash.height);
         portable_mutex_unlock(&dp->dpmutex);
@@ -974,48 +970,75 @@ STRING_AND_INT(dpow,fundnotaries,symbol,numblocks)
 
 extern char *Notaries_elected[65][2];
 
-cJSON *dpow_recvmasks(struct supernet_info *myinfo,struct dpow_block *bp)
+cJSON *dpow_recvmasks(struct supernet_info *myinfo,struct dpow_info *dp)
 {
-    int32_t i; cJSON *retjson,*item; char hexstr[64];
-    retjson = cJSON_CreateArray();
-    for (i=0; i<bp->numnotaries; i++)
+    int32_t i,j; cJSON *retjson,*htitem,*item; char hexstr[64]; struct dpow_block *bp;
+    retjson = cJSON_CreateObject();
+    for ( j=0; j<dp->maxblocks; j++ )
     {
-        item = cJSON_CreateObject();
-        jaddstr(item,"notary",Notaries_elected[i][0]);
-        jaddnum(item,"bestk",bp->notaries[i].bestk);
-        sprintf(hexstr,"%16llx",(long long)bp->notaries[i].recvmask);
-        jaddstr(item,"recvmask",hexstr);
-        sprintf(hexstr,"%16llx",(long long)bp->notaries[i].bestmask);
-        jaddstr(item,"bestmask",hexstr);
-        jaddi(retjson,item);
+        if ( (bp= dp->blocks[j]) != 0 )
+        {
+            htitem = cJSON_CreateArray();
+            for (i=0; i<bp->numnotaries; i++)
+            {
+                item = cJSON_CreateObject();
+                jaddstr(item,"notary",Notaries_elected[i][0]);
+                jaddnum(item,"bestk",bp->notaries[i].bestk);
+                sprintf(hexstr,"%llx",(long long)bp->notaries[i].recvmask);
+                jaddstr(item,"recvmask",hexstr);
+                sprintf(hexstr,"%llx",(long long)bp->notaries[i].bestmask);
+                jaddstr(item,"bestmask",hexstr);
+                jaddi(htitem,item);
+            }
+            sprintf(hexstr,"%i",bp->height);
+            jadd(retjson,hexstr,htitem);
+        }
     }
     return(retjson);
 }
 
 TWO_STRINGS(dpow,active,maskhex,symbol)
 {
-    uint8_t data[8],revdata[8],pubkeys[64][33]; int32_t i,len,current,n; uint64_t mask; cJSON *infojson,*retjson,*array,*notarray;
+    uint8_t data[8],revdata[8],pubkeys[64][33]; int32_t i,len,current,n; uint64_t mask; cJSON *infojson,*retjson,*array,*notarray; struct dpow_info *dp = 0;
     array = cJSON_CreateArray();
     notarray = cJSON_CreateArray();
-    /*if ( coin != 0 && (infojson= dpow_getinfo(myinfo,coin)) != 0 )
-    {
-        current = jint(infojson,"blocks");
-        free_json(infojson);
-    } else return(clonestr("{\"error\":\"cant get current height\"}"));
-    n = komodo_notaries("KMD",pubkeys,current); */
-    for (i=0; i<myinfo->numdpows; i++)
-        if ( strcmp(symbol,myinfo->DPOWS[i]->symbol) == 0 )
-            break;
-    
-    if ( i == myinfo->numdpows || myinfo->DPOWS[i] == 0 )
-        return(clonestr("{\"error\":\"invalid dpow coin\"}"));
     if ( maskhex == 0 || maskhex[0] == 0 )
     {
+        /* 
+            the format of this RPC has changed, so scripts that use it will need updating
+            old: 
+            [
+                {notary}
+            ]
+            new:
+            {
+                blockheight : [
+                    {notary}
+                ]
+            }
+        */
+        // find the coin requested
+        for (i=0; i<myinfo->numdpows; i++)
+            if ( myinfo->DPOWS[i] != 0 && strcmp(symbol,myinfo->DPOWS[i]->symbol) == 0 )
+            {
+                dp = myinfo->DPOWS[i];
+                break;
+            }
+        if ( dp == 0 )
+            return(clonestr("{\"error\":\"dpow not active on this coin\"}"));
+        // Display all current active dpow rounds
+        return(jprint(dpow_recvmasks(myinfo,dp),1));
+        
+        /*
+        currentbp is affected by race conditions, and causes crashes. 
         if ( myinfo->DPOWS[i]->currentbp == 0 )
             return(clonestr("{\"error\":\"there is no dpow round started to check.\"}"));
+        
         return(jprint(dpow_recvmasks(myinfo,myinfo->DPOWS[i]->currentbp),1));
+        
+        
 
-        /*mask = myinfo->DPOWS[0]->lastrecvmask;
+        mask = myinfo->DPOWS[0]->lastrecvmask;
         for (i=0; i<n; i++)
         {
             if ( ((1LL << i) & mask) != 0 )
@@ -1043,10 +1066,10 @@ TWO_STRINGS(dpow,active,maskhex,symbol)
         //for (i=0; i<len; i++)
         //    printf("%02x",data[i]);
         //printf(" <- hex mask.%llx\n",(long long)mask);
-        for (i=0; i<(len<<3); i++)
+        for (i=0; i<Notaries_num; i++) //(len<<3)
         {
-            if ( i == Notaries_num )
-                break;
+            //if ( i == Notaries_num )
+            //    break;
             if ( ((1LL << i) & mask) != 0 )
             {
                 //init_hexbytes_noT(pubkeystr,pubkeys[i],33);

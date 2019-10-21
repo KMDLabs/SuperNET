@@ -312,47 +312,16 @@ cJSON *dpow_MoMoMdata(struct iguana_info *coin,char *symbol,int32_t kmdheight,ui
 
 int32_t dpow_paxpending(struct supernet_info *myinfo,uint8_t *hex,int32_t hexsize,uint32_t *paxwdcrcp,bits256 MoM,uint32_t MoMdepth,uint16_t CCid,int32_t src_or_dest,struct dpow_block *bp)
 {
-    struct iguana_info *coin,*kmdcoin=0; char *retstr,*hexstr; cJSON *retjson,*infojson, *srcinfojson; int32_t kmdheight=0,hexlen=0,n=0,ppMoMheight=0; uint32_t paxwdcrc=0;
+    char *hexstr; cJSON *retjson; int32_t hexlen=0,n=0; uint32_t paxwdcrc=0;
     if ( dpow_smallopreturn(bp->srccoin->symbol) == 0 || src_or_dest != 0 )
     {
         n += iguana_rwbignum(1,&hex[n],sizeof(MoM),MoM.bytes);
         MoMdepth = (MoMdepth & 0xffff) | ((uint32_t)CCid<<16);
         n += iguana_rwnum(1,&hex[n],sizeof(MoMdepth),(uint32_t *)&MoMdepth);
-        /*if ( (srcinfojson= dpow_getinfo(myinfo,bp->srccoin)) != 0 )
+        if ( bp->CCid > (bp->newconsensus!=0?1:0) && src_or_dest == 0 && strcmp(bp->destcoin->symbol,"KMD") == 0 )
         {
-            // not needed CCid is passed to this function already, and we dont need the ppmomheight anymore!
-            CCid = juint(srcinfojson,"CCid");
-            if ( CCid > 1 )
-                ppMoMheight = jint(srcinfojson,"ppMoMheight");
-            free_json(srcinfojson);
-            //printf("ppMoMheight.%i CCid.%i\n", ppMoMheight, CCid);
-        }
-#if STAKED
-        int8_t MoMoMdelay = 5;
-        int8_t ccid_ex = 1;
-#else
-        int8_t MoMoMdelay = 0;
-        int8_t ccid_ex = 0;
-#endif
-*/
-        if ( CCid != 0 && src_or_dest == 0 && strcmp(bp->destcoin->symbol,"KMD") == 0 ) //strncmp(bp->srccoin->symbol,"TXSCL",5) == 0 &&
-        {
-            kmdcoin = bp->destcoin;
-            if ( (infojson= dpow_getinfo(myinfo,kmdcoin)) != 0 )
+            if ( (retjson= dpow_MoMoMdata(bp->destcoin,bp->srccoin->symbol,bp->destcoin->longestchain,bp->CCid)) != 0 )
             {
-                kmdheight = jint(infojson,"blocks");
-                free_json(infojson);
-            }
-            // 5 block delay is easily enough most of the time. In rare case KMD is reorged more than this,
-            // the backup notary validation can be used to complete the import.
-            if ( (retjson= dpow_MoMoMdata(kmdcoin,bp->srccoin->symbol,kmdheight,bp->CCid)) != 0 )
-            {
-                /*if ( ppMoMheight != 0 && jstr(retjson,"error") != 0 )
-                {
-                    // MoMoM returned NULL when after 2 MoM exist on the chain.
-                    free_json(retjson);
-                    return(-1);
-                } */
                 if ( (hexstr= jstr(retjson,"data")) != 0 && (hexlen= (int32_t)strlen(hexstr)) > 0 && n+hexlen/2 <= hexsize )
                 {
                     hexlen >>= 1;
@@ -364,12 +333,12 @@ int32_t dpow_paxpending(struct supernet_info *myinfo,uint8_t *hex,int32_t hexsiz
         }
         paxwdcrc = calc_crc32(0,hex,n) & 0xffffff00;
         paxwdcrc |= (n & 0xff);
-        //if ( hexlen > 0 )
-            //printf("%s.ht.%d opretlen.%d src_or_dest.%d dest.(%s) lastbest.%d paxwdcrc.%x\n",bp->srccoin->symbol,bp->height,n,src_or_dest,bp->destcoin->symbol,kmdcoin!=0?((kmdcoin->lastbestheight/10)*10 - 5):-1,paxwdcrc);
+        if ( 0 && hexlen > 0 )
+            printf("%s.ht.%d opretlen.%d src_or_dest.%d dest.(%s) lastbest.%d paxwdcrc.%x\n",bp->srccoin->symbol,bp->height,n,src_or_dest,bp->destcoin->symbol,((bp->destcoin->lastbestheight/10)*10 - 5),paxwdcrc);
     }
     *paxwdcrcp = paxwdcrc;
     return(n);
-    if ( (coin= iguana_coinfind("KMD")) != 0 )
+    /* if ( (coin= iguana_coinfind("KMD")) != 0 )
     {
         if ( coin->FULLNODE < 0 )
         {
@@ -393,7 +362,7 @@ int32_t dpow_paxpending(struct supernet_info *myinfo,uint8_t *hex,int32_t hexsiz
     } else printf("dpow_paxpending: cant find KMD\n");
     if ( *paxwdcrcp != paxwdcrc )
         *paxwdcrcp = paxwdcrc;
-    return(n);
+    return(n); */
 }
 
 bits256 dpow_getblockhash(struct supernet_info *myinfo,struct iguana_info *coin,int32_t height)

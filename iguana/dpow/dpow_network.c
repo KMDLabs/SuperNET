@@ -1984,26 +1984,27 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
         return;
     if ( bp->isratify == 0 && bp->state != 0xffffffff && senderind >= 0 && senderind < bp->numnotaries && bits256_nonz(srcutxo) != 0 && bits256_nonz(destutxo) != 0 )
     {
-        if ( bp->myind != senderind && (bp->recvmask & (1LL << senderind)) == 0 )
+        if ( bp->myind != senderind )
         {
-            if ( (tmpjson= dpow_gettxout(myinfo, bp->srccoin, srcutxo, srcvout)) != 0 )
+            if ( (bp->recvmask & (1LL << senderind)) == 0 )
             {
-                bp->notaries[senderind].src.prev_hash = srcutxo;
-                bp->notaries[senderind].src.prev_vout = srcvout;
-                free_json(tmpjson);
-                tmpjson = 0;
-                utxos++;
+                if ( (tmpjson= dpow_gettxout(myinfo, bp->srccoin, srcutxo, srcvout)) != 0 )
+                {
+                    bp->notaries[senderind].src.prev_hash = srcutxo;
+                    bp->notaries[senderind].src.prev_vout = srcvout;
+                    free_json(tmpjson);
+                    tmpjson = 0;
+                    utxos++;
+                } else sprintf(printstr,MAGENTA"[%s:%i]: coin.(%s) node.(%s) txid.(%s) v.(%i) is spent\n"RESET,bp->srccoin->symbol,bp->height,bp->srccoin->symbol,Notaries_elected[senderind][0],bits256_str(str,srcutxo),srcvout); 
+                if ( (tmpjson= dpow_gettxout(myinfo, bp->destcoin, destutxo, destvout)) != 0 )
+                {
+                    bp->notaries[senderind].dest.prev_hash = destutxo;
+                    bp->notaries[senderind].dest.prev_vout = destvout;
+                    free_json(tmpjson);
+                    tmpjson = 0;
+                    utxos++;
+                } else sprintf(printstr,MAGENTA"[%s:%i]: coin.(%s) node.(%s) txid.(%s) v.(%i) is spent\n"RESET,bp->srccoin->symbol,bp->height,dp->dest,Notaries_elected[senderind][0],bits256_str(str,destutxo),destvout);
             }
-            else sprintf(printstr,MAGENTA"[%s:%i]: coin.(%s) node.(%s) txid.(%s) v.(%i) is spent\n"RESET,bp->srccoin->symbol,bp->height,bp->srccoin->symbol,Notaries_elected[senderind][0],bits256_str(str,srcutxo),srcvout); 
-            if ( (tmpjson= dpow_gettxout(myinfo, bp->destcoin, destutxo, destvout)) != 0 )
-            {
-                bp->notaries[senderind].dest.prev_hash = destutxo;
-                bp->notaries[senderind].dest.prev_vout = destvout;
-                free_json(tmpjson);
-                tmpjson = 0;
-                utxos++;
-            }
-            else sprintf(printstr,MAGENTA"[%s:%i]: coin.(%s) node.(%s) txid.(%s) v.(%i) is spent\n"RESET,bp->srccoin->symbol,bp->height,dp->dest,Notaries_elected[senderind][0],bits256_str(str,destutxo),destvout);
         }
         else 
         {
@@ -2025,16 +2026,16 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
         }
 
         if ( (bp->recvmask & (1LL << bp->myind)) == 0 && rand() % 100 < 1 )
-            printf(RED"[%s] : %s is not in recvmask.%llx ... check utxos\n"RESET,dp->symbol,Notaries_elected[bp->myind][0],(long long)bp->recvmask);
+            printf(RED"[%s:%i]: %s has no utxos...\n"RESET,dp->symbol,bp->height,Notaries_elected[bp->myind][0]);
         
         if ( bestmask != 0 )
             bp->notaries[senderind].bestmask = bestmask;
         if ( recvmask != 0 )
             bp->notaries[senderind].recvmask |= recvmask;
-        if ( (bp->notaries[senderind].paxwdcrc= paxwdcrc) != 0 )
+        if ( 0 && (bp->notaries[senderind].paxwdcrc = paxwdcrc) != 0 )
         {
-            //fprintf(stderr,"{%d %x} ",senderind,paxwdcrc);
-        }
+            fprintf(stderr,"{%d %x} ",senderind,paxwdcrc);
+        } 
         bp->notaries[bp->myind].paxwdcrc = bp->paxwdcrc;
         if ( bp->bestmask == 0 )
             bp->bestmask = dpow_maskmin(bp->recvmask,dp,bp,&bp->bestk);
@@ -2243,12 +2244,12 @@ void dpow_send(struct supernet_info *myinfo,struct dpow_info *dp,struct dpow_blo
     //printf(" dpow_send.(%d) size.%d numipbits.%d myind.%d\n",datalen,size,np->numipbits,bp->myind);
     if ( bp->isratify == 0 )
     {
+        /* no need to update this for MoM. 
         if ( strcmp(bp->destcoin->symbol,"KMD") == 0 )
             src_or_dest = 0;
         else src_or_dest = 1;
         extralen = dpow_paxpending(myinfo,extras,sizeof(extras),&paxwdcrc,bp->MoM,bp->MoMdepth,bp->CCid,src_or_dest,bp);
-        bp->paxwdcrc = bp->notaries[bp->myind].paxwdcrc = np->notarize.paxwdcrc = paxwdcrc;
-        //dpow_bestconsensus(dp,bp);
+        bp->paxwdcrc = bp->notaries[bp->myind].paxwdcrc = np->notarize.paxwdcrc = paxwdcrc; */
         dpow_nanoutxoset(myinfo,dp,&np->notarize,bp,0);
     }
     else

@@ -121,7 +121,7 @@ struct dpow_block
     int8_t myind,bestk,ratifybestk,pendingbestk,pendingratifybestk,matches,bestmatches,minnodes;
     cJSON *ratified;
     uint16_t CCid;
-    uint8_t ratified_pubkeys[DPOW_MAXRELAYS][33],ratifysigs[2][DPOW_MAXSIGLEN],ratifysiglens[2];
+    uint8_t ratified_pubkeys[DPOW_MAXRELAYS][33],ratifysigs[2][DPOW_MAXSIGLEN],ratifysiglens[2],newconsensus;
     char handles[DPOW_MAXRELAYS][32];
     char signedtx[32768]; uint8_t ratifyrawtx[2][32768]; uint32_t pendingcrcs[2];
 };
@@ -157,7 +157,7 @@ struct dpow_info
     uint32_t fullCCid;
     portable_mutex_t paxmutex,dexmutex,dpmutex;
     uint32_t ipbits[DPOW_MAXIPBITS],numipbits;
-    struct dpow_block **blocks,*currentbp;
+    struct dpow_block **blocks; //*currentbp;
     struct dpow_thread threads[DPOW_MAX_BLOCKS];
 };
 

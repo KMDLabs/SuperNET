@@ -35,7 +35,7 @@ void dpow_clearfinishedthreads(struct supernet_info *myinfo,struct dpow_info *dp
             dp->threads[i].ptrs = 0;
             dp->threads[i].allocated = 0;
             dp->threads[i].finished = 0;
-            printf(YELLOW"[%s] removed thread %i...\n"RESET, dp->symbol, i);
+            //printf(YELLOW"[%s] removed thread %i...\n"RESET, dp->symbol, i);
         }
     }
 }
@@ -306,7 +306,7 @@ void dpow_statemachinestart(void *ptr)
 {
     void **ptrs = ptr;
     struct supernet_info *myinfo; struct dpow_info *dp; struct dpow_checkpoint checkpoint;
-    int32_t i,j,ht,extralen,destprevvout0,srcprevvout0,src_or_dest,start_destht,numratified=0,kmdheight = -1,myind = -1,blockindex=0,abort=0,threadind; uint8_t extras[10000],pubkeys[64][33]; cJSON *ratified=0,*item; struct iguana_info *src,*dest; char *jsonstr,*handle,*hexstr,str[65],str2[65],srcaddr[64],destaddr[64]; bits256 zero,MoM,merkleroot,srchash,destprevtxid0,srcprevtxid0; struct dpow_block *bp; struct dpow_entry *ep = 0; uint32_t MoMdepth,duration,minsigs,starttime,srctime;
+    int32_t i,j,ht,extralen,destprevvout0,srcprevvout0,src_or_dest,numratified=0,kmdheight = -1,myind = -1,blockindex=0,abort=0,threadind; uint8_t extras[10000],pubkeys[64][33]; cJSON *ratified=0,*item; struct iguana_info *src,*dest; char *jsonstr,*handle,*hexstr,str[65],str2[65],srcaddr[64],destaddr[64]; bits256 zero,MoM,merkleroot,srchash,destprevtxid0,srcprevtxid0; struct dpow_block *bp; struct dpow_entry *ep = 0; uint32_t MoMdepth,duration,minsigs,starttime,srctime;
     char *destlockunspent=0,*srclockunspent=0,*destunlockunspent=0,*srcunlockunspent=0;
     memset(&zero,0,sizeof(zero));
     portable_mutex_t dpowT_mutex;
@@ -346,13 +346,15 @@ void dpow_statemachinestart(void *ptr)
     if ( (bp= dpow_heightfind(myinfo,dp, checkpoint.blockhash.height)) == 0 )
     {
         if ( (blockindex= dpow_blockfind(myinfo,dp)) < 0 )
+        {
+            printf(RED"[%s:%d] cannot allocate bp\n"RESET,src->symbol,checkpoint.blockhash.height);
             return;
+        }
         portable_mutex_lock(&dpowT_mutex);
         bp = calloc(1,sizeof(*bp));
         dp->blocks[blockindex] = bp;
         portable_mutex_unlock(&dpowT_mutex);
-        //printf("blockindex.%i allocate bp for %s ht.%d -> %s\n",blockindex,src->symbol,checkpoint.blockhash.height,dest->symbol);
-        bp->pendingprevDESTHT = start_destht = dp->DESTHEIGHT;
+        bp->pendingprevDESTHT = dp->DESTHEIGHT;
         bp->MoM = MoM;
         bp->MoMdepth = MoMdepth;
         bp->CCid = dp->fullCCid & 0xffff;
@@ -365,6 +367,12 @@ void dpow_statemachinestart(void *ptr)
         for (i=0; i<sizeof(bp->notaries)/sizeof(*bp->notaries); i++)
             bp->notaries[i].bestk = -1;
         bp->opret_symbol = dp->symbol;
+        // need to change this to some kind of activation later, use KMD tiptime? 
+#if STAKED 
+        bp->newconsensus = 1;
+#else 
+        bp->newconsensus = 0;
+#endif
         if ( jsonstr != 0 && (ratified= cJSON_Parse(jsonstr)) != 0 )
         {
             bp->isratify = 1;
@@ -419,7 +427,7 @@ void dpow_statemachinestart(void *ptr)
         }
         bp->pendingbestk = bp->bestk = -1;
         //dp->blocks[checkpoint.blockhash.height] = bp;
-        dp->currentbp = bp;
+        //dp->currentbp = bp;
         bp->beacon = rand256(0);
         vcalc_sha256(0,bp->commit.bytes,bp->beacon.bytes,sizeof(bp->beacon));
     }
@@ -511,7 +519,7 @@ void dpow_statemachinestart(void *ptr)
         return;
     }
     //printf(" myind.%d myaddr.(%s %s)\n",myind,srcaddr,destaddr);
-    if ( myind == 0 && bits256_nonz(destprevtxid0) != 0 && bits256_nonz(srcprevtxid0) != 0 && destprevvout0 >= 0 && srcprevvout0 >= 0 )
+    if ( 0 && myind == 0 && bits256_nonz(destprevtxid0) != 0 && bits256_nonz(srcprevtxid0) != 0 && destprevvout0 >= 0 && srcprevvout0 >= 0 )
     {
         ep->dest.prev_hash = destprevtxid0;
         ep->dest.prev_vout = destprevvout0;
@@ -525,7 +533,7 @@ void dpow_statemachinestart(void *ptr)
     }
     else
     {
-        if ( bp->srccoin->notarypay != 0 && dpow_checknotarization(myinfo, bp->srccoin) == 0)
+        if ( bp->srccoin->notarypay != 0 && dpow_checknotarization(myinfo, bp->srccoin) == 0 )
         {
             printf(RED"[%s] notary pay fund is empty, need to send coins to: REDVp3ox1pbcWYCzySadfHhk8UU3HM4k5x\n"RESET, bp->srccoin->symbol);
             dpow_clearbp(myinfo, dp, bp, blockindex, &dpowT_mutex);
@@ -571,9 +579,20 @@ void dpow_statemachinestart(void *ptr)
     bp->timestamp = checkpoint.timestamp;
     bp->hashmsg = checkpoint.blockhash.hash;
     bp->myind = myind;
-    bp->minnodes = bitweight(dp->lastrecvmask)-1; // use one less than the maximum possible, seems to work, as after 30s it drops by 1/8th and then all nodes are already well above the new mim. 
-    if ( bp->minnodes < bp->minsigs)
-        bp->minnodes = bp->minsigs;
+    if ( bp->newconsensus != 0 )
+    {
+        // use the amount of online nodes seen at the last completed notarization -1, this falls over time to cover the edge case where more than 1 node goes offline between notarizations.
+        bp->minnodes = bitweight(dp->lastrecvmask)-1;
+        if ( bp->minnodes < bp->minsigs)
+            bp->minnodes = bp->minsigs;
+    }
+    else 
+    {
+        // ignore minnodes for old consensus. 
+        bp->minnodes = 0; 
+    }
+    /* 
+    If blocks are happeing very fast, this prevents notarizations happening.
     while ( bp->isratify == 0 && dp->destupdated == 0 )
     {
         if ( dp->checkpoint.blockhash.height > checkpoint.blockhash.height ) //(checkpoint.blockhash.height % 100) != 0 &&
@@ -583,10 +602,13 @@ void dpow_statemachinestart(void *ptr)
             goto end;
         }
         sleep(1);
-    }
+    } 
+    */
+    
     starttime = (uint32_t)time(NULL);
     if ( bp->isratify == 0 )
     {
+        // sets MoM and MoMoM data if it is required. 
         bp->starttime = starttime;
         if ( strcmp(bp->destcoin->symbol,"KMD") == 0 )
             src_or_dest = 0;
@@ -603,6 +625,7 @@ void dpow_statemachinestart(void *ptr)
     int32_t iterations = 0;
     while ( time(NULL) < starttime+bp->duration && src != 0 && dest != 0 && bp->state != 0xffffffff )
     {
+        /* no need for this to update, it doesnt change.  
         if ( bp->isratify == 0 )
         {
             if ( myinfo->DPOWS[0]->ratifying != 0 )
@@ -615,7 +638,7 @@ void dpow_statemachinestart(void *ptr)
             else src_or_dest = 1;
             extralen = dpow_paxpending(myinfo,extras,sizeof(extras),&bp->paxwdcrc,bp->MoM,bp->MoMdepth,bp->CCid,src_or_dest,bp);
             bp->notaries[bp->myind].paxwdcrc = bp->paxwdcrc;
-        }
+        } */
         if ( dp->ratifying > 1 )
         {
             printf("new ratification started. abort ht.%d\n",bp->height);
@@ -635,7 +658,7 @@ void dpow_statemachinestart(void *ptr)
         {
             dpow_send(myinfo,dp,bp,srchash,bp->hashmsg,0,bp->height,(void *)"ping",0);
             dpow_nanomsg_update(myinfo);
-            if ( iterations > 1 )
+            if ( iterations > 1 && bp->newconsensus != 0 )
             {
                 bp->minnodes -= ((bp->numnotaries+(bp->numnotaries % 2)) / 8);
                 if ( bp->minnodes < bp->minsigs ) 
@@ -663,7 +686,7 @@ void dpow_statemachinestart(void *ptr)
     }
     dp->ratifying -= bp->isratify;
     printf("END isratify.%d:%d bestk.%d %llx sigs.%llx state.%x machine ht.%d completed state.%x %s.%s %s.%s recvmask.%llx bitweight(lastrecvmask).%d paxwdcrc.%x %p %p\n",bp->isratify,dp->ratifying,bp->bestk,(long long)bp->bestmask,(long long)(bp->bestk>=0?bp->destsigsmasks[bp->bestk]:0),bp->state,bp->height,bp->state,dp->dest,bits256_str(str,bp->desttxid),dp->symbol,bits256_str(str2,bp->srctxid),(long long)bp->recvmask,bitweight(dp->lastrecvmask),bp->paxwdcrc,src,dest);
-end:
+//end:
     if ( ep != 0 && ep->dest.prev_vout != -1 )
         dpow_unlockunspent(myinfo,bp->destcoin,bits256_str(str2,ep->dest.prev_hash),ep->dest.prev_vout);
     if ( ep != 0 && ep->src.prev_vout != -1 )
