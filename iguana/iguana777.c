@@ -444,7 +444,7 @@ void iguana_update_balances(struct supernet_info *myinfo,struct iguana_info *coi
         {
             if ( (bp= coin->bundles[i]) == 0 )
                 continue;
-            if ( (retval= iguana_spendvectors(myinfo,coin,bp,&bp->ramchain,0,bp->n,convertflag,0)) >= 0 ) //bp->utxofinish > 1 || 
+            if ( (retval= iguana_spendvectors(myinfo,coin,bp,&bp->ramchain,0,bp->n,convertflag,0)) >= 0 ) //bp->utxofinish > 1 ||
             {
                 if ( retval > 0 )
                 {
@@ -1121,6 +1121,7 @@ struct iguana_info *iguana_setcoin(char *symbol,void *launched,int32_t maxpeers,
     } else coin->MAXPEERS = 0;
     coin->notarychain = iguana_isnotarychain(coin->symbol);
     coin->myservices = services;
+    coin->utxocacheactive = coin->utxocacheinit = 0;
     coin->initialheight = initialheight;
     coin->mapflags = mapflags;
     coin->protocol = IGUANA_PROTOCOL_BITCOIN;
@@ -1135,14 +1136,21 @@ struct iguana_info *iguana_setcoin(char *symbol,void *launched,int32_t maxpeers,
     coin->enableCACHE = 1;//0;//(strcmp("BTCD",coin->symbol) == 0);
     if ( jobj(json,"cache") != 0 )
         coin->enableCACHE = juint(json,"cache");
-	
+
 	coin->sapling = (strcmp("KMD",coin->symbol) == 0);
 	if (jobj(json, "sapling") != 0)
 	{
 		coin->sapling = juint(json, "sapling");
 		printf("[Decker] %s sapling = %d\n", symbol, coin->sapling);
 	}
-    
+    if (jobj(json, "notarypay") != 0)
+	{
+        if ( ( strcmp("LABSRCTEST",coin->symbol) == 0 ) || ( strcmp("LABS",coin->symbol) == 0 ) )
+            coin->notarypay = 0;
+        else 
+            coin->notarypay = juint(json, "notarypay");
+		printf("[blackjok3r] %s notarypay = %d\n", symbol, coin->notarypay);
+	}
 	if ( (coin->polltimeout= juint(json,"poll")) <= 0 )
         coin->polltimeout = IGUANA_DEFAULT_POLLTIMEOUT;
     coin->active = juint(json,"active");
@@ -1186,9 +1194,48 @@ struct iguana_info *iguana_setcoin(char *symbol,void *launched,int32_t maxpeers,
     return(coin);
 }
 
+extern uint64_t dpow_utxosize(char *symbol);
+
+int32_t iguana_checkwallet(struct supernet_info *myinfo, struct iguana_info *coin)
+{
+    int32_t vout; uint32_t i,n,spents=0; bits256 txid; cJSON *unspents,*item; char str[65]; uint64_t satoshis;
+    if ( (unspents= dpow_listunspent(myinfo,coin,0,0)) != 0 )
+    {
+        if ( (n= cJSON_GetArraySize(unspents)) > 0 )
+        {
+            for (i = 0; i < n; i++)
+            {
+                if ( (item= jitem(unspents,i)) == 0 )
+                    continue;
+                if ( is_cJSON_False(jobj(item,"spendable")) != 0 )
+                    continue;
+                // only check unspents we care about
+                if ( (satoshis= SATOSHIDEN * jdouble(item,"amount")) == 0 )
+                    satoshis= SATOSHIDEN * jdouble(item,"value");
+                if ( satoshis == DPOW_UTXOSIZE )
+                {
+                    txid = jbits256(item,"txid");
+                    vout = jint(item,"vout");
+                    if ( bits256_nonz(txid) != 0 && vout >= 0 )
+                    {
+                        if ( dpow_gettxout(myinfo, coin, txid, vout) == 0 )
+                        {
+                            printf("[%s] : txid.(%s) vout.(%d) is spent!\n",coin->symbol, bits256_str(str,txid), vout);
+                            spents++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return(spents);
+}
+
+extern int dpow_unlockunspent(struct supernet_info *myinfo,struct iguana_info *coin,char *txid,int32_t vout);
+
 int32_t iguana_launchcoin(struct supernet_info *myinfo,char *symbol,cJSON *json,int32_t virtcoin)
 {
-    int32_t maxpeers,maphash,initialheight,minconfirms,maxrequests,maxbundles; char name[64]; int64_t maxrecvcache; uint64_t services; struct iguana_info **coins,*coin;
+    int32_t maxpeers,maphash,initialheight,minconfirms,maxrequests,maxbundles,spents; char name[64]; int64_t maxrecvcache; uint64_t services; struct iguana_info **coins,*coin;
     if ( symbol == 0 )
         return(-1);
     if ( (coin= iguana_coinfind(symbol)) != 0 )
@@ -1217,6 +1264,13 @@ int32_t iguana_launchcoin(struct supernet_info *myinfo,char *symbol,cJSON *json,
             }
             coin->active = 1;
             coin->started = 0;
+            /* Doesn't seem to really help and takes a very long time on huge wallets. uncomment for debugging corrupt wallets.
+            if ( (spents= iguana_checkwallet(myinfo, coin)) != 0 )
+            {
+                printf("[%s] has %i spent transactions in its wallet.dat, please fix this issue and restart.\n",symbol,spents);
+                exit(0);
+            } */
+            dpow_unlockunspent(myinfo,coin,"",-1);
             return(1);
         }
         else
@@ -1291,4 +1345,3 @@ char *busdata_sync(uint32_t *noncep,char *jsonstr,char *broadcastmode,char *dest
     printf("busdata_sync.(%s)\n",jsonstr);
     return(0);
 }
-

@@ -12,7 +12,7 @@
  * Removal or modification of this copyright notice is prohibited.            *
  *                                                                            *
  ******************************************************************************/
-
+ 
 #define DPOW_BLACKLIST -100000
 
 void dpow_bestmask_update(struct supernet_info *myinfo,struct dpow_info *dp,struct dpow_block *bp,uint8_t nn_senderind,int8_t nn_bestk,uint64_t nn_bestmask,uint64_t nn_recvmask)
@@ -47,7 +47,7 @@ uint64_t dpow_lastk_mask(struct dpow_block *bp,int8_t *lastkp)
     m = bp->require0;
     for (j=0; j<bp->numnotaries; j++)
     {
-        k = DPOW_MODIND(bp,j);
+        k = DPOW_MODIND(bp,j,DPOW_CHECKPOINTFREQ);
         if ( (bp->require0 == 0 || k != 0) && bp->scores[k] < DPOW_BLACKLIST )
             continue;
         if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 )
@@ -131,30 +131,64 @@ uint64_t dpow_notarybestk(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
     return(bestmask);
 }
 
-uint64_t dpow_maskmin(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
+uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *bp,int8_t *lastkp)
 {
-    int32_t j,m,k; uint64_t bestmask,mask = 0;//bp->require0;
-    bestmask = 0;
+    int32_t j,m,k,z,n,i,p,jk; uint64_t bestmask = 0,mask = 0;
     *lastkp = -1;
-    m = 0;//bp->require0;
+    m = 0;
+    /* 
+        Need to make sure majority of nodes agree on recvmask before calcuating and submitting bestmask and besk. 
+        This keeps the network in consensus. 
+        Notarizations are more reliable and better distributed amoung all nodes who are in a working state, rather than 
+        the first 13 nodes who see a bestk that is valid in their recvmask. 
+        nodes can only get into recvmask if they have utxos submitted. This happens in dpow_notarize_update before this function is called.
+        //bp->recvmask |= mask;
+        //if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
+    */
+    for (z=n=0; z<bp->numnotaries; z++)
+        if ( bitweight(bp->notaries[z].recvmask) >= bp->minnodes )
+            n++;
+    if ( n < bp->minnodes )
+        return(bestmask);
+
+    // Fetch the last nota txid and create a seed from it. 
+    uint8_t rndnodes[32];
+    printf(BLUE"Random seed: ");
+    for ( i=0; i<32; i++ )
+    {
+        // 32 rnd numbers from 1 -> numnotaries-1. 
+        rndnodes[i] = (dp->prevnotatxid.bytes[i] % (bp->numnotaries-1))+1;
+        printf("%i, ", rndnodes[i]);
+    }
+    printf("\n"RESET);
+    z = -1;
     for (j=0; j<bp->numnotaries; j++)
     {
-        k = DPOW_MODIND(bp,j);
-        //if ( (bp->require0 == 0 || k != 0) && bp->scores[k] < DPOW_BLACKLIST )
-        //    continue;
-        if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
+        jk = ((k=i= DPOW_MODIND(bp,j,dp->freq))>>1);
+        for ( p=0; p<32; p++ )
         {
-            mask |= (1LL << k);
-            if ( ++m == bp->minsigs )
-            {
-                *lastkp = k;
-                bestmask = mask;
-            }
+            if ( (bp->recvmask & (1LL << k)) != 0 && (mask & (1LL << k)) == 0 )
+                break;
+            jk = ((jk >= 32) ? 0 : jk+1);
+            k += rndnodes[jk];
+            while ( k >= bp->numnotaries ) 
+                k -= bp->numnotaries;
+        }
+        if ( p == 32 ) 
+            continue;
+        // got this far we have a valid k
+        mask |= (1LL << k);
+        if ( ++m == bp->minsigs )
+        {
+            *lastkp = i;
+            bestmask = mask;
+            z = k;
         }
     }
-    bp->recvmask |= mask;
     if ( *lastkp >= 0 )
     {
+        char str[64]; sprintf(str,CYAN"-> newk.%i"RESET, z); 
+        printf(GREEN"[%s:%i] nodes.%i vs min.%i bestk.%i %s\n", bp->srccoin->symbol, bp->height, bitweight(bp->recvmask), bp->minnodes, *lastkp, (*lastkp == z) ? RESET : str );
         for (mask=j=0; j<bp->numnotaries; j++)
         {
             if ( bp->notaries[j].src.siglens[*lastkp] > 0 )
@@ -168,7 +202,7 @@ uint64_t dpow_maskmin(uint64_t refmask,struct dpow_block *bp,int8_t *lastkp)
         }
         bp->destsigsmasks[*lastkp] |= mask;
    }
-    return(bestmask);
+   return(bestmask);
 }
 
 struct dpow_block *dpow_heightfind(struct supernet_info *myinfo,struct dpow_info *dp,int32_t height)
@@ -203,20 +237,6 @@ int32_t dpow_blockfind(struct supernet_info *myinfo,struct dpow_info *dp)
     }
     return(-1);
 }
-
-/* maybe this is better not sure... 
-int32_t dpow_blockfind(struct supernet_info *myinfo,struct dpow_info *dp)
-{
-    int32_t i; uint32_t i,r;
-    while ( 1 )
-    {
-        OS_randombytes((uint8_t *)&r,sizeof(r));
-        i = r % dp->maxblocks;
-        if ( dp->blocks[i] == 0 )
-            break;
-    }
-    return(-1);
-}*/
 
 int32_t dpow_voutstandard(struct supernet_info *myinfo,struct dpow_block *bp,uint8_t *serialized,int32_t m,int32_t src_or_dest,uint8_t pubkeys[][33],int32_t numratified)
 {
@@ -542,9 +562,9 @@ void dpow_rawtxsign(struct supernet_info *myinfo,struct dpow_info *dp,struct igu
                                 }
                                 if ( valid != 0 )
                                 {
-                                    char *txinfo = jprint(item,0);
-                                    printf("bestk.%d %llx %s height.%d mod.%d VINI.%d myind.%d MINE.(%s) j.%d\n",bestk,(long long)bestmask,(src_or_dest != 0) ? bp->destcoin->symbol : bp->srccoin->symbol,bp->height,DPOW_MODIND(bp,0),j,myind,txinfo,j);
-                                    free(txinfo);
+                                    /*char *txinfo = jprint(item,0);
+                                    printf("bestk.%d %llx %s height.%d mod.%d VINI.%d myind.%d MINE j.%d\n",bestk,(long long)bestmask,(src_or_dest != 0) ? bp->destcoin->symbol : bp->srccoin->symbol,bp->height,DPOW_MODIND(bp,0),j,myind,txinfo,j);
+                                    free(txinfo); */
                                     cp->siglens[bestk] = (int32_t)strlen(sigstr) >> 1;
                                     if ( src_or_dest != 0 )
                                         bp->destsigsmasks[bestk] |= (1LL << myind);
@@ -634,9 +654,11 @@ int32_t dpow_signedtxgen(struct supernet_info *myinfo,struct dpow_info *dp,struc
     return(retval);
 }
 
+uint64_t iguana_fastnotariescount(struct supernet_info *myinfo, struct dpow_info *dp, struct dpow_block *bp, int32_t src_or_dest, int32_t checkall);
+
 void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpow_block *bp,int32_t myind,int32_t src_or_dest,int8_t bestk,uint64_t bestmask,uint8_t pubkeys[64][33],int32_t numratified)
 {
-    bits256 txid,srchash,zero,signedtxid; struct iguana_info *coin; int32_t j,len,numsigs; char *retstr=0,str[65],str2[65]; uint8_t txdata[32768]; uint32_t channel,state;
+    bits256 txid,srchash,zero,signedtxid; struct iguana_info *coin; int32_t i,j,len,numsigs,buflen=0,errorcode=0; char *retstr=0,str[65],str2[65],printstr[65536]; uint8_t txdata[32768]; uint32_t channel,state; uint64_t testbestmask;
     coin = (src_or_dest != 0) ? bp->destcoin : bp->srccoin;
     memset(zero.bytes,0,sizeof(zero));
     memset(txid.bytes,0,sizeof(txid));
@@ -646,9 +668,9 @@ void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpo
         dpow_notarytx(myinfo,bp->signedtx,&numsigs,coin->chain->isPoS,bp,bestk,bestmask,0,src_or_dest,pubkeys,numratified); // setcrcval
         signedtxid = dpow_notarytx(myinfo,bp->signedtx,&numsigs,coin->chain->isPoS,bp,bestk,bestmask,1,src_or_dest,pubkeys,numratified);
         bp->state = 1;
-        if ( bits256_nonz(signedtxid) != 0 && numsigs == bp->minsigs )
+        if ( bits256_nonz(signedtxid) != 0 && numsigs == bp->minsigs ) 
         {
-            if ( (retstr= dpow_sendrawtransaction(myinfo,coin,bp->signedtx,(bestmask & (1LL << bp->myind)) != 0)) != 0 ) 
+            if ( (retstr= dpow_sendrawtransaction(myinfo,coin,bp->signedtx,(bestmask & (1LL << bp->myind)),&errorcode)) != 0 )
             {
                 //printf("sendrawtransaction.(%s)\n",retstr);
                 if ( is_hexstr(retstr,0) == sizeof(txid)*2 )
@@ -660,6 +682,7 @@ void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpo
                         {
                             bp->desttxid = txid;
                             dpow_signedtxgen(myinfo,dp,bp->srccoin,bp,bestk,bestmask,myind,DPOW_SIGCHANNEL,0,numratified != 0);
+                            
                         } else 
                         {
                             bp->srctxid = txid;
@@ -674,28 +697,72 @@ void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpo
                             bp->state = state;
                             dpow_send(myinfo,dp,bp,txid,bp->hashmsg,(src_or_dest != 0) ? DPOW_BTCTXIDCHANNEL : DPOW_TXIDCHANNEL,bp->height,txdata,len+32);
                             printf("complete statemachine.%s ht.%d state.%d (%x %x)\n",coin->symbol,bp->height,bp->state,bp->hashmsg.uints[0],txid.uints[0]);
+                            if ( src_or_dest == 0 )
+                            {
+                                portable_mutex_lock(&dp->dpmutex);
+                                dp->lastnotarized = bp->hashmsg;
+                                dp->lastnotarizedht = bp->height;
+                                dp->lastrecvmask = bp->recvmask;
+                                dp->prevDESTHEIGHT = bp->pendingprevDESTHT;
+                                dp->prevnotatxid = bp->desttxid;
+                                dp->bestks[dp->numbestks] = bp->bestk;
+                                dp->numbestks = (dp->numbestks==64 ? 0 : dp->numbestks+1);
+                                portable_mutex_unlock(&dp->dpmutex);
+                            }
                         }
                     } else printf("sendtxid mismatch got %s instead of %s\n",bits256_str(str,txid),bits256_str(str2,signedtxid));
                 }
-                else
-                {
-                    bp->state = 0xffffffff;
-                    printf("dpow_sigscheck: [src.%s ht.%i] mismatched txid.%s vs %s\n",bp->srccoin->symbol,bp->height,bits256_str(str,txid),retstr);
-                    dpow_heightfind2(myinfo,dp,bp->height);
-#ifdef LOGTX
-                    FILE * fptr;
-                    fptr = fopen("/home/node/failed_notarizations", "a+");
-                    unsigned long dwy_timestamp = time(NULL);
-                    fprintf(fptr, "%lu %s %s %d %s\n", dwy_timestamp, bp->srccoin->symbol,bp->destcoin->symbol,src_or_dest,bp->signedtx);
-                    fclose(fptr);
-#endif
-                }
-                free(retstr);
-                retstr = 0;
-            }
-            else
+            } else printf("NULL return from sendrawtransaction. abort\n");
+            
+            // as long as the tx isnt already confirmed, check its inputs
+            if ( errorcode != 0 ) //&& errorcode != -27
             {
-                printf("NULL return from sendrawtransaction. abort\n");
+                buflen = sprintf(printstr, RED"dpow_sigscheck: [%s:%i] coin.%s errcode.%i sapling.%i "RESET,bp->srccoin->symbol,bp->height,coin->symbol,errorcode,coin->sapling);
+                // for non sapling coins/utxos we need a diffrent notary count/sigcheck
+                if ( coin->sapling != 0 && (testbestmask= iguana_fastnotariescount(myinfo, dp, bp, src_or_dest, 0)) != bp->bestmask )
+                {
+                    uint64_t failedmask = bp->bestmask^testbestmask;
+                    buflen += sprintf(printstr+buflen,RED"failedbestmask.%llx bestmask.%llx\n"RESET,(long long)failedmask,(long long)bp->bestmask);
+                    buflen += sprintf(printstr+buflen,">>> tx.%s\n",bp->signedtx);
+                    uint64_t testmask = iguana_fastnotariescount(myinfo, dp, bp, src_or_dest, 1);
+                    buflen += sprintf(printstr+buflen,">>> signed by: ");
+                    for (i=0; i<bp->numnotaries; i++)
+                        if ( ((1LL << i) & testmask) != 0 )
+                            buflen += sprintf(printstr+buflen,"%s, ",Notaries_elected[i][0]);
+                    buflen += sprintf(printstr+buflen,"\n >>> missing sigs: ");
+                    for (j=0; j<bp->numnotaries; j++)
+                        if ( (failedmask & (1LL << j)) != 0 )
+                        {
+                            buflen += sprintf(printstr+buflen,"%s, ", Notaries_elected[j][0]);
+                            //disable the ban for now. 
+                            //dp->lastbanheight[j] = bp->height;
+                        }
+                    buflen += sprintf(printstr+buflen,"\n");
+                }
+                buflen += sprintf(printstr+buflen,">>> inputs spent: \n");
+                for (j=0; j<bp->numnotaries; j++)
+                {
+                    if ( ((1LL << j) & bp->bestmask) != 0 )
+                    {
+                        if ( src_or_dest != 0 )
+                        {
+                            if ( dpow_gettxout(myinfo, bp->destcoin, bp->notaries[j].dest.prev_hash, bp->notaries[j].dest.prev_vout) == 0 ) 
+                                buflen += sprintf(printstr+buflen,"     [%s] txid.%s v.%i \n", Notaries_elected[j][0],bits256_str(str,bp->notaries[j].dest.prev_hash), bp->notaries[j].dest.prev_vout);
+                        }
+                        else
+                        {
+                            if ( dpow_gettxout(myinfo, bp->srccoin, bp->notaries[j].src.prev_hash, bp->notaries[j].src.prev_vout) == 0 ) 
+                                buflen += sprintf(printstr+buflen,"     [%s] txid.%s v.%i \n", Notaries_elected[j][0],bits256_str(str,bp->notaries[j].src.prev_hash), bp->notaries[j].src.prev_vout);
+                        }
+                    }
+                }
+#ifdef LOGTX
+                FILE * fptr;
+                fptr = fopen("failed_notarizations", "a+");
+                fprintf(fptr, "%s",printstr);
+                fclose(fptr);
+#endif 
+                printf("%s",printstr);
                 bp->state = 0xffffffff;
             }
         } //else printf("numsigs.%d vs required.%d\n",numsigs,bp->minsigs);

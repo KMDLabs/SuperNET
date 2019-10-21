@@ -752,7 +752,7 @@ int32_t iguana_rwmsgtx(struct iguana_info *coin,int32_t height,int32_t rwflag,cJ
 {
     int32_t i,n,len = 0,extraused=0; uint8_t spendscript[IGUANA_MAXSCRIPTSIZE],*txstart = serialized,*sigser=0; char txidstr[65]; uint64_t spendamount; cJSON *vinarray=0,*voutarray=0; bits256 sigtxid;
 	
-	len += iguana_rwnum(rwflag,&serialized[len],sizeof(msg->version),&msg->version);
+    len += iguana_rwnum(rwflag,&serialized[len],sizeof(msg->version),&msg->version);
 	uint32_t overwintered = msg->version >> 31;
 	uint32_t version = msg->version;
 	// for version 4 the ZK proof size is 192, otherwise 296
@@ -1894,4 +1894,153 @@ int32_t iguana_signrawtransaction(struct supernet_info *myinfo,struct iguana_inf
     return(complete);
 }
 
+/*
+    Ported from libnSPV by blackjok3r.
+*/
 
+bits256 bits256_rev(bits256 hash)
+{
+    bits256 rev; int32_t i;
+    for (i=0; i<32; i++)
+        rev.bytes[i] = hash.bytes[31 - i];
+    return(rev);
+}
+
+bits256 iguana_sapling_sighash(struct supernet_info *myinfo,struct iguana_msgtx *tx,int32_t vini,int64_t spendamount,uint8_t *spendscript,int32_t spendlen)
+{
+    // sapling tx sighash preimage
+    uint8_t for_sig_hash[1000]; bits256 sigtxid; int32_t hashtype,version,i,len=0; struct iguana_msgvin *vin; struct iguana_msgvout *vout;
+    hashtype = SIGHASH_ALL;
+    version = (tx->version & 0x7fffffff);
+    len = iguana_rwnum(1, &for_sig_hash[len], sizeof(tx->version), &tx->version);
+    len += iguana_rwnum(1, &for_sig_hash[len], sizeof(tx->version_group_id), &tx->version_group_id);
+    {
+        uint8_t prev_outs[1000],hash_prev_outs[32]; int32_t prev_outs_len = 0;
+        for (i=0; i<(int32_t)tx->tx_in; i++)
+        {
+            vin = &tx->vins[i];
+            prev_outs_len += iguana_rwbignum(1,&prev_outs[prev_outs_len], sizeof(vin->prev_hash), vin->prev_hash.bytes);
+            prev_outs_len += iguana_rwnum(1, &prev_outs[prev_outs_len], sizeof(vin->prev_vout), &vin->prev_vout);
+        }
+        crypto_generichash_blake2b_salt_personal(hash_prev_outs,32,prev_outs,(uint64_t)prev_outs_len,
+                                                 NULL,0,NULL,ZCASH_PREVOUTS_HASH_PERSONALIZATION);
+        memcpy(&for_sig_hash[len], hash_prev_outs, 32);
+        len += 32;
+    }
+    {
+        uint8_t sequence[1000], sequence_hash[32];
+        int32_t sequence_len = 0;
+        for (i=0; i<(int32_t)tx->tx_in; i++)
+        {
+            vin = &tx->vins[i];
+            sequence_len += iguana_rwnum(1, &sequence[sequence_len], sizeof(vin->sequence),&vin->sequence);
+        }
+        crypto_generichash_blake2b_salt_personal(sequence_hash,32,sequence,(uint64_t)sequence_len,
+                                                 NULL,0,NULL,ZCASH_SEQUENCE_HASH_PERSONALIZATION);
+        memcpy(&for_sig_hash[len],sequence_hash,32);
+        len += 32;
+    }
+    // assumes script_pubkey < 256 bytes
+    {
+        uint8_t *outputs, hash_outputs[32]; int32_t outputs_len = 0;
+        for (i=0; i<(int32_t)tx->tx_out; i++)
+        {
+            vout = &tx->vouts[i];
+            outputs_len += sizeof(vout->value);
+            outputs_len++;
+            outputs_len += (uint8_t)vout->pk_scriptlen;
+        } // calc size for outputs buffer
+        outputs = malloc(outputs_len);
+        outputs_len = 0;
+        for (i=0; i<(int32_t)tx->tx_out; i++)
+        {
+            vout = &tx->vouts[i];
+            //outputs_len += iguana_voutparse(1, outputs, vout);
+            outputs_len += iguana_rwnum(1, &outputs[outputs_len], sizeof(vout->value), &vout->value);
+            outputs[outputs_len++] = vout->pk_scriptlen;
+            memcpy(&outputs[outputs_len],vout->pk_script,vout->pk_scriptlen);
+            outputs_len += vout->pk_scriptlen;
+        }
+        crypto_generichash_blake2b_salt_personal(hash_outputs,32,outputs,(uint64_t)outputs_len,
+                                                 NULL,0,NULL,ZCASH_OUTPUTS_HASH_PERSONALIZATION);
+        memcpy(&for_sig_hash[len],hash_outputs,32);
+        len += 32;
+        free(outputs);
+    }
+    // no join splits, fill the hashJoinSplits with 32 zeros
+    memset(&for_sig_hash[len], 0, 32);
+    len += 32;
+    if ( version > 3 )
+    {
+        // no shielded spends, fill the hashShieldedSpends with 32 zeros
+        memset(&for_sig_hash[len], 0, 32);
+        len += 32;
+        // no shielded outputs, fill the hashShieldedOutputs with 32 zeros
+        memset(&for_sig_hash[len], 0, 32);
+        len += 32;
+    }
+    len += iguana_rwnum(1, &for_sig_hash[len], sizeof(tx->lock_time), &tx->lock_time);
+    len += iguana_rwnum(1, &for_sig_hash[len], sizeof(tx->expiry_height), &tx->expiry_height);
+    if (version > 3)
+        len += iguana_rwnum(1, &for_sig_hash[len], sizeof(tx->value_balance), &tx->value_balance);
+    len += iguana_rwnum(1, &for_sig_hash[len], sizeof(hashtype), &hashtype);
+    vin = &tx->vins[vini];
+    len += iguana_rwbignum(1, &for_sig_hash[len], sizeof(vin->prev_hash), vin->prev_hash.bytes);
+    len += iguana_rwnum(1, &for_sig_hash[len], sizeof(vin->prev_vout), &vin->prev_vout);
+    
+    for_sig_hash[len++] = (uint8_t)spendlen;
+    memcpy(&for_sig_hash[len],spendscript,spendlen), len += spendlen;
+    len += iguana_rwnum(1, &for_sig_hash[len], sizeof(spendamount), &spendamount);
+    len += iguana_rwnum(1, &for_sig_hash[len], sizeof(vin->sequence), &vin->sequence);
+    unsigned const char *sig_hash_personal = ZCASH_SIG_HASH_OVERWINTER_PERSONALIZATION;
+    if (version == 4)
+        sig_hash_personal = ZCASH_SIG_HASH_SAPLING_PERSONALIZATION;
+    crypto_generichash_blake2b_salt_personal(sigtxid.bytes,32,for_sig_hash,(uint64_t)len,
+                                             NULL,0,NULL,sig_hash_personal);
+    return(sigtxid);
+}
+
+uint64_t iguana_fastnotariescount(struct supernet_info *myinfo, struct dpow_info *dp, struct dpow_block *bp, int32_t src_or_dest, int32_t checkall)
+{
+    int32_t len=0,vini,j,i,txlen; uint64_t mask = 0; struct iguana_info *coin; struct iguana_msgtx tx; struct iguana_msgvin *vin; bits256 sighash; uint8_t script[35]; char str[65], vpnstr[65] = {0};
+    uint8_t *txdata,*extraspace;
+    txdata = malloc(1000000);
+    extraspace = malloc(1000000);
+    memset(&tx,0,sizeof(tx));
+    coin = src_or_dest != 0 ? bp->srccoin : bp->destcoin;
+    txlen = (int32_t)strlen(bp->signedtx) >> 1;
+    decode_hex(txdata,txlen,(char*)bp->signedtx);
+    len = iguana_rwmsgtx(coin, coin->lastbestheight,0, 0, txdata, 1000000, &tx, &tx.txid, vpnstr, extraspace, 65536, 0, 0);
+    
+    if ( len == 0 || tx.vins == 0 )
+        return(-1);
+    script[0] = 33;
+    script[34] = SCRIPT_OP_CHECKSIG;
+    for (vini=0; vini<(int32_t)tx.tx_in; vini++)
+    {
+        if ( (vin= &(tx.vins[vini])) == 0 )
+            return(-vini-2);
+        //for (j=0; j<vin->scriptlen; j++)
+        //    fprintf(stderr,"%02x",vin->vinscript[j]&0xff);
+        //fprintf(stderr," sig.%d scritplen.%i hash.",vini, vin->scriptlen);
+        for (j=0; j<bp->numnotaries; j++)
+        {
+            // skip nodes already found
+            if ( ((1LL << j) & mask) != 0 )
+                continue;
+            // optionally skip nodes not in the bestmask (they cannot sign anyway)
+            if ( checkall == 0 && ((1LL << j) & bp->bestmask) == 0 )
+                continue;
+            memcpy(script+1,bp->notaries[j].pubkey,33);
+            sighash = iguana_sapling_sighash(myinfo,&tx,vini,10000,script,35);
+            if ( bitcoin_verify(myinfo->ctx, vin->vinscript+1, vin->scriptlen-2, sighash, (uint8_t*)bp->notaries[j].pubkey, 33) == 0 )
+            {
+                mask |= (1LL << j);
+                //fprintf(stderr,"vini.%i bestmask.%llx node.%i\n",vini,(long long)mask, j);
+                break;
+            }
+        }
+        //fprintf(stderr,"vini.%d numsigs.%d\n",vini,bitweight(mask));
+    }
+    return(mask);
+}

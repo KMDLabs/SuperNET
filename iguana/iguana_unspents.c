@@ -1237,7 +1237,7 @@ int32_t iguana_RTunspentslists(struct supernet_info *myinfo,struct iguana_info *
         {
             if ( (coinaddr= jstri(addresses,i)) != 0 )
             {
-                if ( (array= dpow_listunspent(myinfo,coin,coinaddr)) != 0 )
+                if ( (array= dpow_listunspent(myinfo,coin,coinaddr,0)) != 0 )
                 {
                     if ( (n= cJSON_GetArraySize(array)) > 0 )
                     {

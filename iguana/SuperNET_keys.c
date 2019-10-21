@@ -337,11 +337,11 @@ int32_t iguana_wifstr_valid(char *wifstr)
     }
     if ( n == 0 || A == 0 || a == 0 )
         return(0);
-    if ( A > 5*a || a > 5*A || a > n*20 || A > n*20 ) // unlikely it is a real wif
-    {
-        //printf("reject wif %s due to n.%d a.%d A.%d (%d %d %d %d)\n",wifstr,n,a,A,A > 5*a,a < 5*A,a > n*20,A > n*20);
-        return(0);
-    }
+    //if ( A > 5*a || a > 5*A || a > n*20 || A > n*20 ) // unlikely it is a real wif
+    //{
+    //    printf("reject wif %s due to n.%d a.%d A.%d (%d %d %d %d)\n",wifstr,n,a,A,A > 5*a,a < 5*A,a > n*20,A > n*20);
+    //    return(0);
+    //}
     bitcoin_wif2priv(&wiftype,&privkey,wifstr);
     bitcoin_priv2wif(cmpstr,privkey,wiftype);
     if ( strcmp(cmpstr,wifstr) == 0 )
@@ -355,7 +355,7 @@ int32_t iguana_wifstr_valid(char *wifstr)
         bitcoin_priv2wiflong(cmpstr2,privkey,wiftype);
         if ( bits256_cmp(privkey,cmpkey) == 0 )
             return(1);
-       // char str[65],str2[65]; printf("mismatched wifstr %s -> %s -> %s %s %s\n",wifstr,bits256_str(str,privkey),cmpstr,bits256_str(str2,cmpkey),cmpstr2);
+        //char str[65],str2[65]; printf("mismatched wifstr %s -> %s -> %s %s %s\n",wifstr,bits256_str(str,privkey),cmpstr,bits256_str(str2,cmpkey),cmpstr2);
     }
     //char str[65]; printf("%s is not a wif, privkey.%s\n",wifstr,bits256_str(str,privkey));
     return(0);
@@ -382,6 +382,7 @@ void SuperNET_setkeys(struct supernet_info *myinfo,void *pass,int32_t passlen,in
         vcalc_sha256(0,hash.bytes,myinfo->myaddr.persistent.bytes,32);
         myinfo->myaddr.nxt64bits = hash.txid;
     }
+    
     RS_encode(myinfo->myaddr.NXTADDR,myinfo->myaddr.nxt64bits);
     bitcoin_pubkey33(myinfo->ctx,myinfo->persistent_pubkey33,myinfo->persistent_priv);
     bitcoin_address(myinfo->myaddr.BTC,0,myinfo->persistent_pubkey33,33);
@@ -478,5 +479,3 @@ char *SuperNET_keysinit(struct supernet_info *myinfo,char *argjsonstr)
     printf("(%s) %s %llu session(%s %s) persistent.%llx %llx\n",myinfo->ipaddr,myinfo->myaddr.NXTADDR,(long long)myinfo->myaddr.nxt64bits,bits256_str(str,myinfo->privkey),bits256_str(str2,myinfo->myaddr.pubkey),(long long)myinfo->persistent_priv.txid,(long long)myinfo->myaddr.persistent.txid);
     return(coinargs);
 }
-
-

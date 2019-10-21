@@ -515,7 +515,7 @@ int32_t datachain_opreturnscript(struct iguana_info *coin,uint8_t *script,char *
 int32_t basilisk_messagekeyread(uint8_t *key,uint32_t *channelp,uint32_t *msgidp,bits256 *srchashp,bits256 *desthashp);
 cJSON *basilisk_channelget(struct supernet_info *myinfo,bits256 srchash,bits256 desthash,uint32_t channel,uint32_t msgid,int32_t width);
 int32_t basilisk_channelsend(struct supernet_info *myinfo,bits256 srchash,bits256 desthash,uint32_t channel,uint32_t msgid,uint8_t *data,int32_t datalen,uint32_t duration);
-cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,char *coinaddr);
+cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,char *coinaddr,int32_t utxosize);
 void iguana_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp);
 char *iguana_utxoduplicates(struct supernet_info *myinfo,struct iguana_info *coin,uint8_t *pubkey33,uint64_t satoshis,int32_t duplicates,int32_t *completedp,bits256 *signedtxidp,int32_t sendflag,cJSON *addresses);
 int32_t bitcoin_p2shspend(uint8_t *script,int32_t n,uint8_t rmd160[20]);
@@ -595,7 +595,7 @@ struct iguana_peer *iguana_peerfindipbits(struct iguana_info *coin,uint32_t ipbi
 int32_t basilisk_hashes_send(struct supernet_info *myinfo,struct iguana_info *virt,struct iguana_peer *addr,char *CMD,bits256 *txids,int32_t num);
 int32_t iguana_opreturn(struct supernet_info *myinfo,int32_t ordered,struct iguana_info *coin,uint32_t timestamp,struct iguana_bundle *bp,int64_t crypto777_payment,int32_t height,uint64_t hdrsi_unspentind,int64_t payment,uint32_t fileid,uint64_t scriptpos,uint32_t scriptlen);
 /*
-* because the address passed in a non-portable way we defined uint64_t as parameter to 
+* because the address passed in a non-portable way we defined uint64_t as parameter to
 * allow the pass of 64bit memory address in windows 64
 * @author - fadedreamz@gmail.com
 */
@@ -670,4 +670,3 @@ uint64_t _iguana_interest(uint32_t now,int32_t height,uint32_t txlocktime,uint64
 
 
 #endif
-

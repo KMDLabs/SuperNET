@@ -22,12 +22,13 @@ emit compiler error if recursively being included
 STRING_ARG(dpow,pending,fiat);
 STRING_AND_TWOINTS(dpow,notarizations,symbol,height,numblocks);
 ZERO_ARGS(dpow,notarychains);
-STRING_ARG(dpow,active,maskhex);
+TWO_STRINGS(dpow,active,maskhex,symbol);
 TWOINTS_AND_ARRAY(dpow,ratify,minsigs,timestamp,ratified);
 ZERO_ARGS(dpow,cancelratify);
 STRING_ARG(dpow,bindaddr,ipaddr);
 STRING_AND_INT(dpow,fundnotaries,symbol,numblocks);
 ZERO_ARGS(dpow,ipaddrs);
+HASH_AND_STRING(dpow,updatechaintip,blockhash,symbol);
 
 ZERO_ARGS(pax,start);
 INT_ARG(passthru,paxfiats,mask);

@@ -522,7 +522,7 @@ struct iguana_info
     uint32_t fastfind; FILE *fastfps[0x100]; uint8_t *fast[0x100]; int32_t *fasttables[0x100]; long fastsizes[0x100];
     uint64_t instance_nonce,myservices,totalsize,totalrecv,totalpackets,sleeptime;
     int64_t mining,totalfees,TMPallocated,MAXRECVCACHE,MAXMEM,PREFETCHLAG,estsize,activebundles;
-    int32_t MoMoMheight,MAXPEERS,MAXPENDINGREQUESTS,MAXBUNDLES,MAXSTUCKTIME,active,closestbundle,numemitted,lastsweep,numemit,startutc,newramchain,numcached,cachefreed,helperdepth,startPEND,endPEND,enableCACHE,FULLNODE,VALIDATENODE,origbalanceswritten,balanceswritten,lastRTheight,RTdatabad,sapling;
+    int32_t MoMoMheight,MAXPEERS,MAXPENDINGREQUESTS,MAXBUNDLES,MAXSTUCKTIME,active,closestbundle,numemitted,lastsweep,numemit,startutc,newramchain,numcached,cachefreed,helperdepth,startPEND,endPEND,enableCACHE,FULLNODE,VALIDATENODE,origbalanceswritten,balanceswritten,lastRTheight,RTdatabad,sapling,notarypay;
     bits256 balancehash,allbundles;
     uint32_t lastsync,parsetime,numiAddrs,lastpossible,bundlescount,savedblocks,backlog,spendvectorsaved,laststats,lastinv2,symbolcrc,spendvalidated; char VALIDATEDIR[512];
     int32_t longestchain,badlongestchain,longestchain_strange,RTramchain_busy,emitbusy,stuckiters,virtualchain,RTheight,RTreset_needed;
@@ -537,7 +537,7 @@ struct iguana_info
     portable_mutex_t peers_mutex,blocks_mutex,special_mutex,RTmutex,allcoins_mutex,MoM_mutex;
     char changeaddr[64];
     struct iguana_bundle *bundles[IGUANA_MAXBUNDLES],*current,*lastpending;
-    struct OS_memspace RTrawmem,RTmem,RThashmem; // struct iguana_ramchain RTramchain; 
+    struct OS_memspace RTrawmem,RTmem,RThashmem; // struct iguana_ramchain RTramchain;
     bits256 RThash1;
     int32_t numremain,numpendings,zcount,recvcount,bcount,pcount,lastbundle,numsaved,pendbalances,numverified,blockdepth,matchedfiles;
     uint32_t recvtime,hdrstime,backstoptime,lastbundletime,numreqsent,numbundlesQ,lastbundleitime,lastdisp,RTgenesis,firstRTgenesis,RTstarti,idletime,stucktime,stuckmonitor,maxstuck,lastreqtime,RThdrstime,nextchecked,lastcheckpoint,sigserrs,sigsvalidated,coinid;
@@ -559,7 +559,7 @@ struct iguana_info
     struct iguana_zblock newblock; char *newblockstr;
     int32_t relay_RTheights[BASILISK_MAXRELAYS];
     struct iguana_blocks blocks; void *mempool; void *mempools[BASILISK_MAXRELAYS];
-    
+
     struct iguana_utxoaddr *utxoaddrs,*RTprev; uint32_t utxodatasize,utxoaddrind;
     uint64_t histbalance,RTcredits,RTdebits;
     void *utxoaddrfileptr; long utxoaddrfilesize;
@@ -567,8 +567,9 @@ struct iguana_info
     FILE *utxofp;
     bits256 markedunspents[1024];
     uint64_t estimatedfee;
-    char seedipaddr[64]; 
+    char seedipaddr[64];
     uint32_t lastbesthashtime; bits256 lastbesthash; int32_t lastbestheight;
+    int8_t utxocacheactive, utxocacheinit;
     struct DEXcoin_info DEXinfo;
     struct iguana_block *RTblocks[65536]; uint8_t *RTrawdata[65536]; int32_t RTrecvlens[65536],RTnumtx[65536];
     struct iguana_RTtxid *RTdataset; struct iguana_RTaddr *RTaddrs;
@@ -643,4 +644,3 @@ struct basilisk_relay
 };
 
 #endif
-
