@@ -1121,6 +1121,7 @@ struct iguana_info *iguana_setcoin(char *symbol,void *launched,int32_t maxpeers,
     } else coin->MAXPEERS = 0;
     coin->notarychain = iguana_isnotarychain(coin->symbol);
     coin->myservices = services;
+    coin->utxocacheactive = coin->utxocacheinit = 0;
     coin->initialheight = initialheight;
     coin->mapflags = mapflags;
     coin->protocol = IGUANA_PROTOCOL_BITCOIN;
@@ -1150,6 +1151,10 @@ struct iguana_info *iguana_setcoin(char *symbol,void *launched,int32_t maxpeers,
             coin->notarypay = juint(json, "notarypay");
 		printf("[blackjok3r] %s notarypay = %d\n", symbol, coin->notarypay);
 	}
+    if (jobj(json, "blocktime") != 0)
+        coin->blocktime = juint(json,"blocktime");
+    else 
+        coin->blocktime = 60;
 	if ( (coin->polltimeout= juint(json,"poll")) <= 0 )
         coin->polltimeout = IGUANA_DEFAULT_POLLTIMEOUT;
     coin->active = juint(json,"active");
@@ -1193,9 +1198,11 @@ struct iguana_info *iguana_setcoin(char *symbol,void *launched,int32_t maxpeers,
     return(coin);
 }
 
+extern uint64_t dpow_utxosize(char *symbol);
+
 int32_t iguana_checkwallet(struct supernet_info *myinfo, struct iguana_info *coin)
 {
-    int32_t vout; uint32_t i,n,spents=0; bits256 txid; cJSON *unspents,*item; char str[65];
+    int32_t vout; uint32_t i,n,spents=0; bits256 txid; cJSON *unspents,*item; char str[65]; uint64_t satoshis;
     if ( (unspents= dpow_listunspent(myinfo,coin,0,0)) != 0 )
     {
         if ( (n= cJSON_GetArraySize(unspents)) > 0 )
@@ -1206,14 +1213,20 @@ int32_t iguana_checkwallet(struct supernet_info *myinfo, struct iguana_info *coi
                     continue;
                 if ( is_cJSON_False(jobj(item,"spendable")) != 0 )
                     continue;
-                txid = jbits256(item,"txid");
-                vout = jint(item,"vout");
-                if ( bits256_nonz(txid) != 0 && vout >= 0 )
+                // only check unspents we care about
+                if ( (satoshis= SATOSHIDEN * jdouble(item,"amount")) == 0 )
+                    satoshis= SATOSHIDEN * jdouble(item,"value");
+                if ( satoshis == DPOW_UTXOSIZE )
                 {
-                    if ( dpow_gettxout(myinfo, coin, txid, vout) == 0 )
+                    txid = jbits256(item,"txid");
+                    vout = jint(item,"vout");
+                    if ( bits256_nonz(txid) != 0 && vout >= 0 )
                     {
-                        printf("[%s] : txid.(%s) vout.(%d) is spent!\n",coin->symbol, bits256_str(str,txid), vout);
-                        spents++;
+                        if ( dpow_gettxout(myinfo, coin, txid, vout) == 0 )
+                        {
+                            printf("[%s] : txid.(%s) vout.(%d) is spent!\n",coin->symbol, bits256_str(str,txid), vout);
+                            spents++;
+                        }
                     }
                 }
             }
@@ -1221,6 +1234,8 @@ int32_t iguana_checkwallet(struct supernet_info *myinfo, struct iguana_info *coi
     }
     return(spents);
 }
+
+extern int dpow_unlockunspent(struct supernet_info *myinfo,struct iguana_info *coin,char *txid,int32_t vout);
 
 int32_t iguana_launchcoin(struct supernet_info *myinfo,char *symbol,cJSON *json,int32_t virtcoin)
 {
@@ -1253,11 +1268,13 @@ int32_t iguana_launchcoin(struct supernet_info *myinfo,char *symbol,cJSON *json,
             }
             coin->active = 1;
             coin->started = 0;
+            /* Doesn't seem to really help and takes a very long time on huge wallets. uncomment for debugging corrupt wallets.
             if ( (spents= iguana_checkwallet(myinfo, coin)) != 0 )
             {
                 printf("[%s] has %i spent transactions in its wallet.dat, please fix this issue and restart.\n",symbol,spents);
                 exit(0);
-            }
+            } */
+            dpow_unlockunspent(myinfo,coin,"",-1);
             return(1);
         }
         else

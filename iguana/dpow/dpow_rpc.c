@@ -60,6 +60,7 @@ char *bitcoind_getinfo(char *symbol,char *serverport,char *userpass,char *getinf
 cJSON *dpow_getinfo(struct supernet_info *myinfo,struct iguana_info *coin)
 {
     char buf[128],*retstr=0; cJSON *json = 0;
+    if ( coin->active == 0 ) return (0);
     if ( coin->FULLNODE < 0 )
     {
         buf[0] = 0;
@@ -95,6 +96,7 @@ cJSON *dpow_getinfo(struct supernet_info *myinfo,struct iguana_info *coin)
 uint32_t dpow_CCid(struct supernet_info *myinfo,struct iguana_info *coin)
 {
     uint32_t CCid = 0; cJSON *retjson;
+    if ( coin->active == 0 ) return (CCid);
     if ( (retjson= dpow_getinfo(myinfo,coin)) != 0 )
     {
         CCid = juint(retjson,"CCid");
@@ -125,17 +127,20 @@ int32_t Notaries_numseeds;// = (int32_t)(sizeof(seeds)/sizeof(*seeds))
 int32_t Notaries_num,Notaries_BTCminsigs = DPOW_MINSIGS;
 int32_t Notaries_minsigs = DPOW_MIN_ASSETCHAIN_SIGS;
 uint16_t Notaries_port = DPOW_SOCKPORT;
+uint16_t Notaries_RPCport = IGUANA_NOTARYPORT;
 char *Notaries_seeds[65];
 
 int32_t komodo_initjson(char *fname)
 {
-    char *fstr,*field,*hexstr; cJSON *argjson,*array,*item; long fsize; uint16_t port; int32_t i,n,num,retval = -1;
+    char *fstr,*field,*hexstr; cJSON *argjson,*array,*item; long fsize; uint16_t port, rpc_port; int32_t i,n,num,retval = -1;
     if ( (fstr= OS_filestr(&fsize,fname)) != 0 )
     {
         if ( (argjson= cJSON_Parse(fstr)) != 0 )
         {
             if ( (port= juint(argjson,"port")) != 0 )
                 Notaries_port = port;
+            if ( (rpc_port= juint(argjson,"rpc_port")) != 0 )
+                Notaries_RPCport = rpc_port;
             if ( (num= juint(argjson,"BTCminsigs")) > Notaries_BTCminsigs )
                 Notaries_BTCminsigs = num;
             Notaries_minsigs = juint(argjson,"minsigs");
@@ -239,6 +244,7 @@ int32_t komodo_notaries(char *symbol,uint8_t pubkeys[64][33],int32_t height)
 bits256 dpow_getbestblockhash(struct supernet_info *myinfo,struct iguana_info *coin)
 {
     char *retstr; bits256 blockhash;
+    if ( coin->active == 0 ) return (blockhash);
     memset(blockhash.bytes,0,sizeof(blockhash));
     if ( coin->FULLNODE < 0 )
     {
@@ -272,6 +278,7 @@ bits256 dpow_getbestblockhash(struct supernet_info *myinfo,struct iguana_info *c
 cJSON *issue_calcMoM(struct iguana_info *coin,int32_t height,int32_t MoMdepth)
 {
     char buf[128],*retstr=0; cJSON *retjson = 0;
+    if ( coin->active == 0 ) return (retjson);
     if ( coin->FULLNODE < 0 )
     {
         sprintf(buf,"[\"%d\", \"%d\"]",height,MoMdepth);
@@ -288,6 +295,7 @@ cJSON *issue_calcMoM(struct iguana_info *coin,int32_t height,int32_t MoMdepth)
 cJSON *dpow_MoMoMdata(struct iguana_info *coin,char *symbol,int32_t kmdheight,uint16_t CCid)
 {
     char buf[128],*retstr=0; cJSON *retjson = 0; struct iguana_info *src;
+    if ( coin->active == 0 ) return (retjson);
     if ( coin->FULLNODE < 0 && strcmp(coin->symbol,"KMD") == 0 && (src= iguana_coinfind(symbol)) != 0 )
     {
         sprintf(buf,"[\"%s\", \"%d\", \"%d\"]",symbol,kmdheight,CCid);
@@ -304,47 +312,17 @@ cJSON *dpow_MoMoMdata(struct iguana_info *coin,char *symbol,int32_t kmdheight,ui
 
 int32_t dpow_paxpending(struct supernet_info *myinfo,uint8_t *hex,int32_t hexsize,uint32_t *paxwdcrcp,bits256 MoM,uint32_t MoMdepth,uint16_t CCid,int32_t src_or_dest,struct dpow_block *bp)
 {
-    struct iguana_info *coin,*kmdcoin=0; char *retstr,*hexstr; cJSON *retjson,*infojson, *srcinfojson; int32_t kmdheight=0,hexlen=0,n=0,ppMoMheight=0; uint32_t paxwdcrc=0;
+    char *hexstr; cJSON *retjson; int32_t hexlen=0,n=0; uint32_t paxwdcrc=0;
     if ( dpow_smallopreturn(bp->srccoin->symbol) == 0 || src_or_dest != 0 )
     {
         n += iguana_rwbignum(1,&hex[n],sizeof(MoM),MoM.bytes);
         MoMdepth = (MoMdepth & 0xffff) | ((uint32_t)CCid<<16);
         n += iguana_rwnum(1,&hex[n],sizeof(MoMdepth),(uint32_t *)&MoMdepth);
-        /*if ( (srcinfojson= dpow_getinfo(myinfo,bp->srccoin)) != 0 )
+        // CCid of 1 does not return any MoMoM data
+        if ( bp->CCid > (bp->newconsensus!=0?1:0) && src_or_dest == 0 && strcmp(bp->destcoin->symbol,"KMD") == 0 )
         {
-            // not needed CCid is passed to this function already, and we dont need the ppmomheight anymore!
-            CCid = juint(srcinfojson,"CCid");
-            if ( CCid > 1 )
-                ppMoMheight = jint(srcinfojson,"ppMoMheight");
-            free_json(srcinfojson);
-            //printf("ppMoMheight.%i CCid.%i\n", ppMoMheight, CCid);
-        }
-#if STAKED
-        int8_t MoMoMdelay = 5;
-        int8_t ccid_ex = 1;
-#else
-        int8_t MoMoMdelay = 0;
-        int8_t ccid_ex = 0;
-#endif
-*/
-        if ( CCid != 0 && src_or_dest == 0 && strcmp(bp->destcoin->symbol,"KMD") == 0 ) //strncmp(bp->srccoin->symbol,"TXSCL",5) == 0 &&
-        {
-            kmdcoin = bp->destcoin;
-            if ( (infojson= dpow_getinfo(myinfo,kmdcoin)) != 0 )
+            if ( (retjson= dpow_MoMoMdata(bp->destcoin,bp->srccoin->symbol,bp->destcoin->longestchain,bp->CCid)) != 0 )
             {
-                kmdheight = jint(infojson,"blocks");
-                free_json(infojson);
-            }
-            // 5 block delay is easily enough most of the time. In rare case KMD is reorged more than this,
-            // the backup notary validation can be used to complete the import.
-            if ( (retjson= dpow_MoMoMdata(kmdcoin,bp->srccoin->symbol,kmdheight,bp->CCid)) != 0 )
-            {
-                /*if ( ppMoMheight != 0 && jstr(retjson,"error") != 0 )
-                {
-                    // MoMoM returned NULL when after 2 MoM exist on the chain.
-                    free_json(retjson);
-                    return(-1);
-                } */
                 if ( (hexstr= jstr(retjson,"data")) != 0 && (hexlen= (int32_t)strlen(hexstr)) > 0 && n+hexlen/2 <= hexsize )
                 {
                     hexlen >>= 1;
@@ -356,12 +334,12 @@ int32_t dpow_paxpending(struct supernet_info *myinfo,uint8_t *hex,int32_t hexsiz
         }
         paxwdcrc = calc_crc32(0,hex,n) & 0xffffff00;
         paxwdcrc |= (n & 0xff);
-        //if ( hexlen > 0 )
-            //printf("%s.ht.%d opretlen.%d src_or_dest.%d dest.(%s) lastbest.%d paxwdcrc.%x\n",bp->srccoin->symbol,bp->height,n,src_or_dest,bp->destcoin->symbol,kmdcoin!=0?((kmdcoin->lastbestheight/10)*10 - 5):-1,paxwdcrc);
+        if ( 0 && hexlen > 0 )
+            printf("%s.ht.%d opretlen.%d src_or_dest.%d dest.(%s) lastbest.%d paxwdcrc.%x\n",bp->srccoin->symbol,bp->height,n,src_or_dest,bp->destcoin->symbol,((bp->destcoin->lastbestheight/10)*10 - 5),paxwdcrc);
     }
     *paxwdcrcp = paxwdcrc;
     return(n);
-    if ( (coin= iguana_coinfind("KMD")) != 0 )
+    /* if ( (coin= iguana_coinfind("KMD")) != 0 )
     {
         if ( coin->FULLNODE < 0 )
         {
@@ -385,13 +363,14 @@ int32_t dpow_paxpending(struct supernet_info *myinfo,uint8_t *hex,int32_t hexsiz
     } else printf("dpow_paxpending: cant find KMD\n");
     if ( *paxwdcrcp != paxwdcrc )
         *paxwdcrcp = paxwdcrc;
-    return(n);
+    return(n); */
 }
 
 bits256 dpow_getblockhash(struct supernet_info *myinfo,struct iguana_info *coin,int32_t height)
 {
     char buf[128],*retstr=0; bits256 blockhash;
     memset(blockhash.bytes,0,sizeof(blockhash));
+    if ( coin->active == 0 ) return blockhash;
     if ( coin->FULLNODE < 0 )
     {
         sprintf(buf,"%d",height);
@@ -420,6 +399,7 @@ bits256 dpow_getblockhash(struct supernet_info *myinfo,struct iguana_info *coin,
 cJSON *dpow_getblock(struct supernet_info *myinfo,struct iguana_info *coin,bits256 blockhash)
 {
     char buf[128],str[65],*retstr=0; cJSON *json = 0;
+    if ( coin->active == 0 ) return (0);
     if ( coin->FULLNODE < 0 )
     {
         sprintf(buf,"\"%s\"",bits256_str(str,blockhash));
@@ -447,6 +427,7 @@ cJSON *dpow_getblock(struct supernet_info *myinfo,struct iguana_info *coin,bits2
 char *dpow_validateaddress(struct supernet_info *myinfo,struct iguana_info *coin,char *address)
 {
     char buf[128],*retstr=0; cJSON *retjson;
+    if ( coin->active == 0 ) return (retstr);
     if ( coin->FULLNODE < 0 )
     {
         sprintf(buf,"\"%s\"",address);
@@ -481,6 +462,7 @@ char *dpow_validateaddress(struct supernet_info *myinfo,struct iguana_info *coin
 cJSON *dpow_gettxout(struct supernet_info *myinfo,struct iguana_info *coin,bits256 txid,int32_t vout)
 {
     char buf[128],str[65],*retstr=0; cJSON *json = 0;
+    if ( coin->active == 0 ) return (json);
     sprintf(buf,"\"%s\", %d",bits256_str(str,txid),vout);
     if ( coin->FULLNODE < 0 )
     {
@@ -505,9 +487,10 @@ cJSON *dpow_gettxout(struct supernet_info *myinfo,struct iguana_info *coin,bits2
     return(json);
 }
 
-int dpow_lockunspent(struct supernet_info *myinfo,struct iguana_info *coin,char *coinaddr,char *txid,int32_t vout)
+int dpow_lockunspent(struct supernet_info *myinfo,struct iguana_info *coin,char *txid,int32_t vout)
 {
     char buf[128],*retstr;
+    if ( coin->active == 0 ) return (0);
     if ( coin->FULLNODE < 0 )
     {
         sprintf(buf,"false, [{\"txid\":\"%s\",\"vout\":%d}]", txid, vout);
@@ -521,12 +504,16 @@ int dpow_lockunspent(struct supernet_info *myinfo,struct iguana_info *coin,char 
     return(0);
 }
 
-int dpow_unlockunspent(struct supernet_info *myinfo,struct iguana_info *coin,char *coinaddr,char *txid,int32_t vout)
+int dpow_unlockunspent(struct supernet_info *myinfo,struct iguana_info *coin,char *txid,int32_t vout)
 {
     char buf[128],*retstr;
+    if ( coin->active == 0 ) return (0);
     if ( coin->FULLNODE < 0 )
     {
-        sprintf(buf,"true, [{\"txid\":\"%s\",\"vout\":%d}]", txid, vout);
+        if ( vout >= 0 )
+            sprintf(buf,"true, [{\"txid\":\"%s\",\"vout\":%d}]", txid, vout);
+        else 
+            sprintf(buf, "true");
         if ( (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"lockunspent",buf)) != 0 )
         {
             //printf("RESULT.(%s)\n",retstr);
@@ -540,6 +527,7 @@ int dpow_unlockunspent(struct supernet_info *myinfo,struct iguana_info *coin,cha
 char *dpow_decoderawtransaction(struct supernet_info *myinfo,struct iguana_info *coin,char *rawtx)
 {
     char *retstr,*paramstr; cJSON *array;
+    if ( coin->active == 0 ) return (0);
     if ( coin->FULLNODE < 0 )
     {
         array = cJSON_CreateArray();
@@ -564,6 +552,7 @@ char *dpow_decoderawtransaction(struct supernet_info *myinfo,struct iguana_info 
 int32_t dpow_txconfirms(struct supernet_info *myinfo,struct iguana_info *coin,bits256 txid, char *rawtx)
 {
     cJSON *txobj; int32_t confirms = 0, ret = 0;
+    if ( coin->active == 0 ) return (ret);
     if ( (txobj= dpow_gettransaction(myinfo, coin, txid)) != 0 )
     {
         memcpy(rawtx, jstr(txobj, "hex"), strlen(jstr(txobj, "hex"))+1);
@@ -581,6 +570,7 @@ int32_t dpow_txconfirms(struct supernet_info *myinfo,struct iguana_info *coin,bi
 cJSON *dpow_gettransaction(struct supernet_info *myinfo,struct iguana_info *coin,bits256 txid)
 {
     char buf[128],str[65],*retstr=0; cJSON *json = 0;
+    if ( coin->active == 0 ) return (0);
     if ( coin->FULLNODE < 0 )
     {
         sprintf(buf,"[\"%s\", 1]",bits256_str(str,txid));
@@ -605,23 +595,43 @@ cJSON *dpow_gettransaction(struct supernet_info *myinfo,struct iguana_info *coin
     return(json);
 }
 
-cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,char *coinaddr,int32_t dpow)
+cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,char *coinaddr,int32_t utxosize)
 {
-    char buf[128],*retstr; cJSON *array,*json = 0;
+    char buf[128], buf2[128],*retstr=0; cJSON *array,*json = 0;
+    if ( coin->active == 0 ) return (0);
     if ( coin->FULLNODE < 0 )
     {
         if ( coinaddr == 0 )
-            sprintf(buf,"");
-        else if ( dpow == 1 )
-            sprintf(buf,"1, 7777, [\"%s\"]",coinaddr);
-        else
-            sprintf(buf,"1, 99999999, [\"%s\"]",coinaddr);
-        if ( (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"listunspent",buf)) != 0 )
+            sprintf(buf2,"");
+        else 
+            sprintf(buf2,"1, 99999999, [\"%s\"]",coinaddr);
+
+        if ( utxosize != 0 )
         {
-            json = cJSON_Parse(retstr);
-            //printf("%s (%s) listunspent.(%s)\n",coin->symbol,buf,retstr);
-            free(retstr);
-        } else printf("%s null retstr from (%s)n",coin->symbol,buf);
+            // utxo cache listunspent 
+            sprintf(buf,"%i, \"%s\"", utxosize, coinaddr);
+            if ( coin->utxocacheactive == 0 && coin->utxocacheinit < 3 && (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"dpowlistunspent", buf)) != 0 )
+            {
+                coin->utxocacheinit++;
+                coin->utxocacheactive = 1;
+            }
+            if ( retstr != 0 || (coin->utxocacheactive != 0 && (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass, "dpowlistunspent", buf)) != 0) )
+            {
+                json = cJSON_Parse(retstr);
+                //printf("dpowlistspent %s (%s) listunspent.(%s)\n",coin->symbol,buf,retstr);
+                free(retstr);
+            } //else printf("%s null retstr from dpowlistunspent.%s\n",coin->symbol,buf);
+        }
+        if ( json == 0 || cJSON_GetArraySize(json) == 0 )
+        {
+            // normal listunspent
+            if ( (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"listunspent",buf2)) != 0 )
+            {
+                json = cJSON_Parse(retstr);
+                //printf("listunspent: %s (%s) listunspent.(%s)\n",coin->symbol,buf,retstr);
+                free(retstr);
+            } //else printf("%s null retstr from listunspent.%s\n",coin->symbol,buf2);
+        }
     }
     else if ( coin->FULLNODE > 0 || coin->VALIDATENODE > 0 )
     {
@@ -639,6 +649,7 @@ cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,ch
 
 cJSON *dpow_listspent(struct supernet_info *myinfo,struct iguana_info *coin,char *coinaddr)
 {
+    if ( coin->active == 0 ) return (0);
     if ( myinfo->DEXEXPLORER != 0 )
         return(kmd_listspent(myinfo,coin,coinaddr));
     else
@@ -649,6 +660,7 @@ cJSON *dpow_listspent(struct supernet_info *myinfo,struct iguana_info *coin,char
 
 cJSON *dpow_getbalance(struct supernet_info *myinfo,struct iguana_info *coin,char *coinaddr)
 {
+    if ( coin->active == 0 ) return (0);
     if ( myinfo->DEXEXPLORER != 0 )
         return(kmd_getbalance(myinfo,coin,coinaddr));
     else
@@ -659,6 +671,7 @@ cJSON *dpow_getbalance(struct supernet_info *myinfo,struct iguana_info *coin,cha
 
 cJSON *dpow_gettxin(struct supernet_info *myinfo,struct iguana_info *coin,bits256 txid,int32_t vout)
 {
+    if ( coin->active == 0 ) return (0);
     if ( myinfo->DEXEXPLORER != 0 )
         return(kmd_gettxin(coin,txid,vout));
     else
@@ -670,6 +683,7 @@ cJSON *dpow_gettxin(struct supernet_info *myinfo,struct iguana_info *coin,bits25
 cJSON *dpow_listtransactions(struct supernet_info *myinfo,struct iguana_info *coin,char *coinaddr,int32_t count,int32_t skip)
 {
     char buf[128],*retstr; cJSON *json = 0;
+    if ( coin->active == 0 ) return (0);
     if ( coin->FULLNODE < 0 )
     {
         if ( count == 0 )
@@ -689,6 +703,7 @@ cJSON *dpow_listtransactions(struct supernet_info *myinfo,struct iguana_info *co
 char *dpow_signrawtransaction(struct supernet_info *myinfo,struct iguana_info *coin,char *rawtx,cJSON *vins)
 {
     cJSON *array,*privkeys,*item,*retjson; char *wifstr,*str,*paramstr,*retstr; uint8_t script[256]; int32_t i,n,len,hashtype; struct vin_info V; struct iguana_waddress *waddr; struct iguana_waccount *wacct;
+    if ( coin->active == 0 ) return (0);
     if ( coin->FULLNODE < 0 )
     {
         array = cJSON_CreateArray();
@@ -761,6 +776,7 @@ char *dpow_signrawtransaction(struct supernet_info *myinfo,struct iguana_info *c
 cJSON *dpow_kvupdate(struct supernet_info *myinfo,struct iguana_info *coin,char *key,char *value,int32_t flags)
 {
     char params[IGUANA_MAXSCRIPTSIZE+256],*retstr; cJSON *retjson;
+    if ( coin->active == 0 ) return (0);
     if ( coin->FULLNODE < 0 )
     {
         sprintf(params,"[\"%s\", \"%s\", \"%d\"]",key,value,flags);
@@ -779,6 +795,7 @@ cJSON *dpow_kvupdate(struct supernet_info *myinfo,struct iguana_info *coin,char 
 cJSON *dpow_kvsearch(struct supernet_info *myinfo,struct iguana_info *coin,char *key)
 {
     char params[IGUANA_MAXSCRIPTSIZE+256],*retstr; cJSON *retjson;
+    if ( coin->active == 0 ) return (0);
     if ( coin->FULLNODE < 0 )
     {
         sprintf(params,"[\"%s\"]",key);
@@ -794,16 +811,24 @@ cJSON *dpow_kvsearch(struct supernet_info *myinfo,struct iguana_info *coin,char 
 }
 
 
-char *dpow_sendrawtransaction(struct supernet_info *myinfo,struct iguana_info *coin,char *signedtx)
+char *dpow_sendrawtransaction(struct supernet_info *myinfo,struct iguana_info *coin,char *signedtx, int32_t mine, int32_t *errorcode)
 {
-    bits256 txid; cJSON *json,*array; char *paramstr,*retstr;
+    bits256 txid; cJSON *json,*array,*errorjson = 0,*retjson = 0; char *paramstr,*retstr;
+    if ( coin->active == 0 ) return (0);
     if ( coin->FULLNODE < 0 )
     {
         array = cJSON_CreateArray();
         jaddistr(array,signedtx);
         paramstr = jprint(array,1);
         retstr = bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"sendrawtransaction",paramstr);
-        fprintf(stderr,">>>>>>>>>>> %s dpow_sendrawtransaction (%s)\n",coin->symbol,retstr);
+        if ( errorcode != 0 && (retjson= cJSON_Parse(retstr)) != 0 && (errorjson= jobj(retjson,"error")) != 0 )
+        {
+            *errorcode = jint(errorjson,"code");
+            return(0);
+        }
+        char colour[16];
+        sprintf(colour,mine != 0 ? GREEN : YELLOW);
+        printf("%s>>>>>>>>>> %s dpow_sendrawtransaction (%s)\n"RESET,colour,coin->symbol,retstr);
         free(paramstr);
         return(retstr);
     }
@@ -823,6 +848,7 @@ char *dpow_sendrawtransaction(struct supernet_info *myinfo,struct iguana_info *c
 char *dpow_alladdresses(struct supernet_info *myinfo,struct iguana_info *coin)
 {
     char *retstr,fname[1024]; long filesize;
+    if ( coin->active == 0 ) return (0);
     sprintf(fname,"%s/alladdresses.%s",GLOBAL_CONFSDIR,coin->symbol), OS_compatible_path(fname);
     retstr = OS_filestr(&filesize,fname);
     return(retstr);
@@ -831,6 +857,7 @@ char *dpow_alladdresses(struct supernet_info *myinfo,struct iguana_info *coin)
 void update_alladdresses(struct supernet_info *myinfo,struct iguana_info *coin,char *address)
 {
     struct hashstr_item *hashstr,*tmp; cJSON *alljson; char *outstr,*instr,fname[1024]; int32_t i,n,saveflag = 0;
+    if ( coin->active == 0 ) return;
     HASH_FIND(hh,coin->alladdresses,address,strlen(address),hashstr);
     if ( hashstr == 0 )
     {
@@ -882,6 +909,7 @@ void update_alladdresses(struct supernet_info *myinfo,struct iguana_info *coin,c
 cJSON *dpow_checkaddress(struct supernet_info *myinfo,struct iguana_info *coin,char *address)
 {
     int32_t isvalid=0,doneflag=0; char *retstr; cJSON *validatejson,*retjson = cJSON_CreateObject();
+    if ( coin->active == 0 ) return (retjson);
     if ( (retstr= dpow_validateaddress(myinfo,coin,address)) != 0 )
     {
         if ( (validatejson= cJSON_Parse(retstr)) != 0 )
@@ -909,6 +937,7 @@ cJSON *dpow_checkaddress(struct supernet_info *myinfo,struct iguana_info *coin,c
 char *dpow_importaddress(struct supernet_info *myinfo,struct iguana_info *coin,char *address)
 {
     char buf[1024],*retstr; cJSON *validatejson; int32_t isvalid=0,doneflag = 0;
+    if ( coin->active == 0 ) return "";
     if ( (retstr= dpow_validateaddress(myinfo,coin,address)) != 0 )
     {
         if ( (validatejson= cJSON_Parse(retstr)) != 0 )
@@ -941,6 +970,7 @@ char *dpow_importaddress(struct supernet_info *myinfo,struct iguana_info *coin,c
 void init_alladdresses(struct supernet_info *myinfo,struct iguana_info *coin)
 {
     char *alladdresses,*retstr; cJSON *alljson; int32_t i,n;
+    if ( coin->active == 0 ) return;
     if ( (alladdresses= dpow_alladdresses(myinfo,coin)) != 0 )
     {
         printf("(%s) ALL.(%s)\n",coin->symbol,alladdresses);
@@ -961,6 +991,7 @@ void init_alladdresses(struct supernet_info *myinfo,struct iguana_info *coin)
 int32_t dpow_getchaintip(struct supernet_info *myinfo,bits256 *merklerootp,bits256 *blockhashp,uint32_t *blocktimep,bits256 *txs,uint32_t *numtxp,struct iguana_info *coin)
 {
     int32_t n,i,height = -1,maxtx = *numtxp; bits256 besthash,oldhash; cJSON *array,*json;
+    if ( coin->active == 0 ) return (0);
     *numtxp = *blocktimep = 0;
     oldhash = coin->lastbesthash;
     *blockhashp = besthash = dpow_getbestblockhash(myinfo,coin);
@@ -976,7 +1007,9 @@ int32_t dpow_getchaintip(struct supernet_info *myinfo,bits256 *merklerootp,bits2
                 coin->lastbestheight = height;
                 if ( height > coin->longestchain )
                     coin->longestchain = height;
-                if ( 0 && txs != 0 && numtxp != 0 && (array= jarray(&n,json,"tx")) != 0 )
+                //if ( jobj(json, "last_notarized_height") != 0 )
+                //    coin->lastnotarizedht = juint(json,"last_notarized_height");
+                if ( txs != 0 && numtxp != 0 && (array= jarray(&n,json,"tx")) != 0 )
                 {
                     for (i=0; i<n&&i<maxtx; i++)
                         txs[i] = jbits256i(array,i);
@@ -1009,25 +1042,19 @@ int32_t dpow_vini_ismine(struct supernet_info *myinfo,struct dpow_info *dp,cJSON
 
 int32_t dpow_haveutxo(struct supernet_info *myinfo,struct iguana_info *coin,bits256 *txidp,int32_t *voutp,char *coinaddr,char *srccoin)
 {
-    int32_t vout,haveutxo = 0; uint32_t i,j,n,r; bits256 txid; cJSON *unspents,*item; uint64_t satoshis; char *str,*address; uint8_t script[35];
+    int32_t vout,haveutxo = 0; uint32_t i,j=0,n,r; bits256 txid; cJSON *unspents,*item; uint64_t satoshis; char *str,*address; uint8_t script[35];
+    if ( coin->active == 0 ) return (0);
     memset(txidp,0,sizeof(*txidp));
     *voutp = -1;
-    if ( (unspents= dpow_listunspent(myinfo,coin,coinaddr,1)) != 0 )
+    if ( (unspents= dpow_listunspent(myinfo,coin,coinaddr,dpow_utxosize(coin->symbol))) != 0 )
     {
         if ( (n= cJSON_GetArraySize(unspents)) > 0 )
         {
-            j=0;
-            while (haveutxo < 1)
+            OS_randombytes((uint8_t *)&r,sizeof(r));
+            for ( i=(n==1 ? 0 : r % n); j<n; i++ )
             {
-                if ( n == 1 )
-                    i = 0;
-                else
-                {
-                    OS_randombytes((uint8_t *)&r,sizeof(r));
-                    i = r % n;
-                }
                 j++;
-                printf("[%s] : chosen = %d  out of %d loop.(%d)\n",coin->symbol,i,n,j);
+                i = (i==n ? 0 : i);
                 if ( (item= jitem(unspents,i)) == 0 )
                     continue;
                 if ( is_cJSON_False(jobj(item,"spendable")) != 0 )
@@ -1042,26 +1069,20 @@ int32_t dpow_haveutxo(struct supernet_info *myinfo,struct iguana_info *coin,bits
                         vout = jint(item,"vout");
                         if ( bits256_nonz(txid) != 0 && vout >= 0 )
                         {
-                            if ( *voutp < 0 || (rand() % (n/2+1)) == 0 )
-                            {
-                                *voutp = vout;
-                                *txidp = txid;
-                            }
+                            *voutp = vout;
+                            *txidp = txid;
                             haveutxo++;
+                            break;
                         }
                     }
                 }
-                if (j == n) {
-                  break;
-                }
             }
-            if ( haveutxo == 0 )
-              printf("no (%s -> %s) utxo: need to fund address.(%s) or wait for splitfund to confirm\n",srccoin,coin->symbol,coinaddr);
         } //else printf("null utxo array size\n");
         free_json(unspents);
+        if ( *voutp == -1 )
+            printf(RED"no (%s -> %s) utxo: create %lu sat utxos to address.(%s)\n"RESET,srccoin,coin->symbol,DPOW_UTXOSIZE,coinaddr);
+        //else printf("[%s] utxo %d of %d \n",coin->symbol,i,n);
     } else printf("null return from dpow_listunspent\n");
-    if ( 0 && haveutxo > 0 )
-        printf("%s haveutxo.%d\n",coin->symbol,haveutxo);
     return(haveutxo);
 }
 
