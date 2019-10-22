@@ -25,12 +25,18 @@
 #define DPOW_MINSIGS 13
 #define DPOW_MIN_ASSETCHAIN_SIGS 11
 //#define DPOW_M(bp) ((bp)->minsigs)  // (((bp)->numnotaries >> 1) + 1)
-#define DPOW_MODIND(bp,offset) (((((bp)->height / DPOW_CHECKPOINTFREQ) % (bp)->numnotaries) + (offset)) % (bp)->numnotaries)
+#define DPOW_MODIND(bp,offset,freq) (((((bp)->height / freq) % (bp)->numnotaries) + (offset)) % (bp)->numnotaries)
 #define DPOW_VERSION 0x1782
 #define DPOW_UTXOSIZE dpow_utxosize(coin->symbol) //10000
 #define DPOW_MINOUTPUT 6000
 #define DPOW_DURATION 300
 #define DPOW_RATIFYDURATION (3600 * 24)
+#if STAKED 
+    #define IGUANA_DPOW_HF_TIME 1571693954
+#else 
+    #define IGUANA_DPOW_HF_TIME 1577793954
+#endif
+
 
 //#define DPOW_ENTRIESCHANNEL ('e' | ('n' << 8) | ('t' << 16) | ('r' << 24))
 //#define DPOW_BTCENTRIESCHANNEL (~DPOW_ENTRIESCHANNEL)
@@ -42,12 +48,13 @@
 
 
 #define DPOW_FIFOSIZE 64
-#define DPOW_MAXTX 1
+#define DPOW_MAXTX 8192
 #define DPOW_THIRDPARTY_CONFIRMS 0
 #define DPOW_KOMODOCONFIRMS 10
 #define DPOW_BTCCONFIRMS 1
 #define DPOW_MAXRELAYS 64
 #define DPOW_MAXSIGLEN 128
+#define DPOW_MAX_BLOCKS 32
 
 #define DEX_VERSION 0x0106
 #define DPOW_SOCKPORT 7775
@@ -116,11 +123,11 @@ struct dpow_block
     struct dpow_recvdata recv[64];
     struct dpow_entry notaries[DPOW_MAXRELAYS];
     uint32_t MoMdepth,state,starttime,timestamp,waiting,sigcrcs[2],txidcrcs[2],utxocrcs[2],lastepoch,paxwdcrc,lastnanosend;
-    int32_t rawratifiedlens[2],height,numnotaries,numerrors,completed,minsigs,duration,numratified,isratify,require0,scores[DPOW_MAXRELAYS];
-    int8_t myind,bestk,ratifybestk,pendingbestk,pendingratifybestk,matches,bestmatches;
+    int32_t pendingprevDESTHT,rawratifiedlens[2],height,numnotaries,numerrors,completed,minsigs,duration,numratified,isratify,require0,scores[DPOW_MAXRELAYS],threadind;
+    int8_t myind,bestk,ratifybestk,pendingbestk,pendingratifybestk,matches,bestmatches,minnodes;
     cJSON *ratified;
     uint16_t CCid;
-    uint8_t ratified_pubkeys[DPOW_MAXRELAYS][33],ratifysigs[2][DPOW_MAXSIGLEN],ratifysiglens[2];
+    uint8_t ratified_pubkeys[DPOW_MAXRELAYS][33],ratifysigs[2][DPOW_MAXSIGLEN],ratifysiglens[2],newconsensus;
     char handles[DPOW_MAXRELAYS][32];
     char signedtx[32768]; uint8_t ratifyrawtx[2][32768]; uint32_t pendingcrcs[2];
 };
@@ -137,19 +144,27 @@ struct pax_transaction
 
 #define DPOW_MAXIPBITS 512
 
+struct dpow_thread
+{
+    pthread_t thread;
+    void **ptrs;
+    int8_t allocated, finished;
+};
+
 struct dpow_info
 {
-    char symbol[16],dest[16]; uint8_t minerkey33[33],minerid; uint64_t lastrecvmask;
-    struct dpow_checkpoint checkpoint,last,destchaintip,srcfifo[DPOW_FIFOSIZE],destfifo[DPOW_FIFOSIZE];
+    char symbol[16],dest[16]; uint8_t minerkey33[33],minerid; int8_t bestks[64],numbestks; uint64_t lastrecvmask;
+    struct dpow_checkpoint last,destchaintip,srcfifo[DPOW_FIFOSIZE],destfifo[DPOW_FIFOSIZE]; //checkpoint
     struct dpow_hashheight approved[DPOW_FIFOSIZE],notarized[DPOW_FIFOSIZE];
-    bits256 activehash,lastnotarized,srctx[DPOW_MAXTX],desttx[DPOW_MAXTX];
+    bits256 activehash,lastnotarized,srctx[DPOW_MAXTX],desttx[DPOW_MAXTX],prevnotatxid;
     uint32_t SRCREALTIME,lastsrcupdate,destupdated,srcconfirms,numdesttx,numsrctx,lastsplit,cancelratify;
-    int32_t lastheight,maxblocks,SRCHEIGHT,DESTHEIGHT,prevDESTHEIGHT,SHORTFLAG,ratifying,minsigs,freq;
+    int32_t lastheight,maxblocks,SRCHEIGHT,DESTHEIGHT,prevDESTHEIGHT,SHORTFLAG,ratifying,minsigs,freq,lastbanheight[DPOW_MAXRELAYS],lastnotarizedht;
     struct pax_transaction *PAX;
     uint32_t fullCCid;
-    portable_mutex_t paxmutex,dexmutex;
+    portable_mutex_t paxmutex,dexmutex,dpmutex;
     uint32_t ipbits[DPOW_MAXIPBITS],numipbits;
-    struct dpow_block **blocks,*currentbp;
+    struct dpow_block **blocks; //*currentbp;
+    struct dpow_thread threads[DPOW_MAX_BLOCKS];
 };
 
 struct komodo_ccdatapair { int32_t notarization_height; uint32_t MoMoMoffset; };
@@ -179,11 +194,11 @@ cJSON *dpow_gettransaction(struct supernet_info *myinfo,struct iguana_info *coin
 cJSON *dpow_getblock(struct supernet_info *myinfo,struct iguana_info *coin,bits256 blockhash);
 bits256 dpow_getblockhash(struct supernet_info *myinfo,struct iguana_info *coin,int32_t height);
 bits256 dpow_getbestblockhash(struct supernet_info *myinfo,struct iguana_info *coin);
-char *dpow_sendrawtransaction(struct supernet_info *myinfo,struct iguana_info *coin,char *signedtx);
+char *dpow_sendrawtransaction(struct supernet_info *myinfo,struct iguana_info *coin,char *signedtx, int32_t mine, int32_t *errorcode);
 cJSON *dpow_gettxout(struct supernet_info *myinfo,struct iguana_info *coin,bits256 txid,int32_t vout);
 char *dpow_importaddress(struct supernet_info *myinfo,struct iguana_info *coin,char *address);
 char *dpow_validateaddress(struct supernet_info *myinfo,struct iguana_info *coin,char *address);
-cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,char *coinaddr,int32_t dpow);
+cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,char *coinaddr,int32_t utxosize);
 cJSON *dpow_listtransactions(struct supernet_info *myinfo,struct iguana_info *coin,char *coinaddr,int32_t count,int32_t skip);
 char *dpow_alladdresses(struct supernet_info *myinfo,struct iguana_info *coin);
 cJSON *dpow_kvupdate(struct supernet_info *myinfo,struct iguana_info *coin,char *key,char *value,int32_t flags);

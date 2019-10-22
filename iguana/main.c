@@ -780,33 +780,37 @@ void jumblr_loop(void *ptr)
 
 void dpow_loop(void *arg)
 {
-    struct supernet_info *myinfo = arg; double startmilli,endmilli; 
-    int32_t counter = 0;
+    struct supernet_info *myinfo = arg; //double startmilli,endmilli; 
+    //int32_t counter = 0;
     printf("start dpow loop\n");
     while ( 1 )
     {
-        counter++;
-        startmilli = OS_milliseconds();
-        endmilli = startmilli + 1000;
+        //counter++;
+        //startmilli = OS_milliseconds();
+        //endmilli = startmilli + 1000;
         if ( myinfo->IAMNOTARY != 0 )
         {
-            if ( myinfo->numdpows == 1 )
+            if ( myinfo->numdpows > 0 )
             {
-                iguana_dPoWupdate(myinfo,myinfo->DPOWS[0]);
-                endmilli = startmilli + 100;
+                dpow_nanomsg_update(myinfo);
+                //iguana_dPoWupdate(myinfo,myinfo->DPOWS[0]);
+                //endmilli = startmilli + 100;
             }
-            else if ( myinfo->numdpows > 1 )
-            {
-                iguana_dPoWupdate(myinfo,myinfo->DPOWS[counter % myinfo->numdpows]);
-                endmilli = startmilli + 20;
+            //else if ( myinfo->numdpows > 1 )
+            //{
+            //   iguana_dPoWupdate(myinfo,myinfo->DPOWS[counter % myinfo->numdpows]);
+            //    endmilli = startmilli + 20;
                 //if ( rand() % 100 < 50 )
-                    iguana_dPoWupdate(myinfo,myinfo->DPOWS[0]);
-            }
+            //        iguana_dPoWupdate(myinfo,myinfo->DPOWS[0]);
+            //}
         }
-        while ( OS_milliseconds() < endmilli )
-            usleep(1000);
-        if ( counter > myinfo->numdpows+1 )
-            counter = 0;
+        //while ( OS_milliseconds() < endmilli )
+        //    usleep(1000);
+        //if ( counter > myinfo->numdpows+1 )
+        //    counter = 0;
+        
+        // check for received packets 4 times per second. we will update chaintip with a blocknotify call using iguana_BN_dPoWupdate()
+        usleep(250000);
     }
 }
 
@@ -2195,6 +2199,7 @@ void komodo_REVS_merge(char *str,char *str2)
 }
 
 int32_t komodo_initjson(char *fname);
+extern uint16_t Notaries_RPCport;
 
 void iguana_main(void *arg)
 {
@@ -2258,8 +2263,8 @@ void iguana_main(void *arg)
         }
         else
         {
-            // this means that an elected file was specified for 3rd party network, so use diffrent RPC port. 
-            myinfo->rpcport = IGUANA_NOTARYPORT;
+            // Set RPC port via JSON. 
+            //myinfo->rpcport = IGUANA_NOTARYPORT;
             myinfo->IAMNOTARY = 1;
             myinfo->DEXEXPLORER = 0;//1; disable as SPV is used now
             elected = (char *)arg;
@@ -2270,6 +2275,10 @@ void iguana_main(void *arg)
     {
         printf("didnt find any elected notaries JSON in (%s)\n",elected);
         exit(-1);
+    }
+    else 
+    {
+        myinfo->rpcport = Notaries_RPCport;
     }
     dex_init(myinfo);
 #ifdef IGUANA_OSTESTS
