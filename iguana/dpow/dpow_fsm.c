@@ -346,7 +346,7 @@ void dpow_statemachinestart(void *ptr)
         if ( srctime > IGUANA_DPOW_HF_TIME && dp->srcconfirms == 0 ) 
         {
             /* 
-              needs to be something to lower this value to zero if there has been no block for 
+              needs to be something to lower this value to zero if there has been no block for some amount of time. 
               the blocktime needs to be set in the coins file for any chain that is not 60s. 
               example: CHIPS is 10s so do: 
               ,\"blocktime\":10,

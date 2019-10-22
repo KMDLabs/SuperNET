@@ -329,10 +329,14 @@ int32_t iguana_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp)
     Used with the following. Just change KMD to the coin name being dpowd and put this in the conf file.
     blocknotify=curl -s --url "http://127.0.0.1:7776" --data "{\"agent\":\"dpow\",\"method\":\"updatechaintip\",\"blockhash\":\"%s\",\"symbol\":\"KMD\"}"
         
-        instead of all the stuff, we should simply update the chain tip... then fetch a block 10 blocks lower than the height we are at. 
-        if there has not been a block on the source for more than 30 KMD blocks, then notarize the tip. 
-        this way the daemon does all the reorg tracking, because fifo stuff doesnt work, if there is a reorg it will not have any of the reorged blocks saved at all. 
+    work out how many blocks we need to go back (srcconfirms)
+    update dest chain tip (no fifo stuff)
+    update source chaintip (no fifo stuff)
+    getblockheader for tipheightsrc-dp->srcconfirms 
     
+    fetch this block height header or block 
+    make a checkpoint and start a dpowthread. 
+
     */
     int32_t height,flag=0; uint32_t blocktime; bits256 blockhash,merkleroot; struct iguana_info *src,*dest;
     src = iguana_coinfind(dp->symbol);
