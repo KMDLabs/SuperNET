@@ -188,7 +188,7 @@ int32_t komodo_initjson(char *fname)
 
 int32_t komodo_notaries(char *symbol,uint8_t pubkeys[64][33],int32_t height)
 {
-#if STAKEDTEST
+#ifdef STAKEDTEST
     struct iguana_info *coin; char *retstr,*field,*hexstr; ; cJSON *retjson,*array,*item; int32_t i,n;
     static portable_mutex_t notaries_mutex; static int32_t initflag;
     if ( initflag == 0 )
