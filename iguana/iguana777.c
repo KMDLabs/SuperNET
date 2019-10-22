@@ -1151,6 +1151,10 @@ struct iguana_info *iguana_setcoin(char *symbol,void *launched,int32_t maxpeers,
             coin->notarypay = juint(json, "notarypay");
 		printf("[blackjok3r] %s notarypay = %d\n", symbol, coin->notarypay);
 	}
+    if (jobj(json, "blocktime") != 0)
+        coin->blocktime = juint(json,"blocktime");
+    else 
+        coin->blocktime = 60;
 	if ( (coin->polltimeout= juint(json,"poll")) <= 0 )
         coin->polltimeout = IGUANA_DEFAULT_POLLTIMEOUT;
     coin->active = juint(json,"active");

@@ -342,6 +342,20 @@ void dpow_statemachinestart(void *ptr)
     else if ( strcmp(dest->symbol,"KMD") == 0 )
     {
         kmdheight = dest->longestchain;
+        // use tip time on KMD to trigger major consensus changes. 
+        if ( srctime > IGUANA_DPOW_HF_TIME && dp->srcconfirms == 0 ) 
+        {
+            /* 
+              needs to be something to lower this value to zero if there has been no block for 
+              the blocktime needs to be set in the coins file for any chain that is not 60s. 
+              example: CHIPS is 10s so do: 
+              ,\"blocktime\":10,
+            */
+            portable_mutex_lock(&dp->dpmutex);
+            dp->srcconfirms = 3600/bp->destcoin->blocktime/6;
+            portable_mutex_unlock(&dp->dpmutex);
+            printf(CYAN"set source chain confirms to %i"RESET,dp->srcconfirms);
+        }
     }
     if ( (bp= dpow_heightfind(myinfo,dp, checkpoint.blockhash.height)) == 0 )
     {
@@ -367,12 +381,8 @@ void dpow_statemachinestart(void *ptr)
         for (i=0; i<sizeof(bp->notaries)/sizeof(*bp->notaries); i++)
             bp->notaries[i].bestk = -1;
         bp->opret_symbol = dp->symbol;
-        // need to change this to some kind of activation later, use KMD tiptime? 
-#if STAKED 
-        bp->newconsensus = 1;
-#else 
-        bp->newconsensus = 0;
-#endif
+        bp->newconsensus = dp->srcconfirms != 0 ? 1 : 0;
+            
         if ( jsonstr != 0 && (ratified= cJSON_Parse(jsonstr)) != 0 )
         {
             bp->isratify = 1;
@@ -574,7 +584,7 @@ void dpow_statemachinestart(void *ptr)
     }*/
 
     bp->notaries[myind].othermask |= (1LL << myind);
-    dp->checkpoint = checkpoint;
+    //dp->checkpoint = checkpoint;
     bp->height = checkpoint.blockhash.height;
     bp->timestamp = checkpoint.timestamp;
     bp->hashmsg = checkpoint.blockhash.hash;
@@ -592,7 +602,6 @@ void dpow_statemachinestart(void *ptr)
         bp->minnodes = 0; 
     }
     /* 
-    If blocks are happeing very fast, this prevents notarizations happening.
     while ( bp->isratify == 0 && dp->destupdated == 0 )
     {
         if ( dp->checkpoint.blockhash.height > checkpoint.blockhash.height ) //(checkpoint.blockhash.height % 100) != 0 &&

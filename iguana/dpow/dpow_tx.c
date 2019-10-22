@@ -201,7 +201,7 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
     if ( *lastkp >= 0 )
     {
         char str[64]; sprintf(str,CYAN"-> newk.%i"RESET, z); 
-        printf(GREEN"[%s:%i] nodes.%i vs min.%i bestk.%i %s\n", bp->srccoin->symbol, bp->height, bitweight(bp->recvmask), bp->minnodes, *lastkp, (*lastkp == z || bp->newconsensus == 0) ? RESET : str );
+        printf(GREEN"[%s:%i] nodes.%i vs min.%i bestk.%i %s\n", bp->srccoin->symbol, bp->height, bitweight(bp->recvmask), bp->minnodes, *lastkp, (*lastkp != z || bp->newconsensus != 0) ? str : RESET);
         for (mask=j=0; j<bp->numnotaries; j++)
         {
             if ( bp->notaries[j].src.siglens[*lastkp] > 0 )

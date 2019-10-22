@@ -31,6 +31,12 @@
 #define DPOW_MINOUTPUT 6000
 #define DPOW_DURATION 300
 #define DPOW_RATIFYDURATION (3600 * 24)
+#if STAKED 
+    #define IGUANA_DPOW_HF_TIME 1571693954
+#else 
+    #define IGUANA_DPOW_HF_TIME 1577793954
+#endif
+
 
 //#define DPOW_ENTRIESCHANNEL ('e' | ('n' << 8) | ('t' << 16) | ('r' << 24))
 //#define DPOW_BTCENTRIESCHANNEL (~DPOW_ENTRIESCHANNEL)
@@ -148,7 +154,7 @@ struct dpow_thread
 struct dpow_info
 {
     char symbol[16],dest[16]; uint8_t minerkey33[33],minerid; int8_t bestks[64],numbestks; uint64_t lastrecvmask;
-    struct dpow_checkpoint checkpoint,last,destchaintip,srcfifo[DPOW_FIFOSIZE],destfifo[DPOW_FIFOSIZE];
+    struct dpow_checkpoint last,destchaintip,srcfifo[DPOW_FIFOSIZE],destfifo[DPOW_FIFOSIZE]; //checkpoint
     struct dpow_hashheight approved[DPOW_FIFOSIZE],notarized[DPOW_FIFOSIZE];
     bits256 activehash,lastnotarized,srctx[DPOW_MAXTX],desttx[DPOW_MAXTX],prevnotatxid;
     uint32_t SRCREALTIME,lastsrcupdate,destupdated,srcconfirms,numdesttx,numsrctx,lastsplit,cancelratify;

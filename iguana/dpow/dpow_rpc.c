@@ -318,6 +318,7 @@ int32_t dpow_paxpending(struct supernet_info *myinfo,uint8_t *hex,int32_t hexsiz
         n += iguana_rwbignum(1,&hex[n],sizeof(MoM),MoM.bytes);
         MoMdepth = (MoMdepth & 0xffff) | ((uint32_t)CCid<<16);
         n += iguana_rwnum(1,&hex[n],sizeof(MoMdepth),(uint32_t *)&MoMdepth);
+        // CCid of 1 does not return any MoMoM data
         if ( bp->CCid > (bp->newconsensus!=0?1:0) && src_or_dest == 0 && strcmp(bp->destcoin->symbol,"KMD") == 0 )
         {
             if ( (retjson= dpow_MoMoMdata(bp->destcoin,bp->srccoin->symbol,bp->destcoin->longestchain,bp->CCid)) != 0 )
@@ -1006,6 +1007,8 @@ int32_t dpow_getchaintip(struct supernet_info *myinfo,bits256 *merklerootp,bits2
                 coin->lastbestheight = height;
                 if ( height > coin->longestchain )
                     coin->longestchain = height;
+                //if ( jobj(json, "last_notarized_height") != 0 )
+                //    coin->lastnotarizedht = juint(json,"last_notarized_height");
                 if ( txs != 0 && numtxp != 0 && (array= jarray(&n,json,"tx")) != 0 )
                 {
                     for (i=0; i<n&&i<maxtx; i++)

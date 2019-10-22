@@ -72,26 +72,58 @@ int8_t is_STAKED(const char *chain_name)
         ret = 3; // These chains are for testing consensus to create a chain etc. Not meant to be actually used for anything important.
     return(ret);
 };
+#else
+int8_t is_STAKED(const char *chain_name)
+{
+    int8_t ret;
+    if ( chain_name[0] == 0 )
+        return(0);
+    if ( (strcmp(chain_name, "LABS") == 0) || (strncmp(chain_name, "LABS", 4) == 0) )
+        ret = 1; // These chains are allowed coin emissions.
+    else if ( (strcmp(chain_name, "CFEK") == 0) || (strncmp(chain_name, "CFEK", 4) == 0) )
+        ret = 2; // These chains have no speical rules at all.
+    else if ( (strcmp(chain_name, "TEST") == 0) || (strncmp(chain_name, "TEST", 4) == 0) )
+        ret = 3; // These chains are for testing consensus to create a chain etc. Not meant to be actually used for anything important.
+    return(ret);
+};
 #endif
+
+int32_t dpow_calcconfirms(struct supernet_info *myinfo,struct dpow_info *dp)
+{
+    if ( strcmp(dp->dest,"BTC") == 0 )
+        return(DPOW_KOMODOCONFIRMS);
+    // the amount of blocks on source and target since the last notarization tx was SENT (not confirmed) 
+    int32_t blocks_on_dest, blocks_on_source, diff;
+    blocks_on_dest = dp->DESTHEIGHT-dp->prevDESTHEIGHT;
+    blocks_on_source = dp->lastheight-dp->lastnotarizedht;
+    // we need this for some kind of exception when there has not been a block for ages, we can notarize the tip. 
+    // this is an edge case caused by on_demand blocks, on any normal chain this should never trigger? 
+    return(dp->srcconfirms);
+}
 
 void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t height,bits256 hash,uint32_t timestamp,uint32_t blocktime)
 {
     //struct komodo_ccdataMoMoM mdata; cJSON *blockjson; uint64_t signedmask; struct iguana_info *coin;
     char str[65]; struct dpow_checkpoint checkpoint; int32_t i,ht,suppress=0,retval; uint64_t threadind; //void **ptrs; 
     dpow_checkpointset(myinfo,&dp->last,height,hash,timestamp,blocktime);
+    portable_mutex_lock(&dp->dpmutex);
     checkpoint = dp->srcfifo[dp->srcconfirms];
     dpow_fifoupdate(myinfo,dp->srcfifo,dp->last);
     if ( strcmp(dp->dest,"KMD") == 0 )
     {
-        int supressfreq;
+
+        int supressfreq = DPOW_CHECKPOINTFREQ;
 #if STAKED
-        if ( (is_STAKED(dp->symbol)) != 0 )
-            supressfreq = 5;
+        if ( (supressfreq= (is_STAKED(dp->symbol))) == 0 )
+            supressfreq = DPOW_CHECKPOINTFREQ;
+#else 
+        if ( is_STAKED(dp->symbol) != 0 )
+            supressfreq = 0;
 #endif
         if ( dp->DESTHEIGHT < dp->prevDESTHEIGHT+supressfreq )
         {
             suppress = 1;
-            printf(YELLOW"[%s:%i] suppress %i more KMD blocks\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT+supressfreq-dp->DESTHEIGHT);
+            //printf(YELLOW"[%s:%i] suppress %i more KMD blocks\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT+supressfreq-dp->DESTHEIGHT);
         }
     }
     /*if ( strcmp(dp->dest,"KMD") == 0 )//|| strcmp(dp->dest,"CHAIN") == 0 )
@@ -140,9 +172,6 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
         dp->freq = 1;
     if ( suppress == 0 && bits256_nonz(checkpoint.blockhash.hash) != 0 && (checkpoint.blockhash.height % dp->freq) == 0 )
     {
-        //dpow_heightfind(myinfo,dp,checkpoint.blockhash.height + 1000);
-        //dp->prevDESTHEIGHT = dp->prevDESTHEIGHT == 0 ? 0 : dp->DESTHEIGHT;
-        portable_mutex_lock(&dp->dpmutex);
         dpow_clearfinishedthreads(myinfo,dp);
         if ( (threadind= dpow_newthread(myinfo, dp)) != -1 )
         {
@@ -154,8 +183,6 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
             dp->threads[threadind].ptrs[4] = (void *)(uint64_t)threadind;
             memcpy(&(dp->threads[threadind].ptrs[5]),&checkpoint,sizeof(checkpoint));
             dp->activehash = checkpoint.blockhash.hash;
-            //ht = checkpoint.blockhash.height;
-            //if ( (retval= OS_thread_create((void *)((uint64_t)&ptrs[5] + sizeof(struct dpow_checkpoint)),NULL,(void *)dpow_statemachinestart,(void *)ptrs)) != 0 )
             if ( (retval= OS_thread_create(&(dp->threads[threadind].thread),NULL,(void *)dpow_statemachinestart,(void *)dp->threads[threadind].ptrs)) != 0 )
             {
                 printf(RED"[%s:%i] error creating thread retval.%i\n"RESET, dp->symbol, checkpoint.blockhash.height, retval);
@@ -167,8 +194,8 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
                 //printf("[%s:%i] created thread %lu...\n", dp->symbol, checkpoint.blockhash.height, threadind);
             }
         } else printf(RED"[%s:%i] reached maximum threads.\n"RESET, dp->symbol, checkpoint.blockhash.height);
-        portable_mutex_unlock(&dp->dpmutex);
     }
+    portable_mutex_unlock(&dp->dpmutex);
 }
 
 void dpow_approvedset(struct supernet_info *myinfo,struct dpow_info *dp,struct dpow_checkpoint *checkpoint,bits256 *txs,int32_t numtx)
@@ -210,7 +237,7 @@ void dpow_destupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t h
     dp->destupdated = timestamp;
     dp->DESTHEIGHT = height;
     dpow_checkpointset(myinfo,&dp->destchaintip,height,hash,timestamp,blocktime);
-    dpow_approvedset(myinfo,dp,&dp->destchaintip,dp->desttx,dp->numdesttx);
+    dpow_approvedset(myinfo,dp,&dp->destchaintip,dp->desttx,dp->numdesttx); 
     dpow_fifoupdate(myinfo,dp->destfifo,dp->destchaintip);
     if ( strcmp(dp->dest,"BTC") == 0 )
     {
@@ -301,6 +328,10 @@ int32_t iguana_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp)
     /* 
     Used with the following. Just change KMD to the coin name being dpowd and put this in the conf file.
     blocknotify=curl -s --url "http://127.0.0.1:7776" --data "{\"agent\":\"dpow\",\"method\":\"updatechaintip\",\"blockhash\":\"%s\",\"symbol\":\"KMD\"}"
+        
+        instead of all the stuff, we should simply update the chain tip... then fetch a block 10 blocks lower than the height we are at. 
+        if there has not been a block on the source for more than 30 KMD blocks, then notarize the tip. 
+        this way the daemon does all the reorg tracking, because fifo stuff doesnt work, if there is a reorg it will not have any of the reorged blocks saved at all. 
     
     */
     int32_t height,flag=0; uint32_t blocktime; bits256 blockhash,merkleroot; struct iguana_info *src,*dest;
@@ -423,7 +454,8 @@ THREE_STRINGS_AND_DOUBLE(iguana,dpow,symbol,dest,pubkey,freq)
     else
     {
         strcpy(dp->dest,dest);
-        dp->srcconfirms = DPOW_THIRDPARTY_CONFIRMS;
+        // we will update this at the first dpow round to the correct value. 
+        dp->srcconfirms = DPOW_THIRDPARTY_CONFIRMS; 
     }
     if ( dp->srcconfirms > DPOW_FIFOSIZE )
         dp->srcconfirms = DPOW_FIFOSIZE;
