@@ -610,6 +610,7 @@ cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,ch
         {
             // utxo cache listunspent 
             sprintf(buf,"%i, \"%s\"", utxosize, coinaddr);
+            printf("[%s]: utxocacheactive.%i utxocacheinit.%i ", coin->symbol, coin->utxocacheactive, coin->utxocacheinit );
             if ( coin->utxocacheactive == 0 && coin->utxocacheinit < 3 && (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"dpowlistunspent", buf)) != 0 )
             {
                 coin->utxocacheinit++;
@@ -618,19 +619,20 @@ cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,ch
             if ( retstr != 0 || (coin->utxocacheactive != 0 && (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass, "dpowlistunspent", buf)) != 0) )
             {
                 json = cJSON_Parse(retstr);
-                //printf("dpowlistspent %s (%s) listunspent.(%s)\n",coin->symbol,buf,retstr);
+                printf("dpowlistspent %s (%s) listunspent.(%s)\n",coin->symbol,buf,retstr);
                 free(retstr);
-            } //else printf("%s null retstr from dpowlistunspent.%s\n",coin->symbol,buf);
+            } else printf("%s null retstr from dpowlistunspent.%s\n",coin->symbol,buf);
         }
         if ( json == 0 || cJSON_GetArraySize(json) == 0 )
         {
             // normal listunspent
+            printf("attempting normal listunspent\n");
             if ( (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"listunspent",buf2)) != 0 )
             {
                 json = cJSON_Parse(retstr);
-                //printf("listunspent: %s (%s) listunspent.(%s)\n",coin->symbol,buf,retstr);
+                printf("listunspent: %s (%s) listunspent.(%s)\n",coin->symbol,buf,retstr);
                 free(retstr);
-            } //else printf("%s null retstr from listunspent.%s\n",coin->symbol,buf2);
+            } else printf("%s null retstr from listunspent.%s\n",coin->symbol,buf2);
         }
     }
     else if ( coin->FULLNODE > 0 || coin->VALIDATENODE > 0 )
