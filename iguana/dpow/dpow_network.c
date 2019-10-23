@@ -1713,7 +1713,7 @@ void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
             continue;
         jk++;
         
-        if ( rand() % 10000 < 2)    
+        if ( 0 && rand() % 10000 < 2)    
             printf("[%i] recv.%i vs min.%i max.%i sec.%u bestk.%i bestmsk.%llx\n",i, bitweight(bp->notaries[i].recvmask), bp->minnodes, bp->numnotaries, (uint32_t)time(NULL)-bp->starttime,bp->notaries[i].bestk, (long long)bp->notaries[i].bestmask); 
         
         if ( bp->notaries[i].bestk < 0 || bp->notaries[i].bestmask == 0 )
@@ -1834,7 +1834,6 @@ void dpow_nanoutxoset(struct supernet_info *myinfo,struct dpow_info *dp,struct d
     }
     else
     {
-        //dpow_bestconsensus(dp,bp); // converges bestmask sent to other nodes before all nodes have responded. 
         np->srcutxo = bp->notaries[bp->myind].src.prev_hash;
         np->srcvout = bp->notaries[bp->myind].src.prev_vout;
         np->destutxo = bp->notaries[bp->myind].dest.prev_hash;
