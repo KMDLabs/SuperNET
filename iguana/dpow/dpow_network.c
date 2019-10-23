@@ -2093,9 +2093,9 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
             bp->notaries[senderind].bestmask = bestmask;
         if ( recvmask != 0 )
             bp->notaries[senderind].recvmask |= recvmask;
-        if ( 0 && (bp->notaries[senderind].paxwdcrc = paxwdcrc) != 0 )
+        if ( (bp->notaries[senderind].paxwdcrc = paxwdcrc) != 0 )
         {
-            fprintf(stderr,"{%d %x} ",senderind,paxwdcrc);
+            //fprintf(stderr,"{%d %x} ",senderind,paxwdcrc);
         } 
         bp->notaries[bp->myind].paxwdcrc = bp->paxwdcrc;
         if ( bp->bestmask == 0 )
