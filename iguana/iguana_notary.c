@@ -1038,6 +1038,8 @@ TWO_STRINGS(dpow,active,maskhex,symbol)
     uint8_t data[8],revdata[8],pubkeys[64][33]; int32_t i,len,current,n,allflag; uint64_t mask; cJSON *infojson,*retjson,*array,*notarray,*alljson; struct dpow_info *dp = 0;
     array = cJSON_CreateArray();
     notarray = cJSON_CreateArray();
+    if ( symbol == 0 || symbol[0] == 0 )
+        return(clonestr("{\"error\":\"need coin name, or all\"}"));
     if ( maskhex == 0 || maskhex[0] == 0 )
     {
         /* 
