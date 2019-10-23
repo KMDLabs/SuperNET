@@ -359,7 +359,6 @@ int32_t iguana_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp)
             //printf("[%s] %s height.%d vs last.%d\n",dp->dest,bits256_str(str,blockhash),height,dp->destchaintip.blockhash.height);
             if ( height <= dp->destchaintip.blockhash.height )
             {
-                flag++;
                 printf("iguana_BN_dPoWupdate dest.%s reorg detected %d vs %d\n",dp->dest,height,dp->destchaintip.blockhash.height);
                 if ( height == dp->destchaintip.blockhash.height && bits256_cmp(blockhash,dp->destchaintip.blockhash.hash) != 0 )
                     printf("UNEXPECTED ILLEGAL BLOCK in dest chaintip\n");
@@ -658,9 +657,9 @@ HASH_AND_STRING(dpow,updatechaintip,blockhash,symbol)
     if ( dp != 0 )
     {
         if ( iguana_BN_dPoWupdate(myinfo,dp) != 0 )
-            sprintf(buf,GREEN"[%s] %s"RESET, symbol, bits256_str(str,blockhash));
+            sprintf(buf,RED"[%s:%i] %s was reorged "RESET, symbol, dp->SRCHEIGHT, bits256_str(str,blockhash));
         else 
-            sprintf(buf,RED"[%s] %s was reorged/orphaned"RESET,symbol, bits256_str(str,blockhash));
+            sprintf(buf,GREEN"[%s:%i] %s"RESET, symbol, dp->SRCHEIGHT, bits256_str(str,blockhash));
     }
     //else sprintf(buf,RED"[%s] cannot update non-active or non dpowd coin"RESET, symbol);
     return(clonestr(buf));
