@@ -639,7 +639,7 @@ cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,ch
         if ( json == 0 || cJSON_GetArraySize(json) == 0 )
         {
             // normal listunspent
-            if ( (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"listunspent",buf2)) != 0 && (json= cJSON_Parse(retstr)) != 0) )
+            if ( (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"listunspent",buf2)) != 0 && (json= cJSON_Parse(retstr)) != 0 )
             {
                 if ( jobj(json,"error") != 0 )
                 {
