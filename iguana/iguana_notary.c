@@ -1035,38 +1035,73 @@ cJSON *dpow_recvmasks(struct supernet_info *myinfo,struct dpow_info *dp)
 
 TWO_STRINGS(dpow,active,maskhex,symbol)
 {
-    uint8_t data[8],revdata[8],pubkeys[64][33]; int32_t i,len,current,n; uint64_t mask; cJSON *infojson,*retjson,*array,*notarray; struct dpow_info *dp = 0;
+    uint8_t data[8],revdata[8],pubkeys[64][33]; int32_t i,len,current,n,allflag; uint64_t mask; cJSON *infojson,*retjson,*array,*notarray,*alljson; struct dpow_info *dp = 0;
     array = cJSON_CreateArray();
     notarray = cJSON_CreateArray();
     if ( maskhex == 0 || maskhex[0] == 0 )
     {
         /* 
+            symbol is the coin to print, eg KMD or LABS
+            specify "all" as the symbol to extract every current round from all chains. 
+            not all coins will have active rounds all the time. 
+            
             the format of this RPC has changed, so scripts that use it will need updating
             old: 
             [
                 {notary}
+                {notary} 
             ]
-            new:
+            single coin:
             {
                 blockheight : [
                     {notary}
+                    {notary}
                 ]
             }
+            all coins: 
+            {
+                KMD: {
+                    blockheight : [
+                        {notary}
+                        {notary}
+                    ]
+                }
+                LABS:{
+                    blockheight : [
+                        {notary}
+                        {notary}
+                    ]
+                }  
+            }
         */
-        // find the coin requested
+        
+        if ( (allflag= strcmp(symbol,"all")) == 0 )
+            alljson = cJSON_CreateObject();
+        
         for (i=0; i<myinfo->numdpows; i++)
-            if ( myinfo->DPOWS[i] != 0 && strcmp(symbol,myinfo->DPOWS[i]->symbol) == 0 )
+        {
+            if ( allflag != 0 )
+            {
+                cJSON *coinjson = dpow_recvmasks(myinfo,myinfo->DPOWS[i]);
+                jadd(alljson,myinfo->DPOWS[i]->symbol,coinjson);
+            }
+            else if ( strcmp(symbol,myinfo->DPOWS[i]->symbol) == 0 )
             {
                 dp = myinfo->DPOWS[i];
                 break;
             }
-        if ( dp == 0 )
-            return(clonestr("{\"error\":\"dpow not active on this coin\"}"));
-        // Display all current active dpow rounds
-        return(jprint(dpow_recvmasks(myinfo,dp),1));
+        }
+        if ( allflag != 0 ) 
+            return(jprint(alljson,1));
+        else 
+        {
+            if ( dp == 0 )
+                return(clonestr("{\"error\":\"dpow not active on this coin\"}"));
+            // Display all current active dpow rounds for the specified coin. 
+            return(jprint(dpow_recvmasks(myinfo,dp),1));
+        }
         
         /*
-        currentbp is affected by race conditions, and causes crashes. 
         if ( myinfo->DPOWS[i]->currentbp == 0 )
             return(clonestr("{\"error\":\"there is no dpow round started to check.\"}"));
         
