@@ -627,7 +627,7 @@ cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,ch
                     retstr = 0; 
                 }
             }
-            if ( retstr != 0 || (coin->utxocacheactive != 0 && (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass, "dpowlistunspent", buf)) != 0) && (json= cJSON_Parse(retstr)) != 0 )
+            if ( retstr != 0 || (coin->utxocacheactive != 0 && (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass, "dpowlistunspent", buf)) != 0 && (json= cJSON_Parse(retstr)) != 0) )
             {
                 if ( jobj(json,"error") != 0 )
                 {
