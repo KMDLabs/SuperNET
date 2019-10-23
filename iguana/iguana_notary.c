@@ -126,11 +126,10 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
             printf(YELLOW"[%s:%i] suppress %i more KMD blocks\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT+supressfreq-dp->DESTHEIGHT);
         } */
 #else
-        printf(CYAN"[%s:%i] prevDESTHEIGHT.%i DESTHEIGHT.%i\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT,dp->DESTHEIGHT);
         if ( dp->DESTHEIGHT < dp->prevDESTHEIGHT+DPOW_CHECKPOINTFREQ )
         {
             suppress = 1;
-            printf(YELLOW"[%s:%i] suppress %i more KMD blocks\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT+DPOW_CHECKPOINTFREQ-dp->DESTHEIGHT);
+            //printf(YELLOW"[%s:%i] suppress %i more KMD blocks\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT+DPOW_CHECKPOINTFREQ-dp->DESTHEIGHT);
         }
 #endif
     }
@@ -382,7 +381,7 @@ int32_t iguana_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp)
             }
             else
             {
-                char str[65]; printf("[%s] %s height.%d vs last.%d\n",dp->symbol,bits256_str(str,blockhash),height,dp->lastheight);
+                //char str[65]; printf("[%s] %s height.%d vs last.%d\n",dp->symbol,bits256_str(str,blockhash),height,dp->lastheight);
                 dpow_srcupdate(myinfo,dp,height,blockhash,(uint32_t)time(NULL),blocktime);
                 dp->lastheight = height;
             }
