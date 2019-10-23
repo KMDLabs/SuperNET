@@ -112,15 +112,13 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
     if ( strcmp(dp->dest,"KMD") == 0 )
     {
 
-        int supressfreq = DPOW_CHECKPOINTFREQ;
+        
 #ifdef STAKED
+        int supressfreq;
         if ( (supressfreq= (is_STAKED(dp->symbol))) == 0 )
             supressfreq = DPOW_CHECKPOINTFREQ;
-#else 
-        if ( is_STAKED(dp->symbol) != 0 )
-            supressfreq = 0;
 #endif
-        if ( dp->DESTHEIGHT < dp->prevDESTHEIGHT+supressfreq )
+        if ( is_STAKED(dp->symbol) == 0 && dp->DESTHEIGHT < dp->prevDESTHEIGHT+DPOW_CHECKPOINTFREQ )
         {
             suppress = 1;
             printf(YELLOW"[%s:%i] suppress %i more KMD blocks\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT+supressfreq-dp->DESTHEIGHT);
@@ -353,7 +351,6 @@ int32_t iguana_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp)
                 printf("iguana_BN_dPoWupdate dest.%s reorg detected %d vs %d\n",dp->dest,height,dp->destchaintip.blockhash.height);
                 if ( height == dp->destchaintip.blockhash.height && bits256_cmp(blockhash,dp->destchaintip.blockhash.hash) != 0 )
                     printf("UNEXPECTED ILLEGAL BLOCK in dest chaintip\n");
-                flag++;
             } else dpow_destupdate(myinfo,dp,height,blockhash,(uint32_t)time(NULL),blocktime);
         } //else printf("error getchaintip for %s\n",dp->dest);
         dp->numsrctx = sizeof(dp->srctx)/sizeof(*dp->srctx);
@@ -373,8 +370,7 @@ int32_t iguana_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp)
             }
             else
             {
-                char str[65]; 
-                printf("[%s] %s height.%d vs last.%d\n",dp->symbol,bits256_str(str,blockhash),height,dp->lastheight);
+                char str[65]; printf("[%s] %s height.%d vs last.%d\n",dp->symbol,bits256_str(str,blockhash),height,dp->lastheight);
                 dpow_srcupdate(myinfo,dp,height,blockhash,(uint32_t)time(NULL),blocktime);
                 dp->lastheight = height;
                 flag++;
@@ -654,7 +650,7 @@ HASH_AND_STRING(dpow,updatechaintip,blockhash,symbol)
         else 
             sprintf(buf,RED"[%s] update failed for block %s"RESET,symbol, bits256_str(str,blockhash));
     }
-    else sprintf(buf,RED"[%s] cannot update non-active or non dpowd coin"RESET, symbol);
+    //else sprintf(buf,RED"[%s] cannot update non-active or non dpowd coin"RESET, symbol);
     return(clonestr(buf));
 }
 
@@ -1068,7 +1064,7 @@ TWO_STRINGS(dpow,active,maskhex,symbol)
                         {notary}
                     ]
                 }
-                LABS:{
+                LABS: {
                     blockheight : [
                         {notary}
                         {notary}
@@ -1079,7 +1075,6 @@ TWO_STRINGS(dpow,active,maskhex,symbol)
         
         if ( (allflag= (strcmp(symbol,"all") == 0)) )
             alljson = cJSON_CreateObject();
-        printf("allflag.%i \n", allflag);
         for (i=0; i<myinfo->numdpows; i++)
         {
             if ( allflag != 0 )
