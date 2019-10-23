@@ -613,15 +613,26 @@ cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,ch
             printf("[%s]: utxocacheactive.%i utxocacheinit.%i ", coin->symbol, coin->utxocacheactive, coin->utxocacheinit );
             if ( coin->utxocacheactive == 0 && coin->utxocacheinit < 3 && (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"dpowlistunspent", buf)) != 0 )
             {
-                coin->utxocacheinit++;
-                coin->utxocacheactive = 1;
+                json = cJSON_Parse(retstr);
+                if ( jobj(json,"error") != 0 )
+                {
+                    coin->utxocacheinit++;
+                    coin->utxocacheactive = 1;
+                } 
+                else 
+                {
+                    free_json(json);
+                    free(retstr); 
+                }
             }
             if ( retstr != 0 || (coin->utxocacheactive != 0 && (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass, "dpowlistunspent", buf)) != 0) )
             {
                 json = cJSON_Parse(retstr);
+                if ( jobj(json,"error") == 0 )
+                    free_json(json); 
                 printf("dpowlistspent %s (%s) listunspent.(%s)\n",coin->symbol,buf,retstr);
                 free(retstr);
-            } else printf("%s null retstr from dpowlistunspent.%s\n",coin->symbol,buf);
+            } //else printf("%s null retstr from dpowlistunspent.%s\n",coin->symbol,buf);
         }
         if ( json == 0 || cJSON_GetArraySize(json) == 0 )
         {
