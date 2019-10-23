@@ -111,18 +111,29 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
     dpow_fifoupdate(myinfo,dp->srcfifo,dp->last);
     if ( strcmp(dp->dest,"KMD") == 0 )
     {
-
-        
 #ifdef STAKED
         int supressfreq;
         if ( (supressfreq= (is_STAKED(dp->symbol))) == 0 )
             supressfreq = DPOW_CHECKPOINTFREQ;
-#endif
-        if ( is_STAKED(dp->symbol) == 0 && dp->DESTHEIGHT < dp->prevDESTHEIGHT+DPOW_CHECKPOINTFREQ )
+        if ( dp->DESTHEIGHT < dp->prevDESTHEIGHT+supressfreq )
         {
             suppress = 1;
             printf(YELLOW"[%s:%i] suppress %i more KMD blocks\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT+supressfreq-dp->DESTHEIGHT);
         }
+        /* This is what we should use at LABS hard fork. 
+        if ( is_STAKED(dp->symbol) == 0 && dp->DESTHEIGHT < dp->prevDESTHEIGHT+DPOW_CHECKPOINTFREQ )
+        {
+            suppress = 1;
+            printf(YELLOW"[%s:%i] suppress %i more KMD blocks\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT+supressfreq-dp->DESTHEIGHT);
+        } */
+#else
+        printf(CYAN"[%s:%i] prevDESTHEIGHT.%i DESTHEIGHT.%i\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT,dp->DESTHEIGHT);
+        if ( dp->DESTHEIGHT < dp->prevDESTHEIGHT+DPOW_CHECKPOINTFREQ )
+        {
+            suppress = 1;
+            printf(YELLOW"[%s:%i] suppress %i more KMD blocks\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT+DPOW_CHECKPOINTFREQ-dp->DESTHEIGHT);
+        }
+#endif
     }
     /*if ( strcmp(dp->dest,"KMD") == 0 )//|| strcmp(dp->dest,"CHAIN") == 0 )
     {
