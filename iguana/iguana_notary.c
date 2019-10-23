@@ -387,7 +387,7 @@ int32_t iguana_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp)
                 dp->lastheight = height;
             }
         } //else printf("error getchaintip for %s\n",dp->symbol);
-    } else printf("iguana_BN_dPoWupdate missing src.(%s) %p or dest.(%s) %p\n",dp->symbol,src,dp->dest,dest);
+    } //else printf("iguana_BN_dPoWupdate missing src.(%s) %p or dest.(%s) %p\n",dp->symbol,src,dp->dest,dest);
     return(flag);
 }
 
@@ -660,8 +660,7 @@ HASH_AND_STRING(dpow,updatechaintip,blockhash,symbol)
             sprintf(buf,RED"[%s:%i] %s was reorged "RESET, symbol, dp->SRCHEIGHT, bits256_str(str,blockhash));
         else 
             sprintf(buf,GREEN"[%s:%i] %s"RESET, symbol, dp->SRCHEIGHT, bits256_str(str,blockhash));
-    }
-    //else sprintf(buf,RED"[%s] cannot update non-active or non dpowd coin"RESET, symbol);
+    } else sprintf(buf,YELLOW"[%s] cannot update non-active or non dpowd chain"RESET, symbol);
     return(clonestr(buf));
 }
 
