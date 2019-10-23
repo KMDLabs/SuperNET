@@ -331,7 +331,6 @@ void dpow_statemachinestart(void *ptr)
     dpow_getchaintip(myinfo,&merkleroot,&srchash,&srctime,dp->desttx,&dp->numdesttx,dest);
     dpow_getchaintip(myinfo,&merkleroot,&srchash,&srctime,dp->srctx,&dp->numsrctx,src);
     MoMdepth = 0;
-    memset(&MoM,0,sizeof(MoM));
     MoM = dpow_calcMoM(&MoMdepth,&dp->prevnotatxid,myinfo,src,checkpoint.blockhash.height);
     if ( strcmp(src->symbol,"KMD") == 0 )
     {
@@ -354,7 +353,7 @@ void dpow_statemachinestart(void *ptr)
             portable_mutex_lock(&dp->dpmutex);
             dp->srcconfirms = 3600/bp->destcoin->blocktime/6;
             portable_mutex_unlock(&dp->dpmutex);
-            printf(CYAN"set source chain confirms to %i"RESET,dp->srcconfirms);
+            printf(CYAN"[%s:%i]: setting srcconfirms.%i"RESET,src->symbol,bp->height,dp->srcconfirms);
         }
     }
     if ( (bp= dpow_heightfind(myinfo,dp, checkpoint.blockhash.height)) == 0 )
