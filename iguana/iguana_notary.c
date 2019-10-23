@@ -91,10 +91,8 @@ int8_t is_STAKED(const char *chain_name)
 void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t height,bits256 hash,uint32_t timestamp,uint32_t blocktime)
 {
     //struct komodo_ccdataMoMoM mdata; cJSON *blockjson; uint64_t signedmask; struct iguana_info *coin;
-    char str[65]; struct dpow_checkpoint checkpoint; int32_t i,ht,suppress=0,retval; uint64_t threadind; //void **ptrs; 
+    char str[65]; struct dpow_checkpoint checkpoint; int32_t i,ht,suppress=0,retval,srcconfs; uint64_t threadind; //void **ptrs; 
     dpow_checkpointset(myinfo,&dp->last,height,hash,timestamp,blocktime);
-    checkpoint = dp->srcfifo[dp->srcconfirms];
-    dpow_fifoupdate(myinfo,dp->srcfifo,dp->last);
     if ( strcmp(dp->dest,"KMD") == 0 )
     {
 #ifdef STAKED
@@ -110,7 +108,7 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
         if ( is_STAKED(dp->symbol) == 0 && dp->DESTHEIGHT < dp->prevDESTHEIGHT+DPOW_CHECKPOINTFREQ )
         {
             suppress = 1;
-            printf(YELLOW"[%s:%i] suppress %i more KMD blocks\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT+supressfreq-dp->DESTHEIGHT);
+            //printf(YELLOW"[%s:%i] suppress %i more KMD blocks\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT+supressfreq-dp->DESTHEIGHT);
         } */
 #else
         if ( dp->DESTHEIGHT < dp->prevDESTHEIGHT+DPOW_CHECKPOINTFREQ )
@@ -119,6 +117,31 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
             //printf(YELLOW"[%s:%i] suppress %i more KMD blocks\n"RESET,dp->symbol,checkpoint.blockhash.height,dp->prevDESTHEIGHT+DPOW_CHECKPOINTFREQ-dp->DESTHEIGHT);
         }
 #endif
+    }
+    // keep fifo on KMD for now, test which is better?  
+    if ( dp->flag == 0 || strcmp(dp->src,"KMD") == 0 )
+    {
+        checkpoint = dp->srcfifo[dp->srcconfirms];
+        dpow_fifoupdate(myinfo,dp->srcfifo,dp->last);
+    }
+    else 
+    {
+        /* use dpow_calcsrcconfirms(myinfo,dp) to calculate which block to notarize. 
+        Fetch the block we are notarizing from the daemon and make a checkpoint struct from this.
+        it is a safe assumption that the daemon will not reorg past the last notarization, and it has the longestchain that links back to the last notarization 
+        this allows us to simply ask the daemon for the block height we want, if 13 nodes are on the same chain notarization should happen. */
+        dp->flag = 0; struct iguana_info *src = 0;
+        if ( suppress != 0 ) // no point going further.  
+            return;
+        if ( (srcconfs= dpow_calcsrcconfirms(myinfo,dp)) >= 0 && (src= iguana_coinfind(myinfo,dp->src)) != 0 )
+        {
+            uint32_t blocktime = 0; cJSON *json = 0; int32_t notaht = height-srcconfs;
+            bits256 blockhash = dpow_getblockhash(myinfo,src,notaht);
+            if ( bits256_nonz(blockhash) != 0 && (json= dpow_getblock(myinfo,src,blockhash)) != 0 && (blktime= juint(json,"time")) != 0 )
+            {
+                dpow_checkpointset(myinfo,&checkpoint,notaht,blockhash,(uint32_t)time(NULL),blktime);
+            }
+        }
     }
     /*if ( strcmp(dp->dest,"KMD") == 0 )//|| strcmp(dp->dest,"CHAIN") == 0 )
     {
@@ -381,7 +404,7 @@ int32_t dpow_calcsrcconfirms(struct supernet_info *myinfo,struct dpow_info *dp)
         int32_t blocks_on_source = dp->lastheight-dp->lastnotarizedht;
         
         // 10 blocks on KMD between AC notarizations, if we have enough blocks on the source to notarize tip-srcconfirms do so otherwise, try to notarize the chain tip.
-        if ( blocks_on_dest > 10 ) 
+        if ( blocks_on_dest >= 10 ) 
         {
             if ( blocks_on_source > dp->srcconfirms )
                 return(dp->srcconfirms);
@@ -396,14 +419,10 @@ int32_t iguana_new_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *
     /* 
     Used with the following. Just change KMD to the coin name being dpowd and put this in the conf file.
     blocknotify=curl -s --url "http://127.0.0.1:7776" --data "{\"agent\":\"dpow\",\"method\":\"updatechaintip\",\"blockhash\":\"%s\",\"symbol\":\"KMD\"}"
-        
+
     update dest chain tip 
     update source chaintip
-    use dpow_calcsrcconfirms(myinfo,dp) to calculate which block to notarize. 
-    Fetch the block we are notarizing from the daemon and make a checkpoint struct from this.
-    it is a safe assumption that the daemon will not reorg past the last notarization, and it has the longestchain that links back to the last notarization 
-    this allows us to simply ask the daemon for the block height we want, if 13 nodes are on the same chain notarization should happen. 
-    
+        
     */
     int32_t height,flag=0; uint32_t blocktime; bits256 blockhash,merkleroot; struct iguana_info *src,*dest;
     src = iguana_coinfind(dp->symbol);
@@ -419,7 +438,13 @@ int32_t iguana_new_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *
                 printf("iguana_BN_dPoWupdate dest.%s reorg detected %d vs %d\n",dp->dest,height,dp->destchaintip.blockhash.height);
                 if ( height == dp->destchaintip.blockhash.height && bits256_cmp(blockhash,dp->destchaintip.blockhash.hash) != 0 )
                     printf("UNEXPECTED ILLEGAL BLOCK in dest chaintip\n");
-            } else dpow_destupdate(myinfo,dp,height,blockhash,(uint32_t)time(NULL),blocktime);
+            } 
+            else // dpow_destupdate(myinfo,dp,height,blockhash,(uint32_t)time(NULL),blocktime);
+            {
+                dp->destupdated = (uint32_t)time(NULL);
+                dp->DESTHEIGHT = height;
+                dpow_checkpointset(myinfo,&dp->destchaintip,height,blockhash,dp->destupdated,blocktime);
+            }
         } //else printf("error getchaintip for %s\n",dp->dest);
         if ( (height= dpow_getchaintip(myinfo,&merkleroot,&blockhash,&blocktime,dp->srctx,&dp->numsrctx,src)) != dp->last.blockhash.height && height > 0 )
         {
@@ -429,22 +454,20 @@ int32_t iguana_new_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *
             if ( height < dp->last.blockhash.height )
             {
                 printf("iguana_BN_dPoWupdate src.%s reorg detected %d vs %d approved.%d notarized.%d\n",dp->symbol,height,dp->last.blockhash.height,dp->approved[0].height,dp->notarized[0].height);
-                if ( height <= src->lastnotarizedht )
-                {
-                    if ( bits256_cmp(blockhash,dp->last.blockhash.hash) != 0 )
-                        printf("UNEXPECTED ILLEGAL BLOCK in src chaintip\n");
-                }
-                flag++;
+                if ( bits256_cmp(blockhash,dp->last.blockhash.hash) != 0 )
+                    printf("UNEXPECTED ILLEGAL BLOCK in src chaintip\n");
+                return(1);
             }
             else
             {
                 //char str[65]; printf("[%s] %s height.%d vs last.%d\n",dp->symbol,bits256_str(str,blockhash),height,dp->lastheight);
+                dp->flag = 1; // skip fifo on all coins except KMD. 
                 dpow_srcupdate(myinfo,dp,height,blockhash,(uint32_t)time(NULL),blocktime);
                 dp->lastheight = height;
             }
         } //else printf("error getchaintip for %s\n",dp->symbol);
     } //else printf("iguana_BN_dPoWupdate missing src.(%s) %p or dest.(%s) %p\n",dp->symbol,src,dp->dest,dest);
-    return(flag);
+    return(0);
 }
 
 void dpow_addresses()

@@ -677,13 +677,11 @@ void dpow_statemachinestart(void *ptr)
         iterations++;
         while ( abort == 0 && starttime+(iterations*30) > (uint32_t)time(NULL) ) 
         {
-            portable_mutex_lock(&dp->dpmutex);
             if  ( dp->lastnotarizedht > bp->height && bp->isratify == 0 )
             {
                 bp->state = 0xffffffff;
                 abort++;
             }
-            portable_mutex_unlock(&dp->dpmutex);
             usleep(100000);
         }
         if ( abort != 0 )
