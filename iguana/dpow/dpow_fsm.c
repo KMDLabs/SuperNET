@@ -306,7 +306,7 @@ void dpow_statemachinestart(void *ptr)
 {
     void **ptrs = ptr;
     struct supernet_info *myinfo; struct dpow_info *dp; struct dpow_checkpoint checkpoint;
-    int32_t i,j,ht,extralen,destprevvout0,srcprevvout0,src_or_dest,numratified=0,kmdheight = -1,myind = -1,blockindex=0,abort=0,threadind; uint8_t extras[10000],pubkeys[64][33]; cJSON *ratified=0,*item; struct iguana_info *src,*dest; char *jsonstr,*handle,*hexstr,str[65],str2[65],srcaddr[64],destaddr[64]; bits256 zero,MoM,merkleroot,srchash,destprevtxid0,srcprevtxid0; struct dpow_block *bp; struct dpow_entry *ep = 0; uint32_t MoMdepth,duration,minsigs,starttime,srctime;
+    int32_t i,j,ht,extralen,destprevvout0,srcprevvout0,src_or_dest,numratified=0,kmdheight = -1,myind = -1,blockindex=0,abort=0,threadind; uint8_t extras[10000],pubkeys[64][33]; cJSON *ratified=0,*item; struct iguana_info *src,*dest; char *jsonstr,*handle,*hexstr,str[65],str2[65],srcaddr[64],destaddr[64]; bits256 zero,MoM,merkleroot,srchash,destprevtxid0,srcprevtxid0; struct dpow_block *bp; struct dpow_entry *ep = 0; uint32_t MoMdepth,duration,minsigs,starttime,srctime,desttime;
     char *destlockunspent=0,*srclockunspent=0,*destunlockunspent=0,*srcunlockunspent=0;
     memset(&zero,0,sizeof(zero));
     portable_mutex_t dpowT_mutex;
@@ -328,7 +328,7 @@ void dpow_statemachinestart(void *ptr)
         printf("null coin ptr? (%s %p or %s %p)\n",dp->symbol,src,dp->dest,dest);
         return;
     }
-    dpow_getchaintip(myinfo,&merkleroot,&srchash,&srctime,dp->desttx,&dp->numdesttx,dest);
+    dpow_getchaintip(myinfo,&merkleroot,&srchash,&desttime,dp->desttx,&dp->numdesttx,dest);
     dpow_getchaintip(myinfo,&merkleroot,&srchash,&srctime,dp->srctx,&dp->numsrctx,src);
     MoMdepth = 0;
     MoM = dpow_calcMoM(&MoMdepth,&dp->prevnotatxid,myinfo,src,checkpoint.blockhash.height);
@@ -342,13 +342,14 @@ void dpow_statemachinestart(void *ptr)
     {
         kmdheight = dest->longestchain;
         // use tip time on KMD to trigger major consensus changes. 
-        if ( srctime > IGUANA_DPOW_HF_TIME && dp->srcconfirms == 0 ) 
+        if ( desttime > IGUANA_DPOW_HF_TIME && dp->srcconfirms == 0 ) 
         {
             /* 
-              needs to be something to lower this value to zero if there has been no block for some amount of time. 
               the blocktime needs to be set in the coins file for any chain that is not 60s. 
               example: CHIPS is 10s so do: 
-              ,\"blocktime\":10,
+              \"blocktime\":10,
+              This will set all coins to do approximatly 6 notarizations per hour, using a delay of 1/6th of the blocks per hour. 
+              KMD (60s) this is 10blocks, CHIPS(10s) = 60blocks, and for a 30s coin = 20blocks. 
             */
             portable_mutex_lock(&dp->dpmutex);
             dp->srcconfirms = 3600/bp->destcoin->blocktime/6;
@@ -380,7 +381,7 @@ void dpow_statemachinestart(void *ptr)
         for (i=0; i<sizeof(bp->notaries)/sizeof(*bp->notaries); i++)
             bp->notaries[i].bestk = -1;
         bp->opret_symbol = dp->symbol;
-        bp->newconsensus = dp->srcconfirms != 0 ? 1 : 0;
+        bp->newconsensus = (desttime > IGUANA_DPOW_HF_TIME);
             
         if ( jsonstr != 0 && (ratified= cJSON_Parse(jsonstr)) != 0 )
         {

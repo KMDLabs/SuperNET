@@ -88,19 +88,6 @@ int8_t is_STAKED(const char *chain_name)
 }
 #endif
 
-int32_t dpow_calcconfirms(struct supernet_info *myinfo,struct dpow_info *dp)
-{
-    if ( strcmp(dp->dest,"BTC") == 0 )
-        return(DPOW_KOMODOCONFIRMS);
-    // the amount of blocks on source and target since the last notarization tx was SENT (not confirmed) 
-    int32_t blocks_on_dest, blocks_on_source, diff;
-    blocks_on_dest = dp->DESTHEIGHT-dp->prevDESTHEIGHT;
-    blocks_on_source = dp->lastheight-dp->lastnotarizedht;
-    // we need this for some kind of exception when there has not been a block for ages, we can notarize the tip. 
-    // this is an edge case caused by on_demand blocks, on any normal chain this should never trigger? 
-    return(dp->srcconfirms);
-}
-
 void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t height,bits256 hash,uint32_t timestamp,uint32_t blocktime)
 {
     //struct komodo_ccdataMoMoM mdata; cJSON *blockjson; uint64_t signedmask; struct iguana_info *coin;
@@ -336,15 +323,6 @@ int32_t iguana_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp)
     /* 
     Used with the following. Just change KMD to the coin name being dpowd and put this in the conf file.
     blocknotify=curl -s --url "http://127.0.0.1:7776" --data "{\"agent\":\"dpow\",\"method\":\"updatechaintip\",\"blockhash\":\"%s\",\"symbol\":\"KMD\"}"
-        
-    work out how many blocks we need to go back (srcconfirms)
-    update dest chain tip (no fifo stuff)
-    update source chaintip (no fifo stuff)
-    getblockheader for tipheightsrc-dp->srcconfirms 
-    
-    fetch this block height header or block 
-    make a checkpoint and start a dpowthread. 
-
     */
     int32_t height,flag=0; uint32_t blocktime; bits256 blockhash,merkleroot; struct iguana_info *src,*dest;
     src = iguana_coinfind(dp->symbol);
@@ -373,6 +351,85 @@ int32_t iguana_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp)
             {
                 printf("iguana_BN_dPoWupdate src.%s reorg detected %d vs %d approved.%d notarized.%d\n",dp->symbol,height,dp->last.blockhash.height,dp->approved[0].height,dp->notarized[0].height);
                 if ( height <= dp->approved[0].height )
+                {
+                    if ( bits256_cmp(blockhash,dp->last.blockhash.hash) != 0 )
+                        printf("UNEXPECTED ILLEGAL BLOCK in src chaintip\n");
+                }
+                flag++;
+            }
+            else
+            {
+                //char str[65]; printf("[%s] %s height.%d vs last.%d\n",dp->symbol,bits256_str(str,blockhash),height,dp->lastheight);
+                dpow_srcupdate(myinfo,dp,height,blockhash,(uint32_t)time(NULL),blocktime);
+                dp->lastheight = height;
+            }
+        } //else printf("error getchaintip for %s\n",dp->symbol);
+    } //else printf("iguana_BN_dPoWupdate missing src.(%s) %p or dest.(%s) %p\n",dp->symbol,src,dp->dest,dest);
+    return(flag);
+}
+
+int32_t dpow_calcsrcconfirms(struct supernet_info *myinfo,struct dpow_info *dp)
+{
+    if ( strcmp(dp->dest,"BTC") == 0 )
+        return(dp->srcconfirms);
+    if ( dp->prevDESTHEIGHT != 0 )
+    {
+        // the amount of blocks on source and dest since the last notarization tx, 
+        // dest is kmdht when round started and kmdtip. 
+        // src, is last notarized blockheight and srctip. 
+        int32_t blocks_on_dest = dp->DESTHEIGHT-dp->prevDESTHEIGHT;
+        int32_t blocks_on_source = dp->lastheight-dp->lastnotarizedht;
+        
+        // 10 blocks on KMD between AC notarizations, if we have enough blocks on the source to notarize tip-srcconfirms do so otherwise, try to notarize the chain tip.
+        if ( blocks_on_dest > 10 ) 
+        {
+            if ( blocks_on_source > dp->srcconfirms )
+                return(dp->srcconfirms);
+            else return(0);
+        }
+    }
+    return(-1);
+}
+
+int32_t iguana_new_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp)
+{
+    /* 
+    Used with the following. Just change KMD to the coin name being dpowd and put this in the conf file.
+    blocknotify=curl -s --url "http://127.0.0.1:7776" --data "{\"agent\":\"dpow\",\"method\":\"updatechaintip\",\"blockhash\":\"%s\",\"symbol\":\"KMD\"}"
+        
+    update dest chain tip 
+    update source chaintip
+    use dpow_calcsrcconfirms(myinfo,dp) to calculate which block to notarize. 
+    Fetch the block we are notarizing from the daemon and make a checkpoint struct from this.
+    it is a safe assumption that the daemon will not reorg past the last notarization, and it has the longestchain that links back to the last notarization 
+    this allows us to simply ask the daemon for the block height we want, if 13 nodes are on the same chain notarization should happen. 
+    
+    */
+    int32_t height,flag=0; uint32_t blocktime; bits256 blockhash,merkleroot; struct iguana_info *src,*dest;
+    src = iguana_coinfind(dp->symbol);
+    dest = iguana_coinfind(dp->dest);
+    if ( src != 0 && dest != 0 )
+    {
+        if ( (height= dpow_getchaintip(myinfo,&merkleroot,&blockhash,&blocktime,dp->desttx,&dp->numdesttx,dest)) != dp->destchaintip.blockhash.height && height >= 0 )
+        {
+            char str[65];
+            //printf("[%s] %s height.%d vs last.%d\n",dp->dest,bits256_str(str,blockhash),height,dp->destchaintip.blockhash.height);
+            if ( height <= dp->destchaintip.blockhash.height )
+            {
+                printf("iguana_BN_dPoWupdate dest.%s reorg detected %d vs %d\n",dp->dest,height,dp->destchaintip.blockhash.height);
+                if ( height == dp->destchaintip.blockhash.height && bits256_cmp(blockhash,dp->destchaintip.blockhash.hash) != 0 )
+                    printf("UNEXPECTED ILLEGAL BLOCK in dest chaintip\n");
+            } else dpow_destupdate(myinfo,dp,height,blockhash,(uint32_t)time(NULL),blocktime);
+        } //else printf("error getchaintip for %s\n",dp->dest);
+        if ( (height= dpow_getchaintip(myinfo,&merkleroot,&blockhash,&blocktime,dp->srctx,&dp->numsrctx,src)) != dp->last.blockhash.height && height > 0 )
+        {
+            if ( dp->lastheight == 0 )
+                dp->lastheight = height-1;
+            dp->SRCHEIGHT = height;
+            if ( height < dp->last.blockhash.height )
+            {
+                printf("iguana_BN_dPoWupdate src.%s reorg detected %d vs %d approved.%d notarized.%d\n",dp->symbol,height,dp->last.blockhash.height,dp->approved[0].height,dp->notarized[0].height);
+                if ( height <= src->lastnotarizedht )
                 {
                     if ( bits256_cmp(blockhash,dp->last.blockhash.hash) != 0 )
                         printf("UNEXPECTED ILLEGAL BLOCK in src chaintip\n");
@@ -643,7 +700,7 @@ STRING_ARG(dpow,bindaddr,ipaddr)
 
 HASH_AND_STRING(dpow,updatechaintip,blockhash,symbol)
 {
-    char str[65],buf[1024]; struct dpow_info *dp; int32_t i;
+    char str[65],buf[1024]; struct dpow_info *dp = 0; int32_t i;
     
     for (i=0; i<myinfo->numdpows; i++)
     {
@@ -1040,16 +1097,13 @@ cJSON *dpow_recvmasks(struct supernet_info *myinfo,struct dpow_info *dp)
 
 TWO_STRINGS(dpow,active,maskhex,symbol)
 {
-    uint8_t data[8],revdata[8],pubkeys[64][33]; int32_t i,len,current,n,allflag; uint64_t mask; cJSON *infojson,*retjson,*array,*notarray,*alljson; struct dpow_info *dp = 0;
+    uint8_t data[8],revdata[8],pubkeys[64][33]; int32_t i,len,current,n; uint64_t mask; cJSON *infojson,*retjson,*array,*notarray,*alljson = 0; struct dpow_info *dp = 0;
     array = cJSON_CreateArray();
     notarray = cJSON_CreateArray();
-    if ( symbol == 0 || symbol[0] == 0 )
-        return(clonestr("{\"error\":\"need coin name, or all\"}"));
     if ( maskhex == 0 || maskhex[0] == 0 )
     {
         /* 
-            symbol is the coin to print, eg KMD or LABS
-            specify "all" as the symbol to extract every current round from all chains. 
+            symbol is the coin to print, eg KMD or LABS, leave it blank to fetch all current rounds on all coins. 
             not all coins will have active rounds all the time. 
             
             the format of this RPC has changed, so scripts that use it will need updating
@@ -1082,11 +1136,11 @@ TWO_STRINGS(dpow,active,maskhex,symbol)
             }
         */
         
-        if ( (allflag= (strcmp(symbol,"all") == 0)) )
+        if ( symbol == 0 || symbol[0] == 0 )
             alljson = cJSON_CreateObject();
         for (i=0; i<myinfo->numdpows; i++)
         {
-            if ( allflag != 0 )
+            if ( alljson != 0 )
             {
                 cJSON *coinjson = dpow_recvmasks(myinfo,myinfo->DPOWS[i]);
                 jadd(alljson,myinfo->DPOWS[i]->symbol,coinjson);
@@ -1097,7 +1151,7 @@ TWO_STRINGS(dpow,active,maskhex,symbol)
                 break;
             }
         }
-        if ( allflag != 0 ) 
+        if ( alljson != 0 ) 
             return(jprint(alljson,1));
         else 
         {

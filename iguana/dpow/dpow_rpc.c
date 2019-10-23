@@ -1025,8 +1025,8 @@ int32_t dpow_getchaintip(struct supernet_info *myinfo,bits256 *merklerootp,bits2
                 coin->lastbestheight = height;
                 if ( height > coin->longestchain )
                     coin->longestchain = height;
-                //if ( jobj(json, "last_notarized_height") != 0 )
-                //    coin->lastnotarizedht = juint(json,"last_notarized_height");
+                if ( jobj(json, "last_notarized_height") != 0 )
+                    coin->lastnotarizedht = juint(json,"last_notarized_height");
                 if ( txs != 0 && numtxp != 0 && (array= jarray(&n,json,"tx")) != 0 )
                 {
                     for (i=0; i<n&&i<maxtx; i++)
