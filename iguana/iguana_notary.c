@@ -106,7 +106,6 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
     //struct komodo_ccdataMoMoM mdata; cJSON *blockjson; uint64_t signedmask; struct iguana_info *coin;
     char str[65]; struct dpow_checkpoint checkpoint; int32_t i,ht,suppress=0,retval; uint64_t threadind; //void **ptrs; 
     dpow_checkpointset(myinfo,&dp->last,height,hash,timestamp,blocktime);
-    portable_mutex_lock(&dp->dpmutex);
     checkpoint = dp->srcfifo[dp->srcconfirms];
     dpow_fifoupdate(myinfo,dp->srcfifo,dp->last);
     if ( strcmp(dp->dest,"KMD") == 0 )
@@ -177,6 +176,7 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
             } else return;
         } else return;
     }*/
+    portable_mutex_lock(&dp->dpmutex);
     if ( dp->freq <= 0 )
         dp->freq = 1;
     if ( suppress == 0 && bits256_nonz(checkpoint.blockhash.hash) != 0 && (checkpoint.blockhash.height % dp->freq) == 0 )
