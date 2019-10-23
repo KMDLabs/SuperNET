@@ -1693,7 +1693,7 @@ void dpow_oldbestconsensus(struct dpow_info *dp,struct dpow_block *bp)
 
 void dpow_bestconsensus(struct dpow_info *dp,struct dpow_block *bp)
 {
-    if ( np->newconsensus == 0 )
+    if ( bp->newconsensus == 0 )
     {
         dpow_oldbestconsensus(dp,bp);
         return;
