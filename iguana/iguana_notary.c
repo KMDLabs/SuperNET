@@ -1077,9 +1077,9 @@ TWO_STRINGS(dpow,active,maskhex,symbol)
             }
         */
         
-        if ( (allflag= strcmp(symbol,"all")) == 0 )
+        if ( (allflag= (strcmp(symbol,"all") == 0)) )
             alljson = cJSON_CreateObject();
-        
+        printf("allflag.%i \n", allflag);
         for (i=0; i<myinfo->numdpows; i++)
         {
             if ( allflag != 0 )
