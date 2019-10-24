@@ -2000,7 +2000,7 @@ bits256 iguana_sapling_sighash(struct supernet_info *myinfo,struct iguana_msgtx 
     return(sigtxid);
 }
 
-uint64_t iguana_fastnotariescount(struct supernet_info *myinfo, struct dpow_info *dp, struct dpow_block *bp, int32_t src_or_dest, int32_t checkall)
+uint64_t iguana_fastnotariescount(struct supernet_info *myinfo, struct dpow_info *dp, struct dpow_block *bp, int32_t src_or_dest, int32_t *checkall)
 {
     int32_t len=0,vini,j,i,txlen; uint64_t mask = 0; struct iguana_info *coin; struct iguana_msgtx tx; struct iguana_msgvin *vin; bits256 sighash; uint8_t script[35]; char str[65], vpnstr[65] = {0};
     uint8_t *txdata,*extraspace;
@@ -2011,7 +2011,11 @@ uint64_t iguana_fastnotariescount(struct supernet_info *myinfo, struct dpow_info
     txlen = (int32_t)strlen(bp->signedtx) >> 1;
     decode_hex(txdata,txlen,(char*)bp->signedtx);    
     if ( (len= iguana_rwmsgtx(coin, coin->lastbestheight,0, 0, txdata, 1000000, &tx, &tx.txid, vpnstr, extraspace, 65536, 0, 0)) < 1 || tx.vins == 0 )
-        return(-1);
+    {
+        *checkall = -1;
+        return(0);
+    }
+        
     script[0] = 33;
     script[34] = SCRIPT_OP_CHECKSIG;
     for (vini=0; vini<(int32_t)tx.tx_in; vini++)
@@ -2027,7 +2031,7 @@ uint64_t iguana_fastnotariescount(struct supernet_info *myinfo, struct dpow_info
             if ( ((1LL << j) & mask) != 0 )
                 continue;
             // optionally skip nodes not in the bestmask (they cannot sign anyway)
-            if ( checkall == 0 && ((1LL << j) & bp->bestmask) == 0 )
+            if ( *checkall == 0 && ((1LL << j) & bp->bestmask) == 0 )
                 continue;
             memcpy(script+1,bp->notaries[j].pubkey,33);
             sighash = iguana_sapling_sighash(myinfo,&tx,vini,10000,script,35);
