@@ -2009,10 +2009,8 @@ uint64_t iguana_fastnotariescount(struct supernet_info *myinfo, struct dpow_info
     memset(&tx,0,sizeof(tx));
     coin = src_or_dest != 0 ? bp->srccoin : bp->destcoin;
     txlen = (int32_t)strlen(bp->signedtx) >> 1;
-    decode_hex(txdata,txlen,(char*)bp->signedtx);
-    len = iguana_rwmsgtx(coin, coin->lastbestheight,0, 0, txdata, 1000000, &tx, &tx.txid, vpnstr, extraspace, 65536, 0, 0);
-    
-    if ( len == 0 || tx.vins == 0 )
+    decode_hex(txdata,txlen,(char*)bp->signedtx);    
+    if ( (len= iguana_rwmsgtx(coin, coin->lastbestheight,0, 0, txdata, 1000000, &tx, &tx.txid, vpnstr, extraspace, 65536, 0, 0)) < 1 || tx.vins == 0 )
         return(-1);
     script[0] = 33;
     script[34] = SCRIPT_OP_CHECKSIG;
