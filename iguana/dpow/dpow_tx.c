@@ -299,7 +299,7 @@ int32_t dpow_voutstandard(struct supernet_info *myinfo,struct dpow_block *bp,uin
     else opretlen = dpow_rwopret(1,opret,&bp->hashmsg,&bp->height,bp->srccoin->symbol,extras,n,bp,src_or_dest);
     if ( opretlen < 0 )
     {
-        printf("negative opretlen.%d src_or_dest.%d\n",opretlen,src_or_dest);
+        printf("[%s:%i]: negative opretlen.%d src_or_dest.%d\n",bp->opret_symbol,bp->height,opretlen,src_or_dest);
         return(-1);
     }
     opretlen = dpow_opreturnscript(data,opret,opretlen);
@@ -693,8 +693,8 @@ void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpo
                         if ( src_or_dest != 0 )
                         {
                             bp->desttxid = txid;
+                            printf("[%s:%i]: txid.(%s)\n",dp->symbol,bp->height,bits256_str(str,txid));
                             dpow_signedtxgen(myinfo,dp,bp->srccoin,bp,bestk,bestmask,myind,DPOW_SIGCHANNEL,0,numratified != 0);
-                            
                         } else 
                         {
                             bp->srctxid = txid;
@@ -723,7 +723,7 @@ void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpo
                             }
                         }
                     } else printf("sendtxid mismatch got %s instead of %s\n",bits256_str(str,txid),bits256_str(str2,signedtxid));
-                }
+                } else printf("txid.(%s) is not hexstring\n",retstr);
             } // else printf("NULL return from sendrawtransaction. abort\n");
             
             // If the error code is -27, it means the tx has been confirmed before this node tried to send it, ignore it.

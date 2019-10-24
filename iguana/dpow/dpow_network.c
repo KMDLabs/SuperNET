@@ -2169,7 +2169,7 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
             {
                 if ( bp->pendingbestk < 0 )//bp->pendingbestk != bp->bestk || bp->pendingbestmask != bp->bestmask )
                 {
-                    printf(GREEN"new PENDING BESTK.%d( ",bp->bestk);
+                    printf(GREEN"[%s:%i]: BESTK.%d( ",dp->symbol,bp->height,bp->bestk);
                     for (i=0; i<bp->numnotaries; i++)
                         if ( ((1LL << i) & bp->bestmask) != 0 )
                             printf("%i, ",i);
@@ -2186,7 +2186,7 @@ void dpow_notarize_update(struct supernet_info *myinfo,struct dpow_info *dp,stru
                     bp->pendingbestk = bp->bestk;
                     bp->pendingbestmask = bp->bestmask;
                     dpow_signedtxgen(myinfo,dp,bp->destcoin,bp,bp->pendingbestk,bp->pendingbestmask,bp->myind,DPOW_SIGBTCCHANNEL,1,0);
-                    //printf("finished signing\n");
+                    printf(CYAN"finished signing\n"RESET);
                 }
                 if ( (bp->pendingbestmask & (1LL << bp->myind)) != 0 && bits256_nonz(bp->desttxid) != 0 && bp->srcsigsmasks[bp->pendingbestk] == 0 )
                 {
