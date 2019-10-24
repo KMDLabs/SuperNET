@@ -156,7 +156,7 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
         dp->flag = 0; 
         if ( suppress != 0 ) // no point going further.  
             return;
-        if ( (srcconfs= dpow_calcsrcconfirms(myinfo,dp)) >= 0 && (src= iguana_coinfind(myinfo,dp->symbol)) != 0 )
+        if ( (srcconfs= dpow_calcsrcconfirms(myinfo,dp)) >= 0 && (src= iguana_coinfind(dp->symbol)) != 0 )
         {
             uint32_t blktime = 0; cJSON *json = 0; int32_t notaht = height-srcconfs;
             bits256 blkhash = dpow_getblockhash(myinfo,src,notaht);
