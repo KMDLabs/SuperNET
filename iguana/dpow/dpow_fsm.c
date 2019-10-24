@@ -341,20 +341,20 @@ void dpow_statemachinestart(void *ptr)
     else if ( strcmp(dest->symbol,"KMD") == 0 )
     {
         kmdheight = dest->longestchain;
-        // use tip time on KMD to trigger major consensus changes. 
+        // use tip time on KMD to trigger major consensus changes.
         if ( desttime > IGUANA_DPOW_HF_TIME && dp->srcconfirms == 0 ) 
         {
             /* 
               the blocktime needs to be set in the coins file for any chain that is not 60s. 
               example: CHIPS is 10s so do: 
-              \"blocktime\":10,
-              This will set all coins to do approximatly 6 notarizations per hour, using a delay of 1/6th of the blocks per hour. 
+              \"blocktime\":10
               KMD (60s) this is 10blocks, CHIPS(10s) = 60blocks, and for a 30s coin = 20blocks. 
+              This will set all coins to do approximatly 6 notarizations per hour, using a delay of 1/6th of the expected blocks per hour. 
             */
             portable_mutex_lock(&dp->dpmutex);
             dp->srcconfirms = 3600/bp->destcoin->blocktime/6;
             portable_mutex_unlock(&dp->dpmutex);
-            printf(CYAN"[%s:%i]: setting srcconfirms.%i"RESET,src->symbol,bp->height,dp->srcconfirms);
+            printf(CYAN"[%s:%i]: srcconfirms.%i"RESET,src->symbol,bp->height,dp->srcconfirms);
         }
     }
     if ( (bp= dpow_heightfind(myinfo,dp, checkpoint.blockhash.height)) == 0 )
@@ -677,11 +677,13 @@ void dpow_statemachinestart(void *ptr)
         iterations++;
         while ( abort == 0 && starttime+(iterations*30) > (uint32_t)time(NULL) ) 
         {
-            if  ( dp->lastnotarizedht > bp->height && bp->isratify == 0 )
+            portable_mutex_lock(&dp->dpmutex);
+            if  ( dp->lastnotarizedht > bp->height )
             {
                 bp->state = 0xffffffff;
                 abort++;
             }
+            portable_mutex_unlock(&dp->dpmutex);
             usleep(100000);
         }
         if ( abort != 0 )

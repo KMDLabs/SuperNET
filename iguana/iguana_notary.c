@@ -100,12 +100,16 @@ int32_t dpow_calcsrcconfirms(struct supernet_info *myinfo,struct dpow_info *dp)
         int32_t blocks_on_dest = dp->DESTHEIGHT-dp->prevDESTHEIGHT;
         int32_t blocks_on_source = dp->lastheight-dp->lastnotarizedht;
         
-        // 10 blocks on KMD between AC notarizations, if we have enough blocks on the source to notarize tip-srcconfirms do so otherwise, try to notarize the chain tip.
+        // wait for the chain to advance for 10-20 blocks on KMD since the last notarization. 
         if ( blocks_on_dest >= 10 ) 
         {
             if ( blocks_on_source > dp->srcconfirms )
                 return(dp->srcconfirms);
-            else return(0);
+            if ( blocks_on_dest >= 20 )
+            {
+                // over 20 blocks on KMD we can simply notarize tip, this chain clearly is on demand or has no active miners.  
+                return(0);
+            }
         }
     }
     return(-1);
@@ -141,7 +145,7 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
         }
 #endif
     }
-    // keep fifo on KMD for now, test which is better?  
+    // test which is better, saved FIFO checkpoints or fetch needed height. 
     if ( dp->flag == 0 || strcmp(dp->symbol,"KMD") == 0 )
     {
         checkpoint = dp->srcfifo[dp->srcconfirms];
@@ -149,16 +153,18 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
     }
     else 
     {
-        /* use dpow_calcsrcconfirms(myinfo,dp) to calculate which block to notarize. 
-        Fetch the block we are notarizing from the daemon and make a checkpoint struct from this.
-        it is a safe assumption that the daemon will not reorg past the last notarization, and it has the longestchain that links back to the last notarization 
-        this allows us to simply ask the daemon for the block height we want, if 13 nodes are on the same chain a notarization should happen. */
+        /* 
+            use dpow_calcsrcconfirms(myinfo,dp) to calculate which block to notarize. 
+            Fetch the block we are notarizing from the daemon and make a checkpoint struct from this.
+            it is a safe assumption that the daemon will not reorg past the last notarization, and it has the longestchain that links back to the last notarization 
+         */
         dp->flag = 0; 
         if ( suppress != 0 ) // no point going further.  
             return;
         if ( (srcconfs= dpow_calcsrcconfirms(myinfo,dp)) >= 0 && (src= iguana_coinfind(dp->symbol)) != 0 )
         {
             uint32_t blktime = 0; cJSON *json = 0; int32_t notaht = height-srcconfs;
+            // TODO: change getblock to fetch directly the block via height. 
             bits256 blkhash = dpow_getblockhash(myinfo,src,notaht);
             if ( bits256_nonz(blkhash) != 0 && (json= dpow_getblock(myinfo,src,blkhash)) != 0 && (blktime= juint(json,"time")) != 0 )
             {
@@ -461,7 +467,7 @@ int32_t iguana_new_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *
             else
             {
                 //char str[65]; printf("[%s] %s height.%d vs last.%d\n",dp->symbol,bits256_str(str,blockhash),height,dp->lastheight);
-                dp->flag = 1; // skip fifo on all coins except KMD. 
+                dp->flag = 1; 
                 dpow_srcupdate(myinfo,dp,height,blockhash,(uint32_t)time(NULL),blocktime);
                 dp->lastheight = height;
             }

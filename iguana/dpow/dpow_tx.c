@@ -733,7 +733,7 @@ void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpo
                 buflen = sprintf(printstr, RED"dpow_sigscheck: [%s:%i] coin.%s errcode.%i sapling.%i "RESET,bp->srccoin->symbol,bp->height,coin->symbol,errorcode,coin->sapling);
                 // for non sapling coins/utxos we need a diffrent notary count/sigcheck
                 int32_t checkall = 0;
-                if ( coin->sapling != 0 && (testbestmask= iguana_fastnotariescount(myinfo, dp, bp, src_or_dest, &checkall)) != bp->bestmask && checkall >= 0 )
+                if ( coin->sapling != 0 && (testbestmask= iguana_fastnotariescount(myinfo, dp, bp, src_or_dest, &checkall)) != bp->bestmask && checkall == 0 )
                 {
                     checkall++;
                     uint64_t failedmask = bp->bestmask^testbestmask;
@@ -754,7 +754,7 @@ void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpo
                                 //dp->lastbanheight[j] = bp->height; // disable ban, causes bugs, monitoring via logs should be enough.
                             }
                         buflen += sprintf(printstr+buflen,"\n");
-                    }
+                    } else buflen += sprintf(printstr+buflen,RED" >>>>>>>> iguana_fastnotariescount failed\n"RESET);
                 }
                 buflen += sprintf(printstr+buflen," >>> inputs spent: \n");
                 for (j=0; j<bp->numnotaries; j++)
