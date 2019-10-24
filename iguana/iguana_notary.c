@@ -65,11 +65,11 @@ int8_t is_STAKED(const char *chain_name)
     if ( chain_name[0] == 0 )
         return(0);
     if ( (strcmp(chain_name, "LABS") == 0) || (strncmp(chain_name, "LABS", 4) == 0) )
-        ret = 1; // These chains are allowed coin emissions.
+        ret = 3; // These chains are allowed coin emissions.
     else if ( (strcmp(chain_name, "CFEK") == 0) || (strncmp(chain_name, "CFEK", 4) == 0) )
         ret = 2; // These chains have no speical rules at all.
     else if ( (strcmp(chain_name, "TEST") == 0) || (strncmp(chain_name, "TEST", 4) == 0) )
-        ret = 3; // These chains are for testing consensus to create a chain etc. Not meant to be actually used for anything important.
+        ret = 1; // These chains are for testing consensus to create a chain etc. Not meant to be actually used for anything important.
     return(ret);
 }
 #else
@@ -88,10 +88,33 @@ int8_t is_STAKED(const char *chain_name)
 }
 #endif
 
+int32_t dpow_calcsrcconfirms(struct supernet_info *myinfo,struct dpow_info *dp)
+{
+    if ( strcmp(dp->dest,"BTC") == 0 )
+        return(dp->srcconfirms);
+    if ( dp->prevDESTHEIGHT != 0 )
+    {
+        // the amount of blocks on source and dest since the last notarization tx, 
+        // dest is kmdht when round started and kmdtip. 
+        // src, is last notarized blockheight and srctip. 
+        int32_t blocks_on_dest = dp->DESTHEIGHT-dp->prevDESTHEIGHT;
+        int32_t blocks_on_source = dp->lastheight-dp->lastnotarizedht;
+        
+        // 10 blocks on KMD between AC notarizations, if we have enough blocks on the source to notarize tip-srcconfirms do so otherwise, try to notarize the chain tip.
+        if ( blocks_on_dest >= 10 ) 
+        {
+            if ( blocks_on_source > dp->srcconfirms )
+                return(dp->srcconfirms);
+            else return(0);
+        }
+    }
+    return(-1);
+}
+
 void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t height,bits256 hash,uint32_t timestamp,uint32_t blocktime)
 {
     //struct komodo_ccdataMoMoM mdata; cJSON *blockjson; uint64_t signedmask; struct iguana_info *coin;
-    char str[65]; struct dpow_checkpoint checkpoint; int32_t i,ht,suppress=0,retval,srcconfs; uint64_t threadind; //void **ptrs; 
+    char str[65]; struct dpow_checkpoint checkpoint; int32_t i,ht,suppress=0,retval,srcconfs; uint64_t threadind; struct iguana_info *src = 0;//void **ptrs; 
     dpow_checkpointset(myinfo,&dp->last,height,hash,timestamp,blocktime);
     if ( strcmp(dp->dest,"KMD") == 0 )
     {
@@ -129,17 +152,17 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
         /* use dpow_calcsrcconfirms(myinfo,dp) to calculate which block to notarize. 
         Fetch the block we are notarizing from the daemon and make a checkpoint struct from this.
         it is a safe assumption that the daemon will not reorg past the last notarization, and it has the longestchain that links back to the last notarization 
-        this allows us to simply ask the daemon for the block height we want, if 13 nodes are on the same chain notarization should happen. */
-        dp->flag = 0; struct iguana_info *src = 0;
+        this allows us to simply ask the daemon for the block height we want, if 13 nodes are on the same chain a notarization should happen. */
+        dp->flag = 0; 
         if ( suppress != 0 ) // no point going further.  
             return;
-        if ( (srcconfs= dpow_calcsrcconfirms(myinfo,dp)) >= 0 && (src= iguana_coinfind(myinfo,dp->src)) != 0 )
+        if ( (srcconfs= dpow_calcsrcconfirms(myinfo,dp)) >= 0 && (src= iguana_coinfind(myinfo,dp->symbol)) != 0 )
         {
-            uint32_t blocktime = 0; cJSON *json = 0; int32_t notaht = height-srcconfs;
-            bits256 blockhash = dpow_getblockhash(myinfo,src,notaht);
-            if ( bits256_nonz(blockhash) != 0 && (json= dpow_getblock(myinfo,src,blockhash)) != 0 && (blktime= juint(json,"time")) != 0 )
+            uint32_t blktime = 0; cJSON *json = 0; int32_t notaht = height-srcconfs;
+            bits256 blkhash = dpow_getblockhash(myinfo,src,notaht);
+            if ( bits256_nonz(blkhash) != 0 && (json= dpow_getblock(myinfo,src,blkhash)) != 0 && (blktime= juint(json,"time")) != 0 )
             {
-                dpow_checkpointset(myinfo,&checkpoint,notaht,blockhash,(uint32_t)time(NULL),blktime);
+                dpow_checkpointset(myinfo,&checkpoint,notaht,blkhash,(uint32_t)time(NULL),blktime);
             }
         }
     }
@@ -389,29 +412,6 @@ int32_t iguana_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp)
         } //else printf("error getchaintip for %s\n",dp->symbol);
     } //else printf("iguana_BN_dPoWupdate missing src.(%s) %p or dest.(%s) %p\n",dp->symbol,src,dp->dest,dest);
     return(flag);
-}
-
-int32_t dpow_calcsrcconfirms(struct supernet_info *myinfo,struct dpow_info *dp)
-{
-    if ( strcmp(dp->dest,"BTC") == 0 )
-        return(dp->srcconfirms);
-    if ( dp->prevDESTHEIGHT != 0 )
-    {
-        // the amount of blocks on source and dest since the last notarization tx, 
-        // dest is kmdht when round started and kmdtip. 
-        // src, is last notarized blockheight and srctip. 
-        int32_t blocks_on_dest = dp->DESTHEIGHT-dp->prevDESTHEIGHT;
-        int32_t blocks_on_source = dp->lastheight-dp->lastnotarizedht;
-        
-        // 10 blocks on KMD between AC notarizations, if we have enough blocks on the source to notarize tip-srcconfirms do so otherwise, try to notarize the chain tip.
-        if ( blocks_on_dest >= 10 ) 
-        {
-            if ( blocks_on_source > dp->srcconfirms )
-                return(dp->srcconfirms);
-            else return(0);
-        }
-    }
-    return(-1);
 }
 
 int32_t iguana_new_BN_dPoWupdate(struct supernet_info *myinfo,struct dpow_info *dp)
