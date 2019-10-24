@@ -119,7 +119,7 @@ void dpow_srcupdate(struct supernet_info *myinfo,struct dpow_info *dp,int32_t he
 #endif
     }
     // keep fifo on KMD for now, test which is better?  
-    if ( dp->flag == 0 || strcmp(dp->src,"KMD") == 0 )
+    if ( dp->flag == 0 || strcmp(dp->symbol,"KMD") == 0 )
     {
         checkpoint = dp->srcfifo[dp->srcconfirms];
         dpow_fifoupdate(myinfo,dp->srcfifo,dp->last);
