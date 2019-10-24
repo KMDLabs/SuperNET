@@ -732,24 +732,27 @@ void dpow_sigscheck(struct supernet_info *myinfo,struct dpow_info *dp,struct dpo
             {
                 buflen = sprintf(printstr, RED"dpow_sigscheck: [%s:%i] coin.%s errcode.%i sapling.%i "RESET,bp->srccoin->symbol,bp->height,coin->symbol,errorcode,coin->sapling);
                 // for non sapling coins/utxos we need a diffrent notary count/sigcheck
-                if ( coin->sapling != 0 && (testbestmask= iguana_fastnotariescount(myinfo, dp, bp, src_or_dest, 0)) != bp->bestmask )
+                if ( coin->sapling != 0 && (testbestmask= iguana_fastnotariescount(myinfo, dp, bp, src_or_dest, 0)) >= 0 && testbestmask != bp->bestmask )
                 {
                     uint64_t failedmask = bp->bestmask^testbestmask;
                     buflen += sprintf(printstr+buflen,RED"failedbestmask.%llx bestmask.%llx\n"RESET,(long long)failedmask,(long long)bp->bestmask);
                     buflen += sprintf(printstr+buflen,">>> tx.%s\n",bp->signedtx);
                     uint64_t testmask = iguana_fastnotariescount(myinfo, dp, bp, src_or_dest, 1);
-                    buflen += sprintf(printstr+buflen," >>> signed by: ");
-                    for (i=0; i<bp->numnotaries; i++)
-                        if ( ((1LL << i) & testmask) != 0 )
-                            buflen += sprintf(printstr+buflen,"%s, ",Notaries_elected[i][0]);
-                    buflen += sprintf(printstr+buflen,"\n >>> missing sigs: ");
-                    for (j=0; j<bp->numnotaries; j++)
-                        if ( (failedmask & (1LL << j)) != 0 )
-                        {
-                            buflen += sprintf(printstr+buflen,"%s, ", Notaries_elected[j][0]);
-                            //dp->lastbanheight[j] = bp->height; // disable ban, causes bugs, monitoring via logs should be enough.
-                        }
-                    buflen += sprintf(printstr+buflen,"\n");
+                    if ( testmask >= 0 )
+                    {
+                        buflen += sprintf(printstr+buflen," >>> signed by: ");
+                        for (i=0; i<bp->numnotaries; i++)
+                            if ( ((1LL << i) & testmask) != 0 )
+                                buflen += sprintf(printstr+buflen,"%s, ",Notaries_elected[i][0]);
+                        buflen += sprintf(printstr+buflen,"\n >>> missing sigs: ");
+                        for (j=0; j<bp->numnotaries; j++)
+                            if ( (failedmask & (1LL << j)) != 0 )
+                            {
+                                buflen += sprintf(printstr+buflen,"%s, ", Notaries_elected[j][0]);
+                                //dp->lastbanheight[j] = bp->height; // disable ban, causes bugs, monitoring via logs should be enough.
+                            }
+                        buflen += sprintf(printstr+buflen,"\n");
+                    }
                 }
                 buflen += sprintf(printstr+buflen," >>> inputs spent: \n");
                 for (j=0; j<bp->numnotaries; j++)
