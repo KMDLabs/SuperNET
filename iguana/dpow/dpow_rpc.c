@@ -610,9 +610,8 @@ cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,ch
         {
             // utxo cache listunspent 
             sprintf(buf,"%i, \"%s\"", utxosize, coinaddr);
-            if ( coin->utxocacheinit < 2 && coin->utxocacheactive == 0 && (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"dpowlistunspent", buf)) != 0 && (json= cJSON_Parse(retstr)) != 0 )
+            if ( ++coin->utxocacheinit < 3 && coin->utxocacheactive == 0 && (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"dpowlistunspent", buf)) != 0 && (json= cJSON_Parse(retstr)) != 0 )
             {
-                coin->utxocacheinit++;
                 if ( jobj(json,"error") == 0 )
                 {
                     coin->utxocacheactive = 1;
@@ -629,6 +628,8 @@ cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,ch
             {
                 if ( jobj(json,"error") != 0 )
                 {
+                    coin->utxocacheinit--;
+                    coin->utxocacheactive = 0;
                     free_json(json);
                     json = 0;
                 }
