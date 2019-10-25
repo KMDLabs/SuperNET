@@ -190,14 +190,19 @@ uint64_t dpow_maskmin(uint64_t refmask, struct dpow_info *dp,struct dpow_block *
         else 
         {
             k = DPOW_MODIND(bp,j,DPOW_CHECKPOINTFREQ);
-            mask |= (1LL << k);
-            if ( ++m == bp->minsigs )
+            if ( bits256_nonz(bp->notaries[k].src.prev_hash) != 0 && bits256_nonz(bp->notaries[k].dest.prev_hash) != 0 && bp->paxwdcrc == bp->notaries[k].paxwdcrc )
             {
-                *lastkp = k;
-                bestmask = mask;
+                mask |= (1LL << k);
+                if ( ++m == bp->minsigs )
+                {
+                    *lastkp = k;
+                    bestmask = mask;
+                }
             }
         }
     }
+    if ( bp->newconsensus != 0 )
+        bp->recvmask |= mask;
     if ( *lastkp >= 0 )
     {
         char str[64]; sprintf(str,CYAN"-> newk.%i"RESET, z); 
