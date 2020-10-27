@@ -636,6 +636,7 @@ cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,ch
         else 
             sprintf(buf2,"1, 99999999, [\"%s\"]",coinaddr);
 
+        /* Remove dpow listunspent, LABS does not require it any longer. 
         if ( utxosize != 0 )
         {
             // utxo cache listunspent 
@@ -652,7 +653,7 @@ cJSON *dpow_listunspent(struct supernet_info *myinfo,struct iguana_info *coin,ch
                 free(retstr);
             } //else printf("%s null retstr from dpowlistunspent.%s\n",coin->symbol,buf);
         }
-        if ( json == 0 || cJSON_GetArraySize(json) == 0 )
+        if ( json == 0 || cJSON_GetArraySize(json) == 0 ) */
         {
             // normal listunspent
             if ( (retstr= bitcoind_passthru(coin->symbol,coin->chain->serverport,coin->chain->userpass,"listunspent",buf2)) != 0 )
