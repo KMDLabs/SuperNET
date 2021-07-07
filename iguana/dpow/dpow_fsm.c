@@ -336,7 +336,6 @@ void dpow_statemachinestart(void *ptr)
     if ( strcmp(src->symbol,"KMD") == 0 )
     {
         MoMdepth = 0;
-        memset(&MoM,0,sizeof(MoM));
         kmdheight = checkpoint.blockhash.height;
     }
     else if ( strcmp(dest->symbol,"KMD") == 0 )
